@@ -1,0 +1,82 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(42, 49, 39, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  display: flex;
+  animation: fadeIn var(--transition-fast);
+}
+
+.drawer {
+  background-color: var(--color-white);
+  height: 100%;
+  box-shadow: var(--shadow-float);
+  display: flex;
+  flex-direction: column;
+  animation: slideIn var(--transition-normal);
+  position: absolute;
+}
+
+.right {
+  right: 0;
+}
+
+.left {
+  left: 0;
+  animation-name: slideInLeft;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.title {
+  font-size: 1.5rem;
+  margin: 0;
+}
+
+.closeBtn, .closeBtnAbsolute {
+  color: var(--color-text-muted);
+  transition: color var(--transition-fast), transform var(--transition-fast);
+  padding: 0.5rem;
+  border-radius: 50%;
+}
+
+.closeBtn:hover, .closeBtnAbsolute:hover {
+  color: var(--color-text-main);
+  background-color: var(--color-sage-light);
+  transform: rotate(90deg);
+}
+
+.closeBtnAbsolute {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 2;
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes slideInLeft {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}

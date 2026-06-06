@@ -1,0 +1,321 @@
+.checkoutPage {
+  background-color: var(--color-ivory);
+  min-height: 100vh;
+}
+
+.header {
+  background-color: var(--color-white);
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.headerContent {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.headerContent h1 {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  color: var(--color-sage-dark);
+}
+
+.secureText {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 4rem 2rem;
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 4rem;
+  align-items: flex-start;
+}
+
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.activeStep {
+  color: var(--color-text-main);
+  font-weight: 600;
+}
+
+.formCard {
+  padding: 3rem;
+  background-color: var(--color-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.stepContent h2 {
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  margin-bottom: 2rem;
+  color: var(--color-text-main);
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.formGroup label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-main);
+}
+
+.formGroup input, .formGroup textarea {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-sans);
+  transition: all var(--transition-fast);
+}
+
+.formGroup input:focus, .formGroup textarea:focus {
+  outline: none;
+  border-color: var(--color-sage-dark);
+  box-shadow: 0 0 0 3px rgba(140, 158, 130, 0.1);
+}
+
+.deliveryOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.radioLabel {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.radioLabel:hover {
+  background-color: var(--color-cream);
+}
+
+.radioLabel input[type="radio"] {
+  margin-top: 0.25rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  accent-color: var(--color-sage-dark);
+}
+
+.radioContent strong {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: var(--color-text-main);
+}
+
+.radioContent p {
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+.btnRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 3rem;
+}
+
+.nextBtn {
+  margin-top: 2rem;
+  width: 100%;
+}
+
+.submitBtn {
+  min-width: 200px;
+}
+
+/* Sidebar */
+.sidebar {
+  position: sticky;
+  top: 2rem;
+}
+
+.summaryCard {
+  padding: 2.5rem;
+  background-color: var(--color-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.summaryCard h3 {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 1rem;
+}
+
+.itemsList {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.summaryItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.itemImage {
+  width: 60px;
+  height: 60px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  background-color: var(--color-cream);
+}
+
+.itemInfo {
+  flex: 1;
+}
+
+.itemInfo h4 {
+  font-size: 0.9375rem;
+  margin-bottom: 0.25rem;
+  line-height: 1.4;
+}
+
+.itemQty {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+}
+
+.itemPrice {
+  font-weight: 500;
+  font-size: 0.9375rem;
+}
+
+.costBreakdown {
+  border-top: 1px solid var(--color-border);
+  padding-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.costRow {
+  display: flex;
+  justify-content: space-between;
+  color: var(--color-text-muted);
+  font-size: 0.9375rem;
+}
+
+.totalRow {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+  font-size: 1.25rem;
+  color: var(--color-text-main);
+  margin-top: 0.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px dashed var(--color-border);
+}
+
+/* Success Modal */
+.successModal {
+  text-align: center;
+  padding: 2rem 1rem;
+}
+
+.successIcon {
+  color: var(--color-success);
+  margin-bottom: 1.5rem;
+}
+
+.successModal h2 {
+  font-family: var(--font-serif);
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.successModal p {
+  color: var(--color-text-muted);
+  font-size: 1.125rem;
+  margin-bottom: 2rem;
+}
+
+.successDetails {
+  background-color: var(--color-ivory);
+  padding: 1.5rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 2.5rem;
+  text-align: left;
+}
+
+.successDetails p {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  color: var(--color-text-main);
+}
+
+/* Empty Container */
+.emptyContainer {
+  max-width: 600px;
+  margin: 4rem auto;
+  text-align: center;
+  padding: 4rem 2rem;
+  background-color: var(--color-white);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+}
+
+.emptyContainer h2 {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.emptyContainer p {
+  color: var(--color-text-muted);
+  margin-bottom: 2rem;
+}
+
+@media (max-width: 992px) {
+  .container {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+  .formCard {
+    padding: 1.5rem;
+  }
+}

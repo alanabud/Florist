@@ -1,0 +1,100 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  transition: all var(--transition-fast);
+  position: relative;
+  overflow: hidden;
+  gap: 0.5rem;
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Variants */
+.primary {
+  background-color: var(--color-sage-dark);
+  color: var(--color-white);
+}
+
+.primary:hover:not(:disabled) {
+  background-color: #7b8a72; /* slightly darker sage */
+}
+
+.secondary {
+  background-color: var(--color-champagne);
+  color: var(--color-text-main);
+}
+
+.secondary:hover:not(:disabled) {
+  background-color: #e5d5bc; /* slightly darker champagne */
+}
+
+.outline {
+  background-color: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-main);
+}
+
+.outline:hover:not(:disabled) {
+  border-color: var(--color-sage-dark);
+  color: var(--color-sage-dark);
+}
+
+.ghost {
+  background-color: transparent;
+  color: var(--color-text-main);
+}
+
+.ghost:hover:not(:disabled) {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+/* Sizes */
+.sm {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.md {
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+}
+
+.lg {
+  padding: 0.75rem 1.5rem;
+  font-size: 1.125rem;
+}
+
+/* Modifiers */
+.fullWidth {
+  width: 100%;
+}
+
+.loading .content {
+  opacity: 0;
+}
+
+.spinner {
+  position: absolute;
+  width: 1.25rem;
+  height: 1.25rem;
+  animation: spin 1s linear infinite;
+}
+
+.spinnerCircle {
+  opacity: 0.25;
+}
+
+.spinnerPath {
+  opacity: 0.75;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
