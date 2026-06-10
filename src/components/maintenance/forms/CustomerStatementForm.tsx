@@ -31,6 +31,7 @@ export const CustomerStatementForm: React.FC<CustomerStatementFormProps> = ({ is
   useEffect(() => {
     if (isOpen) {
       const payloadCustomerId = modalPayload?.customerId || '';
+      // Intended: sync form state when an existing customer statement payload is loaded for edit/creation mode.
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setCustomerId(payloadCustomerId);
       

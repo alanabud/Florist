@@ -50,6 +50,7 @@ export const PaymentMaintenanceForm: React.FC<PaymentMaintenanceFormProps> = ({ 
   // Load modal payload
   useEffect(() => {
     if (isOpen) {
+      // Intended: reset form active tab to 'payment' when the modal is opened.
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveTab('payment');
       if (isEdit) {
@@ -83,6 +84,7 @@ export const PaymentMaintenanceForm: React.FC<PaymentMaintenanceFormProps> = ({ 
         o.glPostingStatus === 'posted' &&
         o.status !== 'draft' && o.status !== 'cancelled' && o.status !== 'refunded'
       );
+      // Intended: populate customer's open orders in list state when the customer ID is changed or loaded.
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setCustomerOpenOrders(customerOrders);
     } else {

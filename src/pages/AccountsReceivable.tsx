@@ -84,6 +84,7 @@ export const AccountsReceivable: React.FC = () => {
       };
       loadNotes();
     } else {
+      // Intended: clear collection notes state when no customer is selected.
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setCollectionNotes([]);
     }
