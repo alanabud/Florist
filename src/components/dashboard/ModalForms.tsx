@@ -19,6 +19,11 @@ import { DeliveryMaintenanceForm } from '../maintenance/forms/DeliveryMaintenanc
 import { AccountMaintenanceForm } from '../maintenance/forms/AccountMaintenanceForm';
 import { PaymentMaintenanceForm } from '../maintenance/forms/PaymentMaintenanceForm';
 import { CustomerStatementForm } from '../maintenance/forms/CustomerStatementForm';
+import { VendorMaintenanceForm } from '../maintenance/forms/VendorMaintenanceForm';
+import { PurchaseOrderForm } from '../maintenance/forms/PurchaseOrderForm';
+import { InventoryReceiptForm } from '../maintenance/forms/InventoryReceiptForm';
+import { VendorBillForm } from '../maintenance/forms/VendorBillForm';
+import { VendorPaymentForm } from '../maintenance/forms/VendorPaymentForm';
 
 // Helper functions to generate stable IDs outside the render lifecycle to satisfy ESLint purity rules
 const generateCustomProductId = () => `p-custom-${Date.now()}`;
@@ -43,6 +48,11 @@ export const ModalForms: React.FC<ModalFormsProps> = ({ activeModal, onClose }) 
       <AccountMaintenanceForm isOpen={activeModal === 'newAccount'} onClose={onClose} />
       <PaymentMaintenanceForm isOpen={activeModal === 'newPayment'} onClose={onClose} />
       <CustomerStatementForm isOpen={activeModal === 'newStatement'} onClose={onClose} />
+      <VendorMaintenanceForm isOpen={activeModal === 'newVendor'} onClose={onClose} />
+      <PurchaseOrderForm isOpen={activeModal === 'newPO'} onClose={onClose} />
+      <InventoryReceiptForm isOpen={activeModal === 'receivePO'} onClose={onClose} />
+      <VendorBillForm isOpen={activeModal === 'newVendorBill'} onClose={onClose} />
+      <VendorPaymentForm isOpen={activeModal === 'payVendor'} onClose={onClose} />
 
       {/* Special/Action-oriented Modals remaining in standard FormModal */}
       <CreateCustomBouquetModal isOpen={activeModal === 'customBouquet'} onClose={onClose} />

@@ -243,6 +243,76 @@ async function runTests() {
     return addDoc(collection(db, 'collectionNotes'), { noteText: 'Test Note' });
   });
 
+  // 19. Guest reads /vendors (Denied)
+  await assertFails('Guest reads vendors collection', () => {
+    return getDocs(collection(db, 'vendors'));
+  });
+
+  // 20. Guest writes /vendors (Denied)
+  await assertFails('Guest writes to vendors collection', () => {
+    return addDoc(collection(db, 'vendors'), { name: 'Unauthorized Vendor' });
+  });
+
+  // 21. Guest reads /purchaseOrders (Denied)
+  await assertFails('Guest reads purchaseOrders collection', () => {
+    return getDocs(collection(db, 'purchaseOrders'));
+  });
+
+  // 22. Guest writes /purchaseOrders (Denied)
+  await assertFails('Guest writes to purchaseOrders collection', () => {
+    return addDoc(collection(db, 'purchaseOrders'), { totalCost: 100 });
+  });
+
+  // 23. Guest reads /inventoryReceipts (Denied)
+  await assertFails('Guest reads inventoryReceipts collection', () => {
+    return getDocs(collection(db, 'inventoryReceipts'));
+  });
+
+  // 24. Guest writes /inventoryReceipts (Denied)
+  await assertFails('Guest writes to inventoryReceipts collection', () => {
+    return addDoc(collection(db, 'inventoryReceipts'), { receiptDate: '2026-06-10' });
+  });
+
+  // 25. Guest reads /vendorBills (Denied)
+  await assertFails('Guest reads vendorBills collection', () => {
+    return getDocs(collection(db, 'vendorBills'));
+  });
+
+  // 26. Guest writes /vendorBills (Denied)
+  await assertFails('Guest writes to vendorBills collection', () => {
+    return addDoc(collection(db, 'vendorBills'), { billNumber: '123' });
+  });
+
+  // 27. Guest reads /vendorPayments (Denied)
+  await assertFails('Guest reads vendorPayments collection', () => {
+    return getDocs(collection(db, 'vendorPayments'));
+  });
+
+  // 28. Guest writes /vendorPayments (Denied)
+  await assertFails('Guest writes to vendorPayments collection', () => {
+    return addDoc(collection(db, 'vendorPayments'), { amount: 100 });
+  });
+
+  // 29. Guest reads /inventoryTransactions (Denied)
+  await assertFails('Guest reads inventoryTransactions collection', () => {
+    return getDocs(collection(db, 'inventoryTransactions'));
+  });
+
+  // 30. Guest writes /inventoryTransactions (Denied)
+  await assertFails('Guest writes to inventoryTransactions collection', () => {
+    return addDoc(collection(db, 'inventoryTransactions'), { quantityIn: 5 });
+  });
+
+  // 31. Guest reads /sequences (Denied)
+  await assertFails('Guest reads sequences collection', () => {
+    return getDocs(collection(db, 'sequences'));
+  });
+
+  // 32. Guest writes /sequences (Denied)
+  await assertFails('Guest writes to sequences collection', () => {
+    return addDoc(collection(db, 'sequences'), { currentValue: 1 });
+  });
+
   console.log('----------------------------------------');
   if (failedTests > 0) {
     console.error(`❌ QA Test Run Failed: ${failedTests} test(s) failed.`);

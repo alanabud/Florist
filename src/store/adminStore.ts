@@ -345,6 +345,177 @@ export interface SubscriptionItem {
   auditTrail?: string[];
 }
 
+export interface Vendor {
+  id: string; // VND-10001
+  name: string;
+  contactName?: string;
+  email: string;
+  phone: string;
+  billingAddress: string;
+  paymentTerms: string;
+  taxId?: string;
+  active: boolean;
+  defaultGlAccount?: string;
+  defaultPaymentMethod?: 'check' | 'cash' | 'bank_transfer' | 'credit_card' | 'other';
+  notes?: string;
+  balance: number;
+  openBillsCount: number;
+  lastPaymentDate?: string;
+  agingBuckets?: {
+    current: number;
+    thirtyToSixty: number;
+    sixtyToNinety: number;
+    overNinety: number;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PurchaseOrderLine {
+  id?: string;
+  itemId: string;
+  sku: string;
+  description: string;
+  quantityOrdered: number;
+  quantityReceived: number;
+  quantityBilled: number;
+  unitCost: number;
+  lineTotal: number;
+}
+
+export interface PurchaseOrder {
+  id: string; // PO-20001
+  vendorId: string;
+  vendorName: string;
+  orderDate: string;
+  expectedDeliveryDate?: string;
+  location: string;
+  lines: PurchaseOrderLine[];
+  subtotal: number;
+  taxAmount: number;
+  freightAmount: number;
+  freightTreatment: 'capitalize' | 'expense';
+  discountAmount: number;
+  totalCost: number;
+  status: 'draft' | 'approved' | 'ordered' | 'partially_received' | 'received' | 'closed' | 'cancelled';
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  approvedAt?: string;
+  approvedBy?: string;
+}
+
+export interface InventoryReceiptLine {
+  itemId: string;
+  sku: string;
+  quantityReceived: number;
+  quantityDamaged: number;
+  quantityRejected: number;
+  quantityAccepted: number;
+  unitCost: number;
+}
+
+export interface InventoryReceipt {
+  id: string; // REC-50001
+  poId: string;
+  poNumber: string;
+  vendorId: string;
+  vendorName: string;
+  receiptDate: string;
+  lines: InventoryReceiptLine[];
+  freightAmount: number;
+  freightTreatment: 'capitalize' | 'expense';
+  notes?: string;
+  glPostingStatus: 'unposted' | 'posted';
+  journalEntryId?: string;
+  createdAt: string;
+  createdBy: string;
+}
+
+export interface VendorBillLine {
+  description: string;
+  quantity: number;
+  unitCost: number;
+  lineTotal: number;
+  glAccount?: string;
+  itemId?: string;
+  sku?: string;
+}
+
+export interface VendorBill {
+  id: string; // VBL-30001
+  vendorId: string;
+  vendorName: string;
+  billNumber: string;
+  billDate: string;
+  dueDate: string;
+  paymentTerms: string;
+  poId?: string;
+  poNumber?: string;
+  receiptId?: string;
+  receiptNumber?: string;
+  lines: VendorBillLine[];
+  subtotal: number;
+  taxAmount: number;
+  freightAmount: number;
+  discountAmount: number;
+  totalAmount: number;
+  balanceDue: number;
+  status: 'draft' | 'posted' | 'partially_paid' | 'paid' | 'voided';
+  glPostingStatus: 'unposted' | 'posted' | 'reversed';
+  journalEntryId?: string;
+  reversalJournalEntryId?: string;
+  matchStatus: 'unmatched' | 'matched' | 'variance' | 'blocked';
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+}
+
+export interface VendorPaymentAllocation {
+  billId: string;
+  billNumber: string;
+  originalBalance: number;
+  amountApplied: number;
+  remainingBalance: number;
+}
+
+export interface VendorPayment {
+  id: string; // VPM-40001
+  paymentNumber: string;
+  vendorId: string;
+  vendorName: string;
+  paymentDate: string;
+  paymentMethod: 'check' | 'cash' | 'bank_transfer' | 'credit_card' | 'other';
+  referenceNumber?: string;
+  amount: number;
+  unappliedAmount: number;
+  status: 'draft' | 'posted' | 'voided';
+  allocations: VendorPaymentAllocation[];
+  glPostingStatus: 'unposted' | 'posted' | 'reversed';
+  journalEntryId?: string;
+  reversalJournalEntryId?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt?: string;
+  createdBy: string;
+}
+
+export interface InventoryTransaction {
+  id: string;
+  type: 'purchase_receipt' | 'waste' | 'sale_fulfillment' | 'manual_adjustment';
+  itemId: string;
+  sku: string;
+  quantityIn: number;
+  quantityOut: number;
+  unitCost: number;
+  location: string;
+  sourceReference: string;
+  notes?: string;
+  createdAt: string;
+  createdBy: string;
+}
+
 export type AdminModal =
   | 'newOrder'
   | 'customBouquet'
@@ -361,6 +532,11 @@ export type AdminModal =
   | 'exportReport'
   | 'newPayment'
   | 'newStatement'
+  | 'newVendor'
+  | 'newPO'
+  | 'receivePO'
+  | 'newVendorBill'
+  | 'payVendor'
   | null;
 
 interface AdminState {
@@ -417,6 +593,36 @@ interface AdminState {
   statementsLoading: boolean;
   fetchCustomerStatements: () => Promise<void>;
   addCustomerStatement: (statement: any) => void;
+
+  // Sprint 1C additions
+  vendors: Vendor[];
+  vendorsLoading: boolean;
+  fetchVendors: () => Promise<void>;
+  addVendor: (vendor: Vendor) => void;
+  updateVendorDetails: (id: string, updates: Partial<Vendor>) => void;
+
+  purchaseOrders: PurchaseOrder[];
+  purchaseOrdersLoading: boolean;
+  fetchPurchaseOrders: () => Promise<void>;
+  addPurchaseOrder: (po: PurchaseOrder) => void;
+  updatePurchaseOrderDetails: (id: string, updates: Partial<PurchaseOrder>) => void;
+
+  inventoryReceipts: InventoryReceipt[];
+  inventoryReceiptsLoading: boolean;
+  fetchInventoryReceipts: () => Promise<void>;
+  addInventoryReceipt: (rec: InventoryReceipt) => void;
+
+  vendorBills: VendorBill[];
+  vendorBillsLoading: boolean;
+  fetchVendorBills: () => Promise<void>;
+  addVendorBill: (bill: VendorBill) => void;
+  updateVendorBillDetails: (id: string, updates: Partial<VendorBill>) => void;
+
+  vendorPayments: VendorPayment[];
+  vendorPaymentsLoading: boolean;
+  fetchVendorPayments: () => Promise<void>;
+  addVendorPayment: (payment: VendorPayment) => void;
+  updateVendorPaymentDetails: (id: string, updates: Partial<VendorPayment>) => void;
 }
 
 export const useAdminStore = create<AdminState>()(
@@ -436,6 +642,16 @@ export const useAdminStore = create<AdminState>()(
       paymentsLoading: false,
       statements: [],
       statementsLoading: false,
+      vendors: [],
+      vendorsLoading: false,
+      purchaseOrders: [],
+      purchaseOrdersLoading: false,
+      inventoryReceipts: [],
+      inventoryReceiptsLoading: false,
+      vendorBills: [],
+      vendorBillsLoading: false,
+      vendorPayments: [],
+      vendorPaymentsLoading: false,
 
       fetchOrders: async () => {
         // Prevent concurrent double fetches
@@ -811,6 +1027,93 @@ export const useAdminStore = create<AdminState>()(
       },
       addCustomerStatement: (statement: any) => set((state) => ({
         statements: [statement, ...state.statements]
+      })),
+
+      fetchVendors: async () => {
+        set({ vendorsLoading: true });
+        try {
+          const snap = await getDocs(query(collection(db, 'vendors'), orderBy('createdAt', 'desc')));
+          set({ vendors: snap.docs.map(d => ({ id: d.id, ...d.data() } as Vendor)) });
+        } catch (e) {
+          console.error("Failed to fetch vendors:", e);
+        } finally {
+          set({ vendorsLoading: false });
+        }
+      },
+      addVendor: (vendor: Vendor) => set((state) => ({
+        vendors: [vendor, ...state.vendors]
+      })),
+      updateVendorDetails: (id: string, updates: Partial<Vendor>) => set((state) => ({
+        vendors: state.vendors.map(v => v.id === id ? { ...v, ...updates } : v)
+      })),
+
+      fetchPurchaseOrders: async () => {
+        set({ purchaseOrdersLoading: true });
+        try {
+          const snap = await getDocs(query(collection(db, 'purchaseOrders'), orderBy('createdAt', 'desc')));
+          set({ purchaseOrders: snap.docs.map(d => ({ id: d.id, ...d.data() } as PurchaseOrder)) });
+        } catch (e) {
+          console.error("Failed to fetch purchase orders:", e);
+        } finally {
+          set({ purchaseOrdersLoading: false });
+        }
+      },
+      addPurchaseOrder: (po: PurchaseOrder) => set((state) => ({
+        purchaseOrders: [po, ...state.purchaseOrders]
+      })),
+      updatePurchaseOrderDetails: (id: string, updates: Partial<PurchaseOrder>) => set((state) => ({
+        purchaseOrders: state.purchaseOrders.map(p => p.id === id ? { ...p, ...updates } : p)
+      })),
+
+      fetchInventoryReceipts: async () => {
+        set({ inventoryReceiptsLoading: true });
+        try {
+          const snap = await getDocs(query(collection(db, 'inventoryReceipts'), orderBy('createdAt', 'desc')));
+          set({ inventoryReceipts: snap.docs.map(d => ({ id: d.id, ...d.data() } as InventoryReceipt)) });
+        } catch (e) {
+          console.error("Failed to fetch inventory receipts:", e);
+        } finally {
+          set({ inventoryReceiptsLoading: false });
+        }
+      },
+      addInventoryReceipt: (rec: InventoryReceipt) => set((state) => ({
+        inventoryReceipts: [rec, ...state.inventoryReceipts]
+      })),
+
+      fetchVendorBills: async () => {
+        set({ vendorBillsLoading: true });
+        try {
+          const snap = await getDocs(query(collection(db, 'vendorBills'), orderBy('createdAt', 'desc')));
+          set({ vendorBills: snap.docs.map(d => ({ id: d.id, ...d.data() } as VendorBill)) });
+        } catch (e) {
+          console.error("Failed to fetch vendor bills:", e);
+        } finally {
+          set({ vendorBillsLoading: false });
+        }
+      },
+      addVendorBill: (bill: VendorBill) => set((state) => ({
+        vendorBills: [bill, ...state.vendorBills]
+      })),
+      updateVendorBillDetails: (id: string, updates: Partial<VendorBill>) => set((state) => ({
+        vendorBills: state.vendorBills.map(b => b.id === id ? { ...b, ...updates } : b)
+      })),
+
+      fetchVendorPayments: async () => {
+        set({ vendorPaymentsLoading: true });
+        try {
+          const snap = await getDocs(query(collection(db, 'vendorPayments'), orderBy('createdAt', 'desc')));
+          set({ vendorPayments: snap.docs.map(d => ({ id: d.id, ...d.data() } as VendorPayment)) });
+        } catch (e) {
+          console.error("Failed to fetch vendor payments:", e);
+        } finally {
+          set({ vendorPaymentsLoading: false });
+        }
+      },
+      addVendorPayment: (payment: VendorPayment) => set((state) => ({
+        vendorPayments: [payment, ...state.vendorPayments]
+      })),
+      updateVendorPaymentDetails: (id: string, updates: Partial<VendorPayment>) => set((state) => ({
+        vendorPayments: state.vendorPayments.map(vp => vp.id === id ? { ...vp, ...updates } : vp)
       })),
     }),
     {

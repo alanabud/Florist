@@ -15,7 +15,11 @@ export type JournalSourceType =
   | 'refund'
   | 'tax_adjustment'
   | 'payment'
-  | 'payment_reversal';
+  | 'payment_reversal'
+  | 'purchase_receipt'
+  | 'vendor_bill'
+  | 'vendor_payment'
+  | 'vendor_payment_reversal';
 
 export interface JournalLine {
   account: string;

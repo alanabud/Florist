@@ -34,13 +34,25 @@ export interface AuditRecord {
     | 'CREATE_GL_ACCOUNT'
     | 'UPDATE_GL_ACCOUNT'
     | 'DEACTIVATE_GL_ACCOUNT'
-    | 'REACTIVATE_GL_ACCOUNT';
+    | 'REACTIVATE_GL_ACCOUNT'
+    | 'CREATE_PURCHASE_ORDER'
+    | 'UPDATE_PURCHASE_ORDER'
+    | 'APPROVE_PURCHASE_ORDER'
+    | 'CANCEL_PURCHASE_ORDER'
+    | 'RECEIVE_PURCHASE_ORDER'
+    | 'CREATE_VENDOR_BILL'
+    | 'POST_VENDOR_BILL'
+    | 'VOID_VENDOR_BILL'
+    | 'CREATE_VENDOR_PAYMENT'
+    | 'VOID_VENDOR_PAYMENT'
+    | 'CREATE_VENDOR'
+    | 'UPDATE_VENDOR';
 
-  entityType: 'inventory' | 'order' | 'product' | 'finance' | 'customer' | 'event' | 'subscription' | 'gl_account';
+  entityType: 'inventory' | 'order' | 'product' | 'finance' | 'customer' | 'event' | 'subscription' | 'gl_account' | 'purchase_order' | 'inventory_receipt' | 'vendor_bill' | 'vendor_payment' | 'vendor';
   entityId: string;
 
-  before: Record<string, unknown> | null;
-  after: Record<string, unknown> | null;
+  before: any | null;
+  after: any | null;
 
   journalEntryId?: string;
   createdAt?: unknown;

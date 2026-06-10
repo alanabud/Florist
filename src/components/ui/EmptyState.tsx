@@ -1,19 +1,21 @@
 import React from 'react';
 import { Button } from './Button';
-import { Inbox } from 'lucide-react';
+import { Inbox, type LucideIcon } from 'lucide-react';
 
 interface EmptyStateProps {
   title: string;
   description: string;
   actionLabel?: string;
   onAction?: () => void;
+  icon?: LucideIcon;
 }
 
 export const EmptyState: React.FC<EmptyStateProps> = ({
   title,
   description,
   actionLabel,
-  onAction
+  onAction,
+  icon: Icon = Inbox
 }) => {
   return (
     <div style={{
@@ -40,7 +42,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
         marginBottom: '1rem',
         color: 'var(--color-sage-dark)'
       }}>
-        <Inbox size={22} />
+        <Icon size={22} />
       </div>
       <h3 style={{
         fontFamily: 'var(--font-serif)',

@@ -304,6 +304,41 @@ service cloud.firestore {
     }
 
     // ──────────────────────────────────────────────
+    // SPRINT 1C PURCHASING & PAYABLES COLLECTIONS
+    // ──────────────────────────────────────────────
+    match /vendors/{vendorId} {
+      allow read, write: if isStaff();
+    }
+    match /purchaseOrders/{poId} {
+      allow read, write: if isStaff();
+    }
+    match /inventoryReceipts/{receiptId} {
+      allow read: if isStaff();
+      allow create: if isStaff();
+      allow update, delete: if false;
+    }
+    match /vendorBills/{billId} {
+      allow read: if isStaff();
+      allow create: if isStaff();
+      allow update: if isStaff();
+      allow delete: if false;
+    }
+    match /vendorPayments/{paymentId} {
+      allow read: if isStaff();
+      allow create: if isStaff();
+      allow update: if isStaff();
+      allow delete: if false;
+    }
+    match /inventoryTransactions/{txId} {
+      allow read: if isStaff();
+      allow create: if isStaff();
+      allow update, delete: if false;
+    }
+    match /sequences/{seqId} {
+      allow read, write: if isStaff();
+    }
+
+    // ──────────────────────────────────────────────
     // DEFAULT DENY
     // All paths not matched above are denied.
     // ──────────────────────────────────────────────

@@ -44,6 +44,7 @@ const navGroups = [
       { name: 'Inventory', to: '/admin/inventory', icon: Package },
       { name: 'Finance', to: '/admin/finance', icon: Landmark },
       { name: 'Receivables', to: '/admin/receivables', icon: FileText },
+      { name: 'Purchasing', to: '/admin/purchasing', icon: Truck },
       { name: 'Reports', to: '/admin/reports', icon: BarChart3 },
       { name: 'Operational QA', to: '/admin/qa', icon: ShieldCheck },
       { name: 'Settings', to: '/admin/settings', icon: Settings },
@@ -57,7 +58,12 @@ export const Sidebar: React.FC = () => {
   const filteredGroups = navGroups.map(group => {
     const items = group.items.filter(item => {
       if (role === 'staff') {
-        if (item.name === 'Finance' || item.name === 'Receivables' || item.name === 'QA Checks') {
+        if (
+          item.name === 'Finance' || 
+          item.name === 'Receivables' || 
+          item.name === 'Purchasing' || 
+          item.name === 'QA Checks'
+        ) {
           return false;
         }
       }
