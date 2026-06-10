@@ -10,6 +10,44 @@ import { calculateOrderTotals } from '../services/orderCalculationService';
 
 export type OrderStatus = 'draft' | 'confirmed' | 'scheduled' | 'in_design' | 'ready' | 'out_for_delivery' | 'delivered' | 'cancelled' | 'refunded';
 
+export type CollectionStatus =
+  | 'current'
+  | 'due_soon'
+  | 'past_due'
+  | 'promise_to_pay'
+  | 'disputed'
+  | 'on_hold'
+  | 'sent_to_collections'
+  | 'closed';
+
+export interface PaymentAllocation {
+  orderId: string;
+  orderNumber: string;
+  originalBalance: number;
+  amountApplied: number;
+  remainingBalance: number;
+}
+
+export interface PaymentRecord {
+  id: string;
+  paymentNumber: string;
+  customerId: string;
+  customerName: string;
+  paymentDate: string;
+  paymentMethod: 'cash' | 'check' | 'credit_card' | 'stripe' | 'bank_transfer' | 'other';
+  referenceNumber?: string;
+  amount: number;
+  unappliedAmount: number;
+  status: 'draft' | 'posted' | 'voided' | 'refunded';
+  allocations: PaymentAllocation[];
+  glPostingStatus: 'unposted' | 'posted' | 'reversed';
+  journalEntryId?: string;
+  reversalJournalEntryId?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface OrderLineItem {
   productId: string;
   sku: string;
@@ -202,6 +240,13 @@ export interface Customer {
   lastUpdated?: string;
   internalNotes?: string;
   auditTrail?: string[];
+  
+  // AR & credit fields
+  arBalance?: number;
+  lastPaymentDate?: string;
+  lastStatementDate?: string;
+  collectionStatus?: CollectionStatus;
+  creditBalance?: number;
 }
 
 export interface EventItem {
@@ -314,6 +359,8 @@ export type AdminModal =
   | 'contactVip'
   | 'adjustPrice'
   | 'exportReport'
+  | 'newPayment'
+  | 'newStatement'
   | null;
 
 interface AdminState {
@@ -359,6 +406,17 @@ interface AdminState {
   setActiveModal: (modal: AdminModal, payload?: Record<string, any>) => void;
   closeModal: () => void;
   toggleSubscriptionStatus: (id: string) => void;
+
+  payments: PaymentRecord[];
+  paymentsLoading: boolean;
+  fetchPayments: () => Promise<void>;
+  addPayment: (payment: PaymentRecord) => void;
+  updatePaymentDetails: (id: string, updates: Partial<PaymentRecord>) => void;
+
+  statements: any[];
+  statementsLoading: boolean;
+  fetchCustomerStatements: () => Promise<void>;
+  addCustomerStatement: (statement: any) => void;
 }
 
 export const useAdminStore = create<AdminState>()(
@@ -374,6 +432,10 @@ export const useAdminStore = create<AdminState>()(
       modalPayload: null,
       ordersLoading: false,
       ordersError: null,
+      payments: [],
+      paymentsLoading: false,
+      statements: [],
+      statementsLoading: false,
 
       fetchOrders: async () => {
         // Prevent concurrent double fetches
@@ -714,6 +776,41 @@ export const useAdminStore = create<AdminState>()(
 
       deleteEvent: (id) => set((state) => ({
         events: state.events.filter(e => e.id !== id)
+      })),
+
+      fetchPayments: async () => {
+        set({ paymentsLoading: true });
+        try {
+          const snap = await getDocs(query(collection(db, 'payments'), orderBy('createdAt', 'desc')));
+          const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as PaymentRecord));
+          set({ payments: list });
+        } catch (e) {
+          console.error("Failed to fetch payments:", e);
+        } finally {
+          set({ paymentsLoading: false });
+        }
+      },
+      addPayment: (payment: PaymentRecord) => set((state) => ({
+        payments: [payment, ...state.payments]
+      })),
+      updatePaymentDetails: (id: string, updates: Partial<PaymentRecord>) => set((state) => ({
+        payments: state.payments.map(p => p.id === id ? { ...p, ...updates } : p)
+      })),
+
+      fetchCustomerStatements: async () => {
+        set({ statementsLoading: true });
+        try {
+          const snap = await getDocs(query(collection(db, 'customerStatements'), orderBy('createdAt', 'desc')));
+          const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          set({ statements: list });
+        } catch (e) {
+          console.error("Failed to fetch customer statements:", e);
+        } finally {
+          set({ statementsLoading: false });
+        }
+      },
+      addCustomerStatement: (statement: any) => set((state) => ({
+        statements: [statement, ...state.statements]
       })),
     }),
     {

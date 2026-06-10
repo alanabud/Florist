@@ -20,18 +20,18 @@ export const Card: React.FC<CardProps> = ({ children, className = '', onClick, s
   );
 };
 
-export const CardHeader: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
-  <div className={`${styles.header} ${className}`}>{children}</div>
+export const CardHeader: React.FC<{ children: React.ReactNode; className?: string; style?: React.CSSProperties }> = ({ children, className = '', style }) => (
+  <div className={`${styles.header} ${className}`} style={style}>{children}</div>
 );
 
-export const CardTitle: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
-  <h3 className={`${styles.title} ${className}`}>{children}</h3>
+export const CardTitle: React.FC<{ children: React.ReactNode; className?: string; style?: React.CSSProperties }> = ({ children, className = '', style }) => (
+  <h3 className={`${styles.title} ${className}`} style={style}>{children}</h3>
 );
 
-export const CardContent: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
-  <div className={`${styles.content} ${className}`}>{children}</div>
+export const CardContent: React.FC<{ children: React.ReactNode; className?: string; style?: React.CSSProperties }> = ({ children, className = '', style }) => (
+  <div className={`${styles.content} ${className}`} style={style}>{children}</div>
 );
 
-export const CardFooter: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
-  <div className={`${styles.footer} ${className}`}>{children}</div>
+export const CardFooter: React.FC<{ children: React.ReactNode; className?: string; style?: React.CSSProperties }> = ({ children, className = '', style }) => (
+  <div className={`${styles.footer} ${className}`} style={style}>{children}</div>
 );

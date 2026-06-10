@@ -290,6 +290,20 @@ service cloud.firestore {
     }
 
     // ──────────────────────────────────────────────
+    // PAYMENTS, CUSTOMER STATEMENTS, COLLECTION NOTES
+    // Restricted to authenticated staff roles only. Guests are denied.
+    // ──────────────────────────────────────────────
+    match /payments/{paymentId} {
+      allow read, write: if isStaff();
+    }
+    match /customerStatements/{statementId} {
+      allow read, write: if isStaff();
+    }
+    match /collectionNotes/{noteId} {
+      allow read, write: if isStaff();
+    }
+
+    // ──────────────────────────────────────────────
     // DEFAULT DENY
     // All paths not matched above are denied.
     // ──────────────────────────────────────────────

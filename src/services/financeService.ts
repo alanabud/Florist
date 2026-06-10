@@ -13,7 +13,9 @@ export type JournalSourceType =
   | 'inventory_restock'
   | 'manual_journal'
   | 'refund'
-  | 'tax_adjustment';
+  | 'tax_adjustment'
+  | 'payment'
+  | 'payment_reversal';
 
 export interface JournalLine {
   account: string;

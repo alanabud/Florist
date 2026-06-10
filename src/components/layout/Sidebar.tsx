@@ -13,7 +13,8 @@ import {
   Flower2,
   Landmark,
   BarChart3,
-  ShieldCheck
+  ShieldCheck,
+  FileText
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import styles from './Sidebar.module.css';
@@ -42,6 +43,7 @@ const navGroups = [
     items: [
       { name: 'Inventory', to: '/admin/inventory', icon: Package },
       { name: 'Finance', to: '/admin/finance', icon: Landmark },
+      { name: 'Receivables', to: '/admin/receivables', icon: FileText },
       { name: 'Reports', to: '/admin/reports', icon: BarChart3 },
       { name: 'Operational QA', to: '/admin/qa', icon: ShieldCheck },
       { name: 'Settings', to: '/admin/settings', icon: Settings },
@@ -55,7 +57,7 @@ export const Sidebar: React.FC = () => {
   const filteredGroups = navGroups.map(group => {
     const items = group.items.filter(item => {
       if (role === 'staff') {
-        if (item.name === 'Finance' || item.name === 'QA Checks') {
+        if (item.name === 'Finance' || item.name === 'Receivables' || item.name === 'QA Checks') {
           return false;
         }
       }

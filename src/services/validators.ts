@@ -318,3 +318,86 @@ export function validateDelivery(delivery: any): ValidationResult {
     tabErrorCounts: computeTabErrorCounts(errors, fieldToTabMap),
   };
 }
+
+export function validatePayment(payment: any, orders?: any[]): ValidationResult {
+  const errors: Record<string, string> = {};
+
+  const fieldToTabMap: Record<string, string> = {
+    paymentNumber: 'payment',
+    customerId: 'payment',
+    paymentDate: 'payment',
+    amount: 'payment',
+    allocations: 'allocation',
+    paymentMethod: 'method',
+    referenceNumber: 'method',
+    notes: 'audit',
+  };
+
+  // 1. Payment amount must be greater than zero
+  const amount = parseFloat(payment.amount);
+  if (isNaN(amount) || amount <= 0) {
+    errors.amount = 'Payment amount must be greater than zero';
+  }
+
+  // Check required customer
+  if (!payment.customerId) {
+    errors.customerId = 'Customer is required';
+  }
+
+  if (!payment.paymentDate) {
+    errors.paymentDate = 'Payment date is required';
+  }
+
+  if (!payment.paymentMethod) {
+    errors.paymentMethod = 'Payment method is required';
+  }
+
+  // 2. Allocation total cannot exceed payment amount
+  const allocations = payment.allocations || [];
+  let allocationTotal = 0;
+  allocations.forEach((alloc: any, index: number) => {
+    const amt = parseFloat(alloc.amountApplied) || 0;
+    if (amt < 0) {
+      errors[`allocations.${index}.amountApplied`] = 'Applied amount cannot be negative';
+    }
+    allocationTotal += amt;
+  });
+
+  // Since allocation total can be less than payment amount (creating unapplied credit), it cannot EXCEED the payment amount
+  if (amount > 0 && allocationTotal > amount + 0.01) {
+    errors.allocations = `Total allocated amount ($${allocationTotal.toFixed(2)}) cannot exceed payment amount ($${amount.toFixed(2)})`;
+  }
+
+  // Validate allocations against orders if order DB is provided
+  if (orders && orders.length > 0) {
+    allocations.forEach((alloc: any, index: number) => {
+      const matchedOrder = orders.find(o => o.id === alloc.orderId);
+      if (!matchedOrder) {
+        errors[`allocations.${index}.orderId`] = `Order not found in the system`;
+        return;
+      }
+
+      // Check customer match: Allocated orders must belong to the same customer
+      if (matchedOrder.customerId !== payment.customerId) {
+        errors[`allocations.${index}.customerId`] = `Allocated order ${matchedOrder.orderNumber || matchedOrder.id} does not belong to the selected customer`;
+      }
+
+      // Posted order requirement: Allocation should only apply to posted/delivered AR orders
+      if (matchedOrder.glPostingStatus !== 'posted') {
+        errors[`allocations.${index}.glPostingStatus`] = `Allocation can only apply to posted AR orders. Order ${matchedOrder.orderNumber || matchedOrder.id} is unposted.`;
+      }
+
+      // Order allocation cannot exceed current balanceDue
+      const balanceDue = matchedOrder.balanceDue !== undefined ? matchedOrder.balanceDue : (matchedOrder.total - (matchedOrder.amountPaid || 0));
+      const amtApplied = parseFloat(alloc.amountApplied) || 0;
+      if (amtApplied > balanceDue + 0.01) { // small tolerance for float issues
+        errors[`allocations.${index}.amountApplied`] = `Applied amount ($${amtApplied.toFixed(2)}) cannot exceed current balance due ($${balanceDue.toFixed(2)})`;
+      }
+    });
+  }
+
+  return {
+    errors,
+    tabErrorCounts: computeTabErrorCounts(errors, fieldToTabMap),
+  };
+}

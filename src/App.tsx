@@ -24,6 +24,7 @@ import { Subscriptions } from './pages/Subscriptions';
 import { Settings } from './pages/Settings';
 import { Reports } from './pages/Reports';
 import { QA } from './pages/QA';
+import { AccountsReceivable } from './pages/AccountsReceivable';
 import { ToastContainer } from './components/ui/Toast';
 
 // Placeholder pages for about/contact
@@ -70,6 +71,7 @@ function App() {
             <Route path="events" element={<Events />} />
             <Route path="subscriptions" element={<Subscriptions />} />
             <Route path="finance" element={<FinanceAdmin />} />
+            <Route path="receivables" element={<AccountsReceivable />} />
             <Route path="reports" element={<Reports />} />
             <Route path="qa" element={<QA />} />
             <Route path="settings" element={<Settings />} />

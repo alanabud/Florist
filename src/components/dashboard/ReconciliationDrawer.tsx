@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import type { Order } from '../../store/adminStore';
 import type { JournalEntry } from '../../services/financeService';
 import { useFinanceStore } from '../../store/financeStore';
+import { useAdminStore } from '../../store/adminStore';
 import styles from './ReconciliationDrawer.module.css';
 
 interface ReconciliationDrawerProps {
@@ -160,6 +161,10 @@ export const ReconciliationDrawer: React.FC<ReconciliationDrawerProps> = ({
     ['confirmed', 'scheduled', 'in_design', 'ready', 'out_for_delivery'].includes(o.status) && (o.balanceDue !== undefined ? o.balanceDue > 0 : o.total > 0)
   );
   const arAssetTotal = arOrders.reduce((sum, o) => sum + (o.balanceDue !== undefined ? o.balanceDue : o.total), 0);
+
+  const customers = useAdminStore((s) => s.customers);
+  const customerCreditsTotal = customers.reduce((sum, c) => sum + (c.creditBalance || 0), 0);
+  const netReceivables = arAssetTotal - customerCreditsTotal;
 
   // Tax Liabilities
   const taxOrders = orders.filter((o) => !['draft', 'cancelled', 'refunded'].includes(o.status));
@@ -427,11 +432,21 @@ export const ReconciliationDrawer: React.FC<ReconciliationDrawerProps> = ({
               <div className={styles.formulaCard}>
                 <div className={styles.formulaTitle}>Formula Derivation</div>
                 <div className={styles.formulaMath}>
-                  Sum of Balances for Confirmed, Scheduled, In Design, Ready, and Out for Delivery Orders
+                  AR Invoices (${arAssetTotal.toFixed(2)}) - Customer Credits (${customerCreditsTotal.toFixed(2)})
                 </div>
-                <div className={styles.formulaSummary}>
-                  <span className={styles.summaryLabel}>Total Accounts Receivable</span>
-                  <span className={styles.summaryValue}>${arAssetTotal.toFixed(2)}</span>
+                <div className={styles.formulaSummary} style={{ flexDirection: 'column', gap: '0.5rem', alignItems: 'stretch' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem' }}>
+                    <span style={{ color: '#8a8f8c' }}>Total Accounts Receivable:</span>
+                    <span style={{ fontWeight: 600 }}>${arAssetTotal.toFixed(2)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem' }}>
+                    <span style={{ color: '#8a8f8c' }}>Available Customer Credits:</span>
+                    <span style={{ fontWeight: 600 }}>${customerCreditsTotal.toFixed(2)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #E8EAE6', paddingTop: '0.5rem', marginTop: '0.25rem', fontSize: '1.125rem', fontWeight: 700 }}>
+                    <span className={styles.summaryLabel} style={{ padding: 0 }}>Net Receivables Due:</span>
+                    <span className={styles.summaryValue} style={{ fontSize: '1.125rem' }}>${netReceivables.toFixed(2)}</span>
+                  </div>
                 </div>
               </div>
 

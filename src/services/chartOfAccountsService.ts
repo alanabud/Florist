@@ -82,6 +82,21 @@ export async function fetchChartOfAccounts(): Promise<AccountDefinition[]> {
             console.warn(`Failed to auto-update system account ${defaultAcct.code} in COA:`, e);
           }
         }
+      } else {
+        // Missing system account (like 2200) - auto-seed it
+        try {
+          const docRef = await addDoc(collection(db, COA_COLLECTION), {
+            ...defaultAcct,
+            createdBy: 'system-sync',
+            createdAt: serverTimestamp(),
+            lastModifiedBy: 'system-sync',
+            lastModifiedAt: serverTimestamp(),
+            journalUsageCount: 0,
+          });
+          dbAccounts.push({ ...defaultAcct, id: docRef.id });
+        } catch (e) {
+          console.warn(`Failed to auto-create missing system account ${defaultAcct.code} in COA:`, e);
+        }
       }
     }
   }

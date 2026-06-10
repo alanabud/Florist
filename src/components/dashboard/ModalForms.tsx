@@ -17,6 +17,8 @@ import { SubscriptionMaintenanceForm } from '../maintenance/forms/SubscriptionMa
 import { EventMaintenanceForm } from '../maintenance/forms/EventMaintenanceForm';
 import { DeliveryMaintenanceForm } from '../maintenance/forms/DeliveryMaintenanceForm';
 import { AccountMaintenanceForm } from '../maintenance/forms/AccountMaintenanceForm';
+import { PaymentMaintenanceForm } from '../maintenance/forms/PaymentMaintenanceForm';
+import { CustomerStatementForm } from '../maintenance/forms/CustomerStatementForm';
 
 // Helper functions to generate stable IDs outside the render lifecycle to satisfy ESLint purity rules
 const generateCustomProductId = () => `p-custom-${Date.now()}`;
@@ -39,6 +41,8 @@ export const ModalForms: React.FC<ModalFormsProps> = ({ activeModal, onClose }) 
       <EventMaintenanceForm isOpen={activeModal === 'newEvent'} onClose={onClose} />
       <DeliveryMaintenanceForm isOpen={activeModal === 'newDelivery'} onClose={onClose} />
       <AccountMaintenanceForm isOpen={activeModal === 'newAccount'} onClose={onClose} />
+      <PaymentMaintenanceForm isOpen={activeModal === 'newPayment'} onClose={onClose} />
+      <CustomerStatementForm isOpen={activeModal === 'newStatement'} onClose={onClose} />
 
       {/* Special/Action-oriented Modals remaining in standard FormModal */}
       <CreateCustomBouquetModal isOpen={activeModal === 'customBouquet'} onClose={onClose} />

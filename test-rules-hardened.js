@@ -213,6 +213,36 @@ async function runTests() {
     return getDoc(doc(db, 'systemSeeds', 'ordersDemoSeed'));
   });
 
+  // 13. Guest reads /payments (Denied)
+  await assertFails('Guest reads payments collection', () => {
+    return getDocs(collection(db, 'payments'));
+  });
+
+  // 14. Guest writes /payments (Denied)
+  await assertFails('Guest writes to payments collection', () => {
+    return addDoc(collection(db, 'payments'), { amount: 100 });
+  });
+
+  // 15. Guest reads /customerStatements (Denied)
+  await assertFails('Guest reads customerStatements collection', () => {
+    return getDocs(collection(db, 'customerStatements'));
+  });
+
+  // 16. Guest writes /customerStatements (Denied)
+  await assertFails('Guest writes to customerStatements collection', () => {
+    return addDoc(collection(db, 'customerStatements'), { customerName: 'Test' });
+  });
+
+  // 17. Guest reads /collectionNotes (Denied)
+  await assertFails('Guest reads collectionNotes collection', () => {
+    return getDocs(collection(db, 'collectionNotes'));
+  });
+
+  // 18. Guest writes /collectionNotes (Denied)
+  await assertFails('Guest writes to collectionNotes collection', () => {
+    return addDoc(collection(db, 'collectionNotes'), { noteText: 'Test Note' });
+  });
+
   console.log('----------------------------------------');
   if (failedTests > 0) {
     console.error(`❌ QA Test Run Failed: ${failedTests} test(s) failed.`);
