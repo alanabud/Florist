@@ -32,7 +32,7 @@ export const CartDrawer: React.FC = () => {
             <div className={styles.itemList}>
               {items.map((item) => (
                 <div key={item.id} className={styles.cartItem}>
-                    <img src={item.imageUrl} alt={item.name} className={styles.itemImg} />
+                    <img src={item.imageUrl} alt={item.name} className={styles.itemImage} />
                   <div className={styles.itemDetails}>
                     <div className={styles.itemHeader}>
                       <h4 className={styles.itemName}>

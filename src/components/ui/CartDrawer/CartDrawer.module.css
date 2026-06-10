@@ -47,6 +47,7 @@
   height: 80px;
   background-color: var(--color-sage-light);
   border-radius: var(--radius-md);
+  object-fit: cover;
   display: flex;
   align-items: center;
   justify-content: center;
