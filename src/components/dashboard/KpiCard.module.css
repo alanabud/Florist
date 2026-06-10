@@ -1,0 +1,120 @@
+.card {
+  background: #FFFFFF;
+  border: 1px solid #E8EAE6;
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: all 250ms ease;
+  box-shadow: 0 1px 3px rgba(42, 49, 39, 0.03);
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.clickable:hover {
+  border-color: #D8E2D4;
+  box-shadow: 0 6px 16px rgba(42, 49, 39, 0.06);
+  transform: translateY(-2px);
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.iconWrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.accent-sage {
+  background: linear-gradient(135deg, #E8EDE6 0%, #D8E2D4 100%);
+  color: #3C5A42;
+}
+
+.accent-blush {
+  background: linear-gradient(135deg, #FDF5F5 0%, #F5D3D3 100%);
+  color: #B05A5A;
+}
+
+.accent-champagne {
+  background: linear-gradient(135deg, #F5F1E7 0%, #EBE5D9 100%);
+  color: #8B7340;
+}
+
+.accent-warning {
+  background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+  color: #92400E;
+}
+
+.accent-info {
+  background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%);
+  color: #1E40AF;
+}
+
+.accent-success {
+  background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%);
+  color: #065F46;
+}
+
+.trend {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+}
+
+.trend-up {
+  background: #D1FAE5;
+  color: #065F46;
+}
+
+.trend-down {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+
+.trend-neutral {
+  background: #FEF3C7;
+  color: #92400E;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.title {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.subtitle {
+  font-size: 0.75rem;
+  color: var(--color-text-light);
+  line-height: 1.4;
+}

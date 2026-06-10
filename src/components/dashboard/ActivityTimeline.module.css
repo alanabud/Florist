@@ -1,0 +1,86 @@
+.panel {
+  background: #FFFFFF;
+  border: 1px solid #E8EAE6;
+  border-radius: 14px;
+  padding: 1.5rem;
+}
+
+.panelTitle {
+  font-family: var(--font-serif);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-text-main);
+  margin-bottom: 1.25rem;
+}
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+}
+
+.timelineItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  min-height: 52px;
+}
+
+.lineContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 4px;
+  flex-shrink: 0;
+  width: 16px;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 3px #FFFFFF, 0 0 0 4px #E8EAE6;
+}
+
+.line {
+  width: 1px;
+  flex: 1;
+  min-height: 28px;
+  background: #E8EAE6;
+}
+
+.content {
+  flex: 1;
+  padding-bottom: 1rem;
+}
+
+.label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-main);
+  line-height: 1.3;
+}
+
+.detail {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin-top: 0.125rem;
+}
+
+.timeCol {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
+.time {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.date {
+  font-size: 0.6875rem;
+  color: var(--color-text-light);
+}

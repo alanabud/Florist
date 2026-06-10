@@ -1,31 +1,35 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
 
 :root {
-  /* Luxury Florist Color Palette */
-  --color-white: #ffffff;
-  --color-ivory: #faf6f0;
-  --color-cream: #fdfbf7;
-  --color-champagne: #f1e5d1;
+  /* Premium Florist Color Palette */
+  --color-ivory: #FDFBF7;
+  --color-cream: #F5F1E7;
+  --color-champagne: #EBE5D9;
   
-  --color-soft-blush: #fdf5f5;
-  --color-blush: #f4e3e3;
-  --color-muted-rose: #dfc4c4;
+  --color-sage-light: #E8EDE6;
+  --color-sage: #B4C5B6;
+  --color-sage-dark: #6C8271;
   
-  --color-sage-light: #eef2ec;
-  --color-sage: #d8e2d4;
-  --color-sage-dark: #8c9e82;
-  --color-forest: #3c4a35;
+  --color-blush-light: #FDF5F5;
+  --color-blush: #F5D3D3;
+  --color-blush-dark: #D49A9A;
+
+  --color-white: #FFFFFF;
+  --color-bg: #FDFBF7;
   
-  --color-text-main: #2a3127;
-  --color-text-muted: #6b7268;
+  /* Text Colors */
+  --color-text-main: #2C302E; /* Deep Charcoal */
+  --color-text-muted: #6B7280; /* Soft Gray */
   --color-text-light: #a3aaa0;
   
   --color-border: #e8eae6;
   --color-border-hover: #d2d5ce;
   
-  --color-error: #e57373;
-  --color-success: #8c9e82;
-  --color-warning: #eab308;
+  /* UI Feedback */
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-error: #EF4444;
+  --color-info: #3B82F6;
 
   /* Typography */
   --font-sans: 'Inter', sans-serif;

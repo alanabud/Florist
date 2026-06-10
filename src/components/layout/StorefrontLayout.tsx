@@ -21,19 +21,21 @@ export const StorefrontLayout: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Close mobile menu on route change
-  useEffect(() => {
+  const [prevPath, setPrevPath] = useState(location.pathname);
+  if (location.pathname !== prevPath) {
+    setPrevPath(location.pathname);
     setIsMobileMenuOpen(false);
-  }, [location]);
+  }
 
   const isActive = (path: string) => location.pathname === path;
 
-  const NavLinks = () => (
+  const renderNavLinks = () => (
     <>
       <Link to="/" className={`${styles.navLink} ${isActive('/') ? styles.active : ''}`}>Home</Link>
-      <Link to="/shop" className={`${styles.navLink} ${isActive('/shop') ? styles.active : ''}`}>Shop</Link>
+      <Link to="/shop" className={`${styles.navLink} ${isActive('/shop') ? styles.active : ''}`}>Shop Flowers</Link>
       <Link to="/occasions" className={`${styles.navLink} ${isActive('/occasions') ? styles.active : ''}`}>Occasions</Link>
-      <Link to="/custom" className={`${styles.navLink} ${isActive('/custom') ? styles.active : ''}`}>Custom Bouquet</Link>
+      <Link to="/contact" className={`${styles.navLink} ${isActive('/contact') ? styles.active : ''}`}>Weddings & Events</Link>
+      <Link to="/track-order" className={`${styles.navLink} ${isActive('/track-order') ? styles.active : ''}`}>Track Order</Link>
     </>
   );
 
@@ -53,13 +55,13 @@ export const StorefrontLayout: React.FC = () => {
           
           <Link to="/" className={styles.logo}>
             <span className={styles.logoIcon}>❁</span>
-            BloomPro Studio
+            BloomPro Florals
           </Link>
-
+ 
           <nav className={styles.desktopNav}>
-            <NavLinks />
+            {renderNavLinks()}
           </nav>
-
+ 
           <div className={styles.actions}>
             <button 
               className={styles.cartBtn} 
@@ -73,15 +75,15 @@ export const StorefrontLayout: React.FC = () => {
             </button>
             <button 
               className={styles.loginBtn}
-              onClick={() => navigate('/login')}
+              onClick={() => navigate('/admin/login')}
             >
               <User size={18} />
-              <span>Sign In</span>
+              <span>Staff Login</span>
             </button>
           </div>
         </div>
       </header>
-
+ 
       {/* Mobile Menu Drawer */}
       <Drawer 
         isOpen={isMobileMenuOpen} 
@@ -92,33 +94,33 @@ export const StorefrontLayout: React.FC = () => {
         <div className={styles.mobileMenu}>
           <div className={styles.mobileLogo}>
             <span className={styles.logoIcon}>❁</span>
-            BloomPro Studio
+            BloomPro Florals
           </div>
           <nav className={styles.mobileNav}>
-            <NavLinks />
+            {renderNavLinks()}
           </nav>
           <div className={styles.mobileMenuFooter}>
             <button 
               className={styles.mobileLoginBtn}
-              onClick={() => navigate('/login')}
+              onClick={() => navigate('/admin/login')}
             >
               <User size={18} />
-              Sign In
+              Staff Login
             </button>
           </div>
         </div>
       </Drawer>
-
+ 
       <CartDrawer />
-
+ 
       <main className={styles.main}>
         <Outlet />
       </main>
-
+ 
       <footer className={styles.footer}>
         <div className={styles.footerContainer}>
           <div className={styles.footerBrand}>
-            <h3><span className={styles.logoIcon}>❁</span> BloomPro Studio</h3>
+            <h3><span className={styles.logoIcon}>❁</span> BloomPro Florals</h3>
             <p>Premium, handcrafted floral arrangements delivered with care.</p>
           </div>
           <div className={styles.footerLinks}>
@@ -132,18 +134,18 @@ export const StorefrontLayout: React.FC = () => {
               <h4>Company</h4>
               <Link to="/about">About Us</Link>
               <Link to="/contact">Contact</Link>
-              <Link to="/about">FAQ</Link>
+              <Link to="/track-order">Track Order</Link>
             </div>
             <div>
-              <h4>Legal</h4>
+              <h4>Operations</h4>
+              <Link to="/admin/login" style={{ fontWeight: 600, color: 'var(--color-sage-dark)' }}>Staff Login</Link>
               <Link to="/about">Terms of Service</Link>
               <Link to="/about">Privacy Policy</Link>
-              <Link to="/about">Delivery Policy</Link>
             </div>
           </div>
         </div>
         <div className={styles.footerBottom}>
-          <p>&copy; {new Date().getFullYear()} BloomPro Studio. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} BloomPro Florals. All rights reserved.</p>
         </div>
       </footer>
     </div>

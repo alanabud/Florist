@@ -1,0 +1,220 @@
+.card {
+  background: #FFFDFB; /* Soft warm porcelain/ivory background */
+  border: 1px solid #ECE7E1; /* Warm, delicate champagne border */
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  position: relative;
+  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 20px rgba(139, 115, 64, 0.03), 0 1px 2px rgba(0, 0, 0, 0.02);
+  overflow: hidden;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.clickable:hover {
+  transform: translateY(-3px);
+  border-color: #D6CBB7;
+  box-shadow: 0 10px 24px rgba(139, 115, 64, 0.06), 0 2px 4px rgba(0, 0, 0, 0.02);
+  background: #FFFFFF;
+}
+
+/* Accessible focus ring */
+.clickable:focus-visible {
+  outline: 2px solid #6C8271;
+  outline-offset: 2px;
+}
+
+/* Left alert rail for low stock or critical warning cards */
+.warningCard {
+  border-left: 4px solid #B05A5A !important;
+  border-color: #F5D3D3;
+  background: #FFFDFD;
+  box-shadow: 0 4px 20px rgba(176, 90, 90, 0.03);
+}
+
+.warningCard.clickable:hover {
+  border-color: #E6B2B2;
+  box-shadow: 0 10px 24px rgba(176, 90, 90, 0.06);
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.iconWrap {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 -2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.warningIconWrap {
+  background: linear-gradient(135deg, #FDF5F5 0%, #F5D3D3 100%);
+  color: #B05A5A;
+}
+
+.accent-sage {
+  background: linear-gradient(135deg, #F4F6F3 0%, #E8EDE6 100%);
+  color: #3C5A42;
+  border: 1px solid #E2E8DF;
+}
+
+.accent-blush {
+  background: linear-gradient(135deg, #FDF8F7 0%, #F7ECEB 100%);
+  color: #B27C76;
+  border: 1px solid #F0E2E0;
+}
+
+.accent-champagne {
+  background: linear-gradient(135deg, #FAF7F2 0%, #F3ECDF 100%);
+  color: #8B7340;
+  border: 1px solid #EDE3D0;
+}
+
+.accent-warning {
+  background: linear-gradient(135deg, #FFFDF5 0%, #FEF3C7 100%);
+  color: #B45309;
+  border: 1px solid #FBEAAB;
+}
+
+.accent-info {
+  background: linear-gradient(135deg, #F7FAFC 0%, #EBF4FA 100%);
+  color: #2B6CB0;
+  border: 1px solid #E1EAF2;
+}
+
+.accent-success {
+  background: linear-gradient(135deg, #F3FAF7 0%, #D1FAE5 100%);
+  color: #047857;
+  border: 1px solid #C2F3D9;
+}
+
+.rightBadgeRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sparkline {
+  margin-right: 0.25rem;
+  opacity: 0.9;
+}
+
+.badge {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.1875rem 0.5rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.badgeInfo {
+  background-color: #F2EFE9;
+  color: #7A7265;
+}
+
+.badgeAlert {
+  background-color: #FDF2F2;
+  color: #C81E1E;
+}
+
+.trend {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.1875rem 0.5rem;
+  border-radius: 999px;
+}
+
+.trend-up {
+  background: #EBFDF5;
+  color: #047857;
+}
+
+.trend-down {
+  background: #FFF5F5;
+  color: #C81E1E;
+}
+
+.trend-neutral {
+  background: #FFFDF0;
+  color: #B45309;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #726E64; /* Sophisticated dusty taupe */
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin: 0;
+  font-family: var(--font-sans);
+}
+
+.valueRow {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.value {
+  font-size: 2.125rem;
+  font-weight: 600;
+  color: #24221E; /* Charcoal dark text */
+  letter-spacing: -0.02em;
+  font-family: var(--font-serif);
+  line-height: 1.1;
+}
+
+.progressSection {
+  margin-top: 0.25rem;
+}
+
+.progressTrack {
+  height: 6px;
+  background: #F4F1EC;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progressBar {
+  height: 100%;
+  background: linear-gradient(90deg, #8DA491 0%, #6C8271 100%);
+  border-radius: 3px;
+  transition: width 800ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.footer {
+  margin-top: auto;
+  border-top: 1px solid #F5F2EE;
+  padding-top: 0.625rem;
+}
+
+.subtitle {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #8C877D; /* Soft contrast text */
+  line-height: 1.4;
+  font-family: var(--font-sans);
+}

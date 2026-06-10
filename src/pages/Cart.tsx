@@ -1,0 +1,135 @@
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useCartStore } from '../store/cartStore';
+import { Button } from '../components/ui/Button';
+import { Card } from '../components/ui/Card';
+import { Trash2, Plus, Minus, ArrowLeft, ShoppingBag } from 'lucide-react';
+import styles from './Cart.module.css';
+
+export const Cart: React.FC = () => {
+  const navigate = useNavigate();
+  const { items, updateQuantity, removeItem, getSubtotal } = useCartStore();
+
+  const handleQuantityChange = (id: string, currentQty: number, delta: number) => {
+    const newQty = currentQty + delta;
+    if (newQty > 0) {
+      updateQuantity(id, newQty);
+    }
+  };
+
+  const subtotal = getSubtotal();
+  const deliveryEstimate = 9.99;
+  const taxEstimate = subtotal * 0.08875; // 8.875% NYC tax estimate for summary
+  const estimatedTotal = subtotal + deliveryEstimate + taxEstimate;
+
+  if (items.length === 0) {
+    return (
+      <div className={styles.emptyCart}>
+        <div className={styles.emptyIcon}>
+          <ShoppingBag size={48} />
+        </div>
+        <h2>Your flower cart is empty</h2>
+        <p>Explore our seasonal curations and artisan arrangements to say it beautifully.</p>
+        <Button onClick={() => navigate('/shop')} style={{ background: 'linear-gradient(135deg, #4A6B50, #6C8271)', border: 'none' }}>
+          Browse Shop
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.cartPage}>
+      <div className={styles.container}>
+        <div className={styles.header}>
+          <button className={styles.backBtn} onClick={() => navigate('/shop')}>
+            <ArrowLeft size={16} /> Continue Shopping
+          </button>
+          <h1 className={styles.title}>Your Shopping Cart</h1>
+        </div>
+
+        <div className={styles.cartGrid}>
+          <div className={styles.itemsSection}>
+            {items.map((item) => (
+              <Card key={item.id} className={styles.itemCard}>
+                <div className={styles.itemFlex}>
+                  <img src={item.imageUrl} alt={item.name} className={styles.itemImage} />
+                  <div className={styles.itemDetails}>
+                    <div className={styles.itemMeta}>
+                      <h3 className={styles.itemName}>{item.name}</h3>
+                      {item.isCustom && <span className={styles.customBadge}>Custom Bouquet</span>}
+                    </div>
+                    <div className={styles.itemPricing}>
+                      <span className={styles.unitPrice}>${item.price.toFixed(2)} each</span>
+                      <span className={styles.lineTotal}>${(item.price * item.quantity).toFixed(2)}</span>
+                    </div>
+                    
+                    <div className={styles.itemActions}>
+                      <div className={styles.quantitySelector}>
+                        <button 
+                          className={styles.qtyBtn} 
+                          onClick={() => handleQuantityChange(item.id, item.quantity, -1)}
+                          disabled={item.quantity <= 1}
+                        >
+                          <Minus size={14} />
+                        </button>
+                        <span className={styles.qtyVal}>{item.quantity}</span>
+                        <button 
+                          className={styles.qtyBtn} 
+                          onClick={() => handleQuantityChange(item.id, item.quantity, 1)}
+                        >
+                          <Plus size={14} />
+                        </button>
+                      </div>
+
+                      <button className={styles.removeBtn} onClick={() => removeItem(item.id)}>
+                        <Trash2 size={16} /> Remove
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          <aside className={styles.summarySection}>
+            <Card className={styles.summaryCard}>
+              <h2>Order Summary</h2>
+              
+              <div className={styles.summaryRows}>
+                <div className={styles.summaryRow}>
+                  <span>Subtotal</span>
+                  <span>${subtotal.toFixed(2)}</span>
+                </div>
+                <div className={styles.summaryRow}>
+                  <span>Standard Delivery (Est.)</span>
+                  <span>${deliveryEstimate.toFixed(2)}</span>
+                </div>
+                <div className={styles.summaryRow}>
+                  <span>Sales Tax (Est.)</span>
+                  <span>${taxEstimate.toFixed(2)}</span>
+                </div>
+                <div className={`${styles.summaryRow} ${styles.totalRow}`}>
+                  <span>Estimated Total</span>
+                  <span>${estimatedTotal.toFixed(2)}</span>
+                </div>
+              </div>
+
+              <div className={styles.checkoutNotice}>
+                <p>❀ Free card message and signature packaging included on checkout.</p>
+              </div>
+
+              <Button 
+                fullWidth 
+                size="lg" 
+                onClick={() => navigate('/checkout')}
+                style={{ background: 'linear-gradient(135deg, #4A6B50, #6C8271)', border: 'none', color: '#FFF', padding: '0.85rem' }}
+              >
+                Proceed to Guest Checkout
+              </Button>
+            </Card>
+          </aside>
+        </div>
+      </div>
+    </div>
+  );
+};

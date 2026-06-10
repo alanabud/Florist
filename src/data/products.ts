@@ -16,9 +16,43 @@ export interface Product {
   imageUrl: string;
   isBestSeller: boolean;
   isSameDay: boolean;
+  isTaxable: boolean;
   rating: number;
   inStock: boolean;
   tags: string[];
+  // Expanded fields
+  sku?: string;
+  shortDescription?: string;
+  productStatus?: string;
+  featuredProduct?: boolean;
+  seasonalProduct?: boolean;
+  basePrice?: number;
+  salePrice?: number;
+  cost?: number;
+  marginPercent?: number;
+  taxCategory?: string;
+  deliveryEligible?: boolean;
+  subscriptionEligible?: boolean;
+  stockQuantity?: number;
+  reorderPoint?: number;
+  preferredSupplier?: string;
+  leadTimeDays?: number;
+  unitOfMeasure?: string;
+  storageLocation?: string;
+  shelfLifeDays?: number;
+  substitutionProduct?: string;
+  mainImage?: string;
+  galleryUrls?: string[];
+  storefrontVisibility?: boolean;
+  seoTitle?: string;
+  seoDescription?: string;
+  productBadge?: string;
+  displayOrder?: number;
+  createdBy?: string;
+  createdDate?: string;
+  lastUpdated?: string;
+  internalNotes?: string;
+  auditTrail?: string[];
 }
 
 export const OCCASIONS: Occasion[] = [
@@ -40,6 +74,7 @@ export const PRODUCTS: Product[] = [
     imageUrl: 'https://images.unsplash.com/photo-1563241527-3004b7be0ffd?q=80&w=800&auto=format&fit=crop',
     isBestSeller: true,
     isSameDay: true,
+    isTaxable: true,
     rating: 4.9,
     inStock: true,
     tags: ['roses', 'premium', 'romantic']
@@ -55,6 +90,7 @@ export const PRODUCTS: Product[] = [
     imageUrl: 'https://images.unsplash.com/photo-1562690868-60bbe7293e94?q=80&w=800&auto=format&fit=crop',
     isBestSeller: true,
     isSameDay: false,
+    isTaxable: true,
     rating: 5.0,
     inStock: true,
     tags: ['peonies', 'luxury', 'spring']
@@ -70,6 +106,7 @@ export const PRODUCTS: Product[] = [
     imageUrl: 'https://images.unsplash.com/photo-1508611116238-6b83f05f426c?q=80&w=800&auto=format&fit=crop',
     isBestSeller: false,
     isSameDay: true,
+    isTaxable: true,
     rating: 4.7,
     inStock: true,
     tags: ['lilies', 'classic', 'sympathy']
@@ -85,6 +122,7 @@ export const PRODUCTS: Product[] = [
     imageUrl: 'https://images.unsplash.com/photo-1591886960571-74d43a9d4166?q=80&w=800&auto=format&fit=crop',
     isBestSeller: true,
     isSameDay: true,
+    isTaxable: true,
     rating: 4.8,
     inStock: true,
     tags: ['sunflowers', 'basket', 'cheerful']
@@ -100,6 +138,7 @@ export const PRODUCTS: Product[] = [
     imageUrl: 'https://images.unsplash.com/photo-1508110546313-05f48866e4a2?q=80&w=800&auto=format&fit=crop',
     isBestSeller: false,
     isSameDay: false,
+    isTaxable: true,
     rating: 4.6,
     inStock: true,
     tags: ['orchid', 'potted', 'exotic']
@@ -115,6 +154,7 @@ export const PRODUCTS: Product[] = [
     imageUrl: 'https://images.unsplash.com/photo-1559868725-78363737b9d6?q=80&w=800&auto=format&fit=crop',
     isBestSeller: false,
     isSameDay: true,
+    isTaxable: true,
     rating: 4.5,
     inStock: true,
     tags: ['hydrangea', 'blue', 'voluminous']
@@ -130,6 +170,7 @@ export const PRODUCTS: Product[] = [
     imageUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=800&auto=format&fit=crop',
     isBestSeller: true,
     isSameDay: true,
+    isTaxable: true,
     rating: 4.9,
     inStock: true,
     tags: ['red roses', 'classic', 'valentines']
@@ -145,6 +186,7 @@ export const PRODUCTS: Product[] = [
     imageUrl: 'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?q=80&w=800&auto=format&fit=crop',
     isBestSeller: false,
     isSameDay: false,
+    isTaxable: true,
     rating: 4.8,
     inStock: true,
     tags: ['monstera', 'houseplant', 'greenery']
@@ -160,6 +202,7 @@ export const PRODUCTS: Product[] = [
     imageUrl: 'https://images.unsplash.com/photo-1520763185298-1b434c919102?q=80&w=800&auto=format&fit=crop',
     isBestSeller: true,
     isSameDay: true,
+    isTaxable: true,
     rating: 4.7,
     inStock: true,
     tags: ['tulips', 'spring', 'colorful']
@@ -175,6 +218,7 @@ export const PRODUCTS: Product[] = [
     imageUrl: 'https://images.unsplash.com/photo-1506456015502-39c288fdb72d?q=80&w=800&auto=format&fit=crop',
     isBestSeller: false,
     isSameDay: false,
+    isTaxable: true,
     rating: 5.0,
     inStock: true,
     tags: ['orchid', 'luxury', 'marble']
@@ -190,6 +234,7 @@ export const PRODUCTS: Product[] = [
     imageUrl: 'https://images.unsplash.com/photo-1459156212016-c812468e2115?q=80&w=800&auto=format&fit=crop',
     isBestSeller: false,
     isSameDay: true,
+    isTaxable: true,
     rating: 4.6,
     inStock: true,
     tags: ['succulents', 'rustic', 'low-maintenance']
@@ -205,6 +250,7 @@ export const PRODUCTS: Product[] = [
     imageUrl: 'https://images.unsplash.com/photo-1526047932273-341f2a7631f9?q=80&w=800&auto=format&fit=crop',
     isBestSeller: true,
     isSameDay: false,
+    isTaxable: true,
     rating: 4.9,
     inStock: true,
     tags: ['pastel', 'ranunculus', 'dreamy']
@@ -220,6 +266,7 @@ export const PRODUCTS: Product[] = [
     imageUrl: 'https://images.unsplash.com/photo-1473215234509-54d90ceb7e65?q=80&w=800&auto=format&fit=crop',
     isBestSeller: false,
     isSameDay: true,
+    isTaxable: true,
     rating: 4.5,
     inStock: true,
     tags: ['autumn', 'dahlias', 'warm']
@@ -235,6 +282,7 @@ export const PRODUCTS: Product[] = [
     imageUrl: 'https://images.unsplash.com/photo-1542458428-1f1cc7d043d8?q=80&w=800&auto=format&fit=crop',
     isBestSeller: true,
     isSameDay: true,
+    isTaxable: true,
     rating: 4.8,
     inStock: true,
     tags: ['sympathy', 'white', 'peaceful']
@@ -250,6 +298,7 @@ export const PRODUCTS: Product[] = [
     imageUrl: 'https://images.unsplash.com/photo-1563241527-3004b7be0ffd?q=80&w=800&auto=format&fit=crop',
     isBestSeller: false,
     isSameDay: true,
+    isTaxable: true,
     rating: 4.7,
     inStock: true,
     tags: ['vibrant', 'fiesta', 'colorful']
@@ -265,6 +314,7 @@ export const PRODUCTS: Product[] = [
     imageUrl: 'https://images.unsplash.com/photo-1485955900006-10f4d324d411?q=80&w=800&auto=format&fit=crop',
     isBestSeller: false,
     isSameDay: true,
+    isTaxable: true,
     rating: 4.4,
     inStock: true,
     tags: ['fern', 'houseplant', 'green']
@@ -280,6 +330,7 @@ export const PRODUCTS: Product[] = [
     imageUrl: 'https://images.unsplash.com/photo-1555239121-f09bf26ea137?q=80&w=800&auto=format&fit=crop',
     isBestSeller: false,
     isSameDay: false,
+    isTaxable: true,
     rating: 4.9,
     inStock: true,
     tags: ['pampas', 'boho', 'premium']
@@ -289,12 +340,13 @@ export const PRODUCTS: Product[] = [
     name: 'Simple Elegance Daisies',
     price: 40,
     description: 'A sweet, simple wrapped bouquet of white daisies. Perfect for brightening someone\'s day just because.',
-    category: 'Just Because' as any,
+    category: 'Seasonal',
     occasions: ['Just Because'],
     colors: ['White', 'Yellow'],
     imageUrl: 'https://images.unsplash.com/photo-1560717845-968823efbee1?q=80&w=800&auto=format&fit=crop',
     isBestSeller: true,
     isSameDay: true,
+    isTaxable: true,
     rating: 4.6,
     inStock: true,
     tags: ['daisies', 'simple', 'wrapped']

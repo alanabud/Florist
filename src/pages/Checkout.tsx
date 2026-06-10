@@ -3,21 +3,22 @@ import { useNavigate } from 'react-router-dom';
 import { useCartStore } from '../store/cartStore';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
-import { Modal } from '../components/ui/Modal';
-import { CheckCircle2, ChevronRight, Lock } from 'lucide-react';
+import { ChevronRight, Lock } from 'lucide-react';
+import { getTaxConfigForState, STATE_TAX_RATES } from '../data/taxConfig';
+import { createGuestOrder } from '../services/publicOrderService';
 import styles from './Checkout.module.css';
 
 export const Checkout: React.FC = () => {
   const navigate = useNavigate();
-  const { items, getSubtotal, clearCart } = useCartStore();
+  const { items, getSubtotal, getTaxableSubtotal, clearCart } = useCartStore();
   const [step, setStep] = useState(1);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     // Recipient
     recipientName: '',
     recipientPhone: '',
     recipientAddress: '',
     recipientCity: '',
+    recipientState: '',
     recipientZip: '',
     // Delivery Details
     deliveryType: 'standard', // standard, sameday, pickup
@@ -40,21 +41,62 @@ export const Checkout: React.FC = () => {
   const nextStep = () => setStep(s => Math.min(s + 1, 4));
   const prevStep = () => setStep(s => Math.max(s - 1, 1));
 
-  const handleCheckoutSubmit = (e: React.FormEvent) => {
+  const handleCheckoutSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (step < 4) {
       nextStep();
       return;
     }
     
-    // Simulate order placement
-    setTimeout(() => {
+    try {
+      const subtotal = getSubtotal();
+      const taxableSubtotal = getTaxableSubtotal();
+      const deliveryFee = formData.deliveryType === 'sameday' ? 19.99 : (formData.deliveryType === 'pickup' ? 0 : 9.99);
+      
+      const taxConfig = getTaxConfigForState(formData.recipientState);
+      let taxableAmount = taxableSubtotal;
+      if (taxConfig.isDeliveryTaxable) {
+        taxableAmount += deliveryFee;
+      }
+      const taxes = taxableAmount * taxConfig.rate;
+      const total = subtotal + deliveryFee + taxes;
+
+      const orderData = {
+        recipientName: formData.recipientName,
+        recipientPhone: formData.recipientPhone,
+        recipientAddress: formData.recipientAddress,
+        recipientCity: formData.recipientCity,
+        recipientState: formData.recipientState,
+        recipientZip: formData.recipientZip,
+        deliveryType: formData.deliveryType,
+        deliveryDate: formData.deliveryDate,
+        senderName: formData.senderName,
+        senderEmail: formData.senderEmail,
+        cardMessage: formData.cardMessage,
+        items: items.map(item => ({
+          productId: item.productId,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          imageUrl: item.imageUrl,
+          isCustom: item.isCustom || false
+        })),
+        subtotal,
+        deliveryFee,
+        taxes,
+        total,
+      };
+
+      const result = await createGuestOrder(orderData);
       clearCart();
-      setIsModalOpen(true);
-    }, 1000);
+      navigate(`/order-confirmation/${result.trackingLookupId}`);
+    } catch (error) {
+      console.error("Failed to process checkout", error);
+      alert("Checkout failed. Please try again.");
+    }
   };
 
-  if (items.length === 0 && !isModalOpen) {
+  if (items.length === 0) {
     return (
       <div className={styles.emptyContainer}>
         <h2>Your cart is empty</h2>
@@ -65,8 +107,15 @@ export const Checkout: React.FC = () => {
   }
 
   const subtotal = getSubtotal();
+  const taxableSubtotal = getTaxableSubtotal();
   const deliveryFee = formData.deliveryType === 'sameday' ? 19.99 : (formData.deliveryType === 'pickup' ? 0 : 9.99);
-  const taxes = subtotal * 0.08;
+  
+  const taxConfig = getTaxConfigForState(formData.recipientState);
+  let taxableAmount = taxableSubtotal;
+  if (taxConfig.isDeliveryTaxable) {
+    taxableAmount += deliveryFee;
+  }
+  const taxes = taxableAmount * taxConfig.rate;
   const total = subtotal + deliveryFee + taxes;
 
   return (
@@ -116,6 +165,15 @@ export const Checkout: React.FC = () => {
                     <div className={styles.formGroup}>
                       <label>City</label>
                       <input required name="recipientCity" value={formData.recipientCity} onChange={handleInputChange} />
+                    </div>
+                    <div className={styles.formGroup}>
+                      <label>State</label>
+                      <select required name="recipientState" value={formData.recipientState} onChange={handleInputChange}>
+                        <option value="">Select State</option>
+                        {Object.keys(STATE_TAX_RATES).filter(k => k !== 'DEFAULT').map(state => (
+                          <option key={state} value={state}>{state}</option>
+                        ))}
+                      </select>
                     </div>
                     <div className={styles.formGroup}>
                       <label>ZIP Code</label>
@@ -284,21 +342,7 @@ export const Checkout: React.FC = () => {
         </aside>
       </div>
 
-      <Modal isOpen={isModalOpen} onClose={() => {}} title="" maxWidth="500px">
-        <div className={styles.successModal}>
-          <CheckCircle2 size={64} className={styles.successIcon} />
-          <h2>Order Confirmed!</h2>
-          <p>Thank you, {formData.senderName || 'Customer'}. Your order has been placed successfully and is being processed.</p>
-          <div className={styles.successDetails}>
-            <p><strong>Order Number:</strong> #BLM-{Math.floor(Math.random() * 100000)}</p>
-            <p><strong>Delivery Date:</strong> {formData.deliveryDate || 'TBD'}</p>
-            <p>A confirmation email has been sent to {formData.senderEmail || 'your email'}.</p>
-          </div>
-          <Button fullWidth size="lg" onClick={() => navigate('/')}>
-            Return to Home
-          </Button>
-        </div>
-      </Modal>
+      {/* Success Modal removed, user is redirected to confirmation page */}
     </div>
   );
 };

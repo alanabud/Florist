@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { PRODUCTS } from '../data/products';
+import { useAdminStore } from '../store/adminStore';
 import { useCartStore } from '../store/cartStore';
 import { useToastStore } from '../store/toastStore';
 import { useWishlistStore } from '../store/wishlistStore';
@@ -12,16 +12,16 @@ import styles from './ProductDetail.module.css';
 export const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { products } = useAdminStore();
   const { addItem } = useCartStore();
   const { addToast } = useToastStore();
   const { toggleItem, isInWishlist } = useWishlistStore();
 
   const [quantity, setQuantity] = useState(1);
-  const [product, setProduct] = useState(PRODUCTS.find(p => p.id === id));
+  const product = products.find(p => p.id === id);
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    setProduct(PRODUCTS.find(p => p.id === id));
   }, [id]);
 
   if (!product) {
@@ -52,7 +52,7 @@ export const ProductDetail: React.FC = () => {
     addToast(isWished ? 'Removed from wishlist' : 'Added to wishlist');
   };
 
-  const relatedProducts = PRODUCTS.filter(p => p.category === product.category && p.id !== product.id).slice(0, 3);
+  const relatedProducts = products.filter(p => p.category === product.category && p.id !== product.id).slice(0, 3);
 
   return (
     <div className={styles.container}>

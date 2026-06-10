@@ -5,13 +5,34 @@
   justify-content: center;
   background-color: var(--color-cream);
   padding: 1.5rem;
+  position: relative;
+}
+
+.backBtn {
+  position: absolute;
+  top: 2rem;
+  left: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  transition: color 0.2s;
+}
+
+.backBtn:hover {
+  color: var(--color-text-main);
 }
 
 .card {
   background-color: var(--color-white);
   padding: 3rem 2.5rem;
   border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--shadow-md);
   width: 100%;
   max-width: 440px;
 }
@@ -39,8 +60,10 @@
 }
 
 .title {
-  font-size: 1.75rem;
+  font-family: var(--font-serif);
+  font-size: 2rem;
   margin-bottom: 0.5rem;
+  color: var(--color-text-main);
 }
 
 .subtitle {
@@ -55,16 +78,84 @@
 }
 
 .errorAlert {
-  background-color: rgba(229, 115, 115, 0.1);
-  color: var(--color-error);
-  padding: 0.75rem;
+  background-color: #fff1f0;
+  color: #cf1322;
+  padding: 1rem;
   border-radius: var(--radius-md);
   font-size: 0.875rem;
-  border: 1px solid rgba(229, 115, 115, 0.2);
+  border: 1px solid #ffa39e;
+  margin-bottom: 1.5rem;
+  line-height: 1.4;
+}
+
+.providerGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.providerBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border) !important;
+  color: var(--color-text-main) !important;
+  font-weight: 500 !important;
+}
+
+.providerBtn:hover:not(:disabled) {
+  background-color: var(--color-cream) !important;
+  border-color: var(--color-border-dark) !important;
+}
+
+.providerIcon {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 2rem;
+  color: var(--color-text-muted);
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.divider span {
+  padding: 0 1rem;
+  font-size: 0.875rem;
+}
+
+.forgotPassword {
+  text-align: right;
+  margin-top: -0.5rem;
+}
+
+.forgotPassword button {
+  background: none;
+  border: none;
+  color: var(--color-sage-dark);
+  font-size: 0.875rem;
+  cursor: pointer;
+  padding: 0;
+}
+
+.forgotPassword button:hover {
+  text-decoration: underline;
 }
 
 .submitBtn {
   margin-top: 0.5rem;
-  padding: 0.75rem;
-  font-size: 1rem;
+  padding: 0.875rem !important;
+  font-size: 1rem !important;
 }

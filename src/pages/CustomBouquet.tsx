@@ -156,16 +156,16 @@ export const CustomBouquet: React.FC = () => {
           <div className={styles.stepPane}>
             <h2>Select size and budget</h2>
             <div className={styles.grid3}>
-              {[
+              {([
                 { size: 'Standard', price: 75, desc: 'A beautiful, modest arrangement perfect for a desk or side table.' },
                 { size: 'Deluxe', price: 125, desc: 'A fuller arrangement with premium blooms. Our most popular choice.' },
                 { size: 'Premium', price: 200, desc: 'A show-stopping, luxurious arrangement with our finest seasonal flowers.' }
-              ].map(opt => (
+              ] as const).map(opt => (
                 <Card 
                   key={opt.size}
                   className={`${styles.optionCard} ${styles.sizeCard} ${state.size === opt.size ? styles.selected : ''}`}
                   onClick={() => {
-                    updateField('size', opt.size as any);
+                    updateField('size', opt.size);
                     updateField('budget', opt.price);
                   }}
                 >

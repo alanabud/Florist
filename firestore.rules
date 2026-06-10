@@ -1,0 +1,299 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ──────────────────────────────────────────────
+    // ROLE HELPER FUNCTIONS
+    // ──────────────────────────────────────────────
+
+    // Check if user is authenticated
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    // Resolve the current user's role.
+    // Checks custom claims first, falls back to the database users document.
+    function role() {
+      return request.auth.token.role != null 
+        ? request.auth.token.role 
+        : get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+    
+    // Role hierarchy: owner > admin > manager > staff
+    function isOwner() {
+      return isSignedIn() && role() == 'owner';
+    }
+    
+    function isAdmin() {
+      return isSignedIn() && (role() == 'owner' || role() == 'admin');
+    }
+    
+    function isManager() {
+      return isSignedIn() && (role() == 'owner' || role() == 'admin' || role() == 'manager');
+    }
+    
+    function isStaff() {
+      return isSignedIn() && (role() == 'owner' || role() == 'admin' || role() == 'manager' || role() == 'staff');
+    }
+
+    // ──────────────────────────────────────────────
+    // GUEST CHECKOUT SAFETY
+    // Guest checkout can create only public order fields.
+    // Guests must never write operational, finance, audit, or assignment fields.
+    // ──────────────────────────────────────────────
+    function guestSafeOrderFields() {
+      return request.resource.data.keys().hasOnly([
+        'customerName', 'customerEmail', 'recipientName', 'recipientPhone',
+        'recipientAddress', 'recipientCity', 'recipientState', 'recipientZip',
+        'deliveryType', 'deliveryDate', 'senderName', 'senderEmail',
+        'cardMessage', 'items', 'subtotal', 'taxes', 'deliveryFee', 'total', 
+        'status', 'createdAt', 'id', 'orderNumber', 'orderNumberNormalized', 
+        'senderEmailNormalized', 'customerId', 'paymentStatus', 'glPostingStatus'
+      ])
+      && !request.resource.data.keys().hasAny([
+        'internalNotes',
+        'auditTrail',
+        'financeStatus',
+        'glPosted',
+        'assignedStaffId'
+      ]);
+    }
+
+    function isValidGuestOrderCreate() {
+      return request.auth == null
+        && request.resource.data.status == 'confirmed'
+        && request.resource.data.paymentStatus == 'paid'
+        && request.resource.data.glPostingStatus == 'unposted'
+        && request.resource.data.customerId == 'guest'
+        && guestSafeOrderFields();
+    }
+
+    function publicTrackingFields() {
+      return [
+        'orderNumber', 'orderNumberNormalized', 'senderEmailNormalized',
+        'status', 'deliveryDate', 'recipientFirstName',
+        'city', 'state', 'itemsSummary', 'timeline', 'updatedAt'
+      ];
+    }
+
+    function isValidPublicTrackingCreate(trackingId) {
+      let data = request.resource.data;
+      return data.keys().hasOnly(publicTrackingFields())
+        && trackingId == data.orderNumberNormalized + '_' + data.senderEmailNormalized
+        && data.orderNumberNormalized is string
+        && data.senderEmailNormalized is string
+        && data.orderNumber is string
+        && data.status == 'placed';
+    }
+
+    // ──────────────────────────────────────────────
+    // USERS
+    // Users can read their own profile; managers+ can read any.
+    // Users can update their own profile except role.
+    // Only owners can delete user documents.
+    // ──────────────────────────────────────────────
+    match /users/{userId} {
+      allow read: if isSignedIn() && (request.auth.uid == userId || isManager());
+      
+      // Allow user creation (on first login)
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      
+      // Users can update own profile but NOT change role.
+      // Owners can update any profile.
+      allow update: if isSignedIn() && (
+        (request.auth.uid == userId && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role'])) ||
+        isOwner()
+      );
+      
+      allow delete: if isOwner();
+    }
+
+    // ──────────────────────────────────────────────
+    // ORDERS
+    // - Staff+ can read all orders.
+    // - Staff+ can create orders (internal sales flow).
+    // - Guests (unauthenticated) can create checkout orders with safe fields only.
+    // - Guests cannot update, delete, or read orders.
+    // - Staff+ can update orders.
+    // - Admin+ can delete orders.
+    // ──────────────────────────────────────────────
+    match /orders/{orderId} {
+      allow create: if isStaff() || isValidGuestOrderCreate();
+      allow get, list: if isStaff();
+      allow update: if isStaff();
+      allow delete: if isAdmin();
+    }
+    
+    // ──────────────────────────────────────────────
+    // JOURNAL ENTRIES (General Ledger)
+    // IMMUTABILITY POLICY:
+    // - Managers+ can read journal entries.
+    // - Staff+ or guest order flows can create entries.
+    // - Journal entries CANNOT be deleted (ever).
+    // - The ONLY allowed update is a controlled reversal marker:
+    //     status: "posted" → "reversed"
+    //   with optional metadata: reversedBy, reversedAt, reversalEntryId.
+    // - No arbitrary edits to amounts, accounts, debits, credits,
+    //   source, memo, or description fields after posting.
+    // ──────────────────────────────────────────────
+    match /journalEntries/{document=**} {
+      allow read: if isManager();
+      
+      // Guests can post order-linked journals; staff+ can post any journal.
+      allow create: if isStaff() || (
+        request.auth == null && request.resource.data.sourceType in ['order', 'demo_order']
+      );
+      
+      // Immutable! Only allow transition from posted → reversed
+      // updating only the reversal metadata fields.
+      allow update: if isAdmin()
+        && resource.data.status == 'posted'
+        && request.resource.data.status == 'reversed'
+        && request.resource.data.diff(resource.data).changedKeys()
+          .hasOnly(['status', 'reversedBy', 'reversedAt', 'reversalEntryId']);
+          
+      // Journal entries can never be deleted.
+      allow delete: if false;
+    }
+
+    // ──────────────────────────────────────────────
+    // AUDIT LOGS
+    // APPEND-ONLY POLICY:
+    // - Managers+ can read audit logs.
+    // - Staff+ can create audit logs.
+    // - Guests can create audit logs only for ORDER_STATUS_CHANGE actions.
+    // - No client can update or delete audit logs.
+    // ──────────────────────────────────────────────
+    match /auditLogs/{logId} {
+      allow read: if isManager();
+      allow create: if isStaff() || (
+        request.auth == null && request.resource.data.action == 'ORDER_STATUS_CHANGE'
+      );
+      // Append-only: no updates, no deletes.
+      allow update, delete: if false;
+    }
+
+    // ──────────────────────────────────────────────
+    // QA RUNS
+    // - Managers+ can read QA run history.
+    // - Admin+ can create QA evidence records.
+    // - QA records are immutable once created.
+    // ──────────────────────────────────────────────
+    match /qaRuns/{runId} {
+      allow read: if isManager();
+      allow create: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    // ──────────────────────────────────────────────
+    // PRODUCTS (Admin)
+    // - Staff+ can read and create/update products.
+    // - Admin+ can delete products.
+    // ──────────────────────────────────────────────
+    match /products_admin/{document=**} {
+      allow read: if isStaff();
+      allow create, update: if isStaff();
+      allow delete: if isAdmin();
+    }
+
+    // ──────────────────────────────────────────────
+    // CUSTOMERS
+    // - Staff+ can read and create/update customer records.
+    // - Admin+ can delete customer records.
+    // ──────────────────────────────────────────────
+    match /customers/{document=**} {
+      allow read: if isStaff();
+      allow create, update: if isStaff();
+      allow delete: if isAdmin();
+    }
+
+    // ──────────────────────────────────────────────
+    // DELIVERIES
+    // - Staff+ can read and create/update delivery records.
+    // - Admin+ can delete delivery records.
+    // ──────────────────────────────────────────────
+    match /deliveries/{document=**} {
+      allow read: if isStaff();
+      allow create, update: if isStaff();
+      allow delete: if isAdmin();
+    }
+
+    // ──────────────────────────────────────────────
+    // INVENTORY
+    // - Staff+ can read inventory items.
+    // - Manager+ can create and update inventory.
+    // - Owner only can delete inventory items.
+    // ──────────────────────────────────────────────
+    match /inventory/{itemId} {
+      allow read: if isStaff();
+      allow create, update: if isManager();
+      allow delete: if isOwner();
+    }
+
+    // ──────────────────────────────────────────────
+    // METADATA
+    // - Owner claim bootstrapping.
+    // ──────────────────────────────────────────────
+    match /_metadata/roles {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.ownerClaimed == true;
+      allow update: if isSignedIn() && resource.data.ownerClaimed == false && request.resource.data.ownerClaimed == true;
+    }
+
+    // ──────────────────────────────────────────────
+    // PUBLIC ORDER TRACKING
+    // - Anyone (including unauthenticated guests) can read a specific tracking document.
+    // - Listing all tracking records is prohibited.
+    // - Anyone can create a valid public tracking document.
+    // - Only staff+ can update or delete.
+    // ──────────────────────────────────────────────
+    match /publicOrderTracking/{trackingId} {
+      allow get: if true;
+      allow list: if false;
+      allow create: if isStaff() || isValidPublicTrackingCreate(trackingId);
+      allow update, delete: if isStaff();
+    }
+
+    // ──────────────────────────────────────────────
+    // SYSTEM SEEDS
+    // - Staff+ can read and write system seeds.
+    // ──────────────────────────────────────────────
+    match /systemSeeds/{seedId} {
+      allow read, write: if isStaff();
+    }
+
+    // ──────────────────────────────────────────────
+    // CHART OF ACCOUNTS
+    // - Staff+ can read, create, and update chart of accounts.
+    // - Admin+ can delete chart of accounts.
+    // - System Account Protections:
+    //     - System accounts (isSystem == true) cannot be deleted.
+    //     - System accounts cannot have structural, reporting, or posting-control fields updated.
+    // ──────────────────────────────────────────────
+    match /chartOfAccounts/{accountId} {
+      allow read: if isStaff();
+      allow create: if isStaff();
+      allow update: if isStaff() && (
+        !resource.data.keys().contains('isSystem') || 
+        resource.data.isSystem != true || 
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'code', 'name', 'type', 'normalBalance', 'isSystem',
+          'statementType', 'statementSection', 'reportLineGroup', 'cashFlowCategory', 'displayOrder',
+          'isPostingAccount', 'allowManualPosting', 'allowSystemPosting', 'isCashAccount', 'isControlAccount'
+        ])
+      );
+      allow delete: if isAdmin() && (
+        !resource.data.keys().contains('isSystem') || 
+        resource.data.isSystem != true
+      );
+    }
+
+    // ──────────────────────────────────────────────
+    // DEFAULT DENY
+    // All paths not matched above are denied.
+    // ──────────────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

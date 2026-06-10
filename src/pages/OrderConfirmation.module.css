@@ -1,0 +1,267 @@
+.confirmPage {
+  min-height: 85vh;
+  padding: 5rem 2rem;
+  background-color: #FDFCFA; /* Cream */
+  display: flex;
+  align-items: center;
+}
+
+.container {
+  max-width: 650px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.successCard {
+  background-color: #FFFFFF;
+  border: 1px solid #E8EAE6;
+  border-radius: 24px;
+  padding: 3.5rem 2.5rem;
+  box-shadow: 0 10px 40px rgba(44, 48, 46, 0.04);
+}
+
+.successHeader {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 2.5rem;
+}
+
+.checkIcon {
+  color: #4A6B50; /* Sage */
+  margin-bottom: 1.5rem;
+}
+
+.thanks {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #888e8b;
+  margin-bottom: 0.5rem;
+}
+
+.pageTitle {
+  font-family: var(--font-serif);
+  font-size: 2.25rem;
+  color: #2C302E;
+  margin: 0 0 1rem 0;
+  font-weight: 600;
+}
+
+.subtitle {
+  color: #6b7280;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  max-width: 450px;
+  margin: 0;
+}
+
+.orderNumberBox {
+  background-color: #F8F6F0; /* Soft Warm Cream */
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  margin-bottom: 2.5rem;
+  border: 1px dashed #E5DFD3;
+}
+
+.label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #888e8b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.25rem;
+}
+
+.orderNum {
+  display: block;
+  font-size: 2rem;
+  font-weight: 800;
+  color: #2C302E;
+  letter-spacing: 0.02em;
+  margin-bottom: 0.25rem;
+}
+
+.savePrompt {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #888e8b;
+}
+
+.detailsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.detailBlock {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.detailIcon {
+  color: #4A6B50;
+  margin-top: 0.15rem;
+}
+
+.detailBlock h3 {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #2C302E;
+  text-transform: uppercase;
+  margin: 0 0 0.25rem 0;
+  letter-spacing: 0.05em;
+}
+
+.detailBlock p {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.itemsSummary {
+  border-top: 1px solid #E8EAE6;
+  border-bottom: 1px solid #E8EAE6;
+  padding: 1.5rem 0;
+  margin-bottom: 2rem;
+}
+
+.itemsSummary h3 {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #2C302E;
+  text-transform: uppercase;
+  margin: 0 0 0.75rem 0;
+  letter-spacing: 0.05em;
+}
+
+.itemsBlock {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.itemsIcon {
+  color: #888e8b;
+}
+
+.itemsText {
+  font-size: 0.9375rem;
+  color: #4b5563;
+  font-weight: 500;
+}
+
+.emailNotice {
+  background-color: #EAF2EC;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 0.75rem;
+  color: #385E40;
+  margin-bottom: 2.5rem;
+  text-align: center;
+}
+
+.emailNotice p {
+  margin: 0;
+  line-height: 1.4;
+}
+
+.actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.actions button {
+  flex: 1;
+}
+
+/* Loading & Error States */
+.loadingContainer {
+  min-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #FDFCFA;
+  color: #6b7280;
+}
+
+.spinner {
+  font-size: 3rem;
+  color: #4A6B50;
+  animation: spin 2s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  100% { transform: rotate(360deg); }
+}
+
+.errorContainer {
+  min-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem;
+  background-color: #FDFCFA;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.errorIcon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background-color: #FDE8E8;
+  color: #EF4444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+}
+
+.errorContainer h2 {
+  font-family: var(--font-serif);
+  font-size: 1.75rem;
+  color: #2C302E;
+  margin: 0 0 0.5rem 0;
+  font-weight: 600;
+}
+
+.errorContainer p {
+  color: #6b7280;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  margin: 0 0 2rem 0;
+}
+
+.errorActions {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+}
+
+.errorActions button {
+  flex: 1;
+}
+
+@media (max-width: 576px) {
+  .detailsGrid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .actions {
+    flex-direction: column;
+  }
+}

@@ -1,0 +1,255 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(36, 34, 30, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  justify-content: flex-end;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 300ms ease;
+}
+
+.overlayOpen {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.drawer {
+  width: 100%;
+  max-width: 600px;
+  height: 100%;
+  background-color: #FFFDFB; /* Soft warm porcelain/ivory */
+  border-left: 1px solid #ECE7E1;
+  box-shadow: -10px 0 30px rgba(139, 115, 64, 0.08);
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.drawerOpen {
+  transform: translateX(0);
+}
+
+.header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #F2EFE9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.title {
+  font-family: var(--font-serif);
+  font-size: 1.375rem;
+  font-weight: 600;
+  color: #24221E;
+  margin: 0;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  color: #8C877D;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 200ms ease;
+}
+
+.closeButton:hover {
+  background-color: #F4F1EC;
+  color: #24221E;
+}
+
+.tabList {
+  display: flex;
+  background-color: #F7F5F0;
+  padding: 0.25rem;
+  border-bottom: 1px solid #ECE7E1;
+  gap: 0.25rem;
+  overflow-x: auto;
+}
+
+.tabButton {
+  flex: 1;
+  min-width: 100px;
+  background: none;
+  border: none;
+  padding: 0.75rem 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #726E64;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 200ms ease;
+  white-space: nowrap;
+}
+
+.tabButton:hover {
+  color: #24221E;
+  background-color: #FFFDFB;
+}
+
+.activeTab {
+  background-color: #FFFDFB;
+  color: #3C5A42; /* Sage green primary */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Formula Block Styling */
+.formulaCard {
+  background: linear-gradient(135deg, #FAF8F5 0%, #F4EFE6 100%);
+  border: 1px solid #EDE3D0;
+  border-radius: 12px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.6);
+}
+
+.formulaTitle {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #8B7340; /* Champagne accent color */
+  margin: 0;
+}
+
+.formulaMath {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #24221E;
+  margin: 0;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.formulaSummary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #ECE7E1;
+  padding-top: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.summaryLabel {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #726E64;
+}
+
+.summaryValue {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #3C5A42;
+}
+
+/* Section lists and lists tables */
+.sectionTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #24221E;
+  margin: 0 0 0.75rem 0;
+}
+
+.tableWrapper {
+  border: 1px solid #ECE7E1;
+  border-radius: 12px;
+  overflow: hidden;
+  background-color: #FFFFFF;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+  text-align: left;
+}
+
+.table th {
+  background-color: #FAF9F6;
+  color: #726E64;
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #ECE7E1;
+}
+
+.table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #F4F1EC;
+  color: #4A463F;
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.table tr:hover td {
+  background-color: #FAF9F6;
+}
+
+/* Badges */
+.badge {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 0.1875rem 0.5rem;
+  border-radius: 999px;
+  display: inline-flex;
+}
+
+.badgeSuccess {
+  background-color: #EBFDF5;
+  color: #047857;
+}
+
+.badgeWarning {
+  background-color: #FFFDF0;
+  color: #B45309;
+}
+
+.badgeDanger {
+  background-color: #FFF5F5;
+  color: #C81E1E;
+}
+
+.badgeInfo {
+  background-color: #EBF4FA;
+  color: #2B6CB0;
+}
+
+.badgeNeutral {
+  background-color: #F2EFE9;
+  color: #7A7265;
+}
+
+.emptyState {
+  padding: 2rem;
+  text-align: center;
+  color: #8C877D;
+  font-size: 0.875rem;
+}

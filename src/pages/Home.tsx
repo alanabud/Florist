@@ -3,22 +3,24 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { ArrowRight, Star, Clock, Heart, ShieldCheck, Search, Truck, Camera, Leaf } from 'lucide-react';
-import { PRODUCTS, OCCASIONS } from '../data/products';
+import { OCCASIONS, type Product } from '../data/products';
+import { useAdminStore } from '../store/adminStore';
 import { useCartStore } from '../store/cartStore';
 import { useToastStore } from '../store/toastStore';
 import styles from './Home.module.css';
 
 export const Home: React.FC = () => {
   const navigate = useNavigate();
+  const { products } = useAdminStore();
   const { addItem } = useCartStore();
   const { addToast } = useToastStore();
   const [searchQuery, setSearchQuery] = useState('');
 
-  const bestSellers = PRODUCTS.filter(p => p.isBestSeller).slice(0, 4);
-  const featured = PRODUCTS.filter(p => !p.isBestSeller).slice(0, 3);
-  const sameDay = PRODUCTS.filter(p => p.isSameDay).slice(0, 3);
+  const bestSellers = products.filter(p => p.isBestSeller).slice(0, 4);
+  const featured = products.filter(p => !p.isBestSeller).slice(0, 3);
+  const sameDay = products.filter(p => p.isSameDay).slice(0, 3);
 
-  const handleAddToCart = (e: React.MouseEvent, product: any) => {
+  const handleAddToCart = (e: React.MouseEvent, product: Product) => {
     e.stopPropagation();
     addItem({
       productId: product.id,

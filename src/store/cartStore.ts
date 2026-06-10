@@ -9,7 +9,8 @@ export interface CartItem {
   quantity: number;
   imageUrl: string;
   isCustom?: boolean;
-  customDetails?: any;
+  customDetails?: unknown;
+  isTaxable?: boolean;
 }
 
 interface CartState {
@@ -24,6 +25,7 @@ interface CartState {
   toggleDrawer: () => void;
   getTotalItems: () => number;
   getSubtotal: () => number;
+  getTaxableSubtotal: () => number;
 }
 
 export const useCartStore = create<CartState>()(
@@ -83,6 +85,14 @@ export const useCartStore = create<CartState>()(
 
       getSubtotal: () => {
         return get().items.reduce((total, item) => total + (item.price * item.quantity), 0);
+      },
+
+      getTaxableSubtotal: () => {
+        return get().items.reduce((total, item) => {
+          // If isTaxable is explicitly false, it's non-taxable, otherwise default true
+          const isTaxable = item.isTaxable !== false;
+          return isTaxable ? total + (item.price * item.quantity) : total;
+        }, 0);
       }
     }),
     {

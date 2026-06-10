@@ -1,6 +1,7 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { PRODUCTS, OCCASIONS } from '../data/products';
+import { OCCASIONS, type Product } from '../data/products';
+import { useAdminStore } from '../store/adminStore';
 import { useCartStore } from '../store/cartStore';
 import { useToastStore } from '../store/toastStore';
 import { useWishlistStore } from '../store/wishlistStore';
@@ -13,6 +14,7 @@ type SortOption = 'popular' | 'price-low' | 'price-high' | 'newest';
 
 export const Shop: React.FC = () => {
   const navigate = useNavigate();
+  const { products } = useAdminStore();
   const [searchParams, setSearchParams] = useSearchParams();
   const occasionFilter = searchParams.get('occasion') || 'all';
   const searchQueryParam = searchParams.get('search') || '';
@@ -27,11 +29,7 @@ export const Shop: React.FC = () => {
   const { addToast } = useToastStore();
   const { toggleItem, isInWishlist } = useWishlistStore();
 
-  useEffect(() => {
-    setSearchInput(searchQueryParam);
-  }, [searchQueryParam]);
-
-  const handleAddToCart = (e: React.MouseEvent, product: any) => {
+  const handleAddToCart = (e: React.MouseEvent, product: Product) => {
     e.stopPropagation();
     addItem({
       productId: product.id,
@@ -62,7 +60,7 @@ export const Shop: React.FC = () => {
   };
 
   const filteredProducts = useMemo(() => {
-    let result = [...PRODUCTS];
+    let result = [...products];
 
     if (occasionFilter !== 'all') {
       result = result.filter(p => p.occasions.includes(occasionFilter));
@@ -99,9 +97,9 @@ export const Shop: React.FC = () => {
     }
 
     return result;
-  }, [occasionFilter, selectedColor, activeSort, searchQueryParam, deliveryFilter]);
+  }, [occasionFilter, selectedColor, activeSort, searchQueryParam, deliveryFilter, products]);
 
-  const allColors = Array.from(new Set(PRODUCTS.flatMap(p => p.colors)));
+  const allColors = Array.from(new Set(products.flatMap(p => p.colors)));
 
   const handleOccasionClick = (occ: string) => {
     if (occ === 'all') {
@@ -133,9 +131,10 @@ export const Shop: React.FC = () => {
           <form className={styles.searchForm} onSubmit={handleSearchSubmit}>
             <Search size={16} className={styles.searchIcon} />
             <input 
+              key={searchQueryParam}
               type="text" 
               placeholder="Search products..." 
-              value={searchInput}
+              defaultValue={searchQueryParam}
               onChange={(e) => setSearchInput(e.target.value)}
               className={styles.searchInput}
             />

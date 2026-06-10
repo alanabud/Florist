@@ -1,0 +1,669 @@
+import React from 'react';
+import { MaintenanceModal, type TabConfig } from '../MaintenanceModal';
+import { useAdminStore } from '../../../store/adminStore';
+import { useFinanceStore } from '../../../store/financeStore';
+import { useToastStore } from '../../../store/toastStore';
+import { calculateOrderTotals } from '../../../services/orderCalculationService';
+import { validateOrder } from '../../../services/validators';
+import { writeAuditLog } from '../../../services/auditService';
+import { createOrderAndPostFinancials } from '../../../services/financeService';
+import { normalizeOrder } from '../../../services/normalizers';
+import { Plus, Trash2 } from 'lucide-react';
+
+interface OrderMaintenanceFormProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export const OrderMaintenanceForm: React.FC<OrderMaintenanceFormProps> = ({ isOpen, onClose }) => {
+  const addToast = useToastStore((s) => s.addToast);
+  const { orders, products, addOrder, updateOrderDetails, deleteOrder, modalPayload } = useAdminStore();
+  const fetchJournalEntries = useFinanceStore((s) => s.fetchJournalEntries);
+
+  const mode = modalPayload?.id ? 'edit' : 'create';
+  const rawInitial = modalPayload?.id ? modalPayload : {};
+  const initialValues = normalizeOrder(rawInitial);
+
+  // Validate wrapper
+  const handleValidate = (values: Record<string, any>) => {
+    const res = validateOrder(values);
+    return res.errors;
+  };
+
+  const handleSave = async (values: Record<string, any>) => {
+    try {
+      const normalized = normalizeOrder(values);
+      // Recalculate totals
+      const totals = calculateOrderTotals(normalized);
+      const finalOrder = {
+        ...normalized,
+        ...totals,
+      };
+
+      if (mode === 'create') {
+        const isPaid = finalOrder.paymentStatus === 'paid' || finalOrder.status === 'delivered';
+        const res = await createOrderAndPostFinancials(
+          {
+            customerName: finalOrder.customerName,
+            recipientName: finalOrder.recipientName || finalOrder.customerName,
+            recipientPhone: finalOrder.recipientPhone || '',
+            recipientAddress: `${finalOrder.addressLine1} ${finalOrder.addressLine2 || ''}`.trim(),
+            recipientState: finalOrder.state || 'NY',
+            deliveryType: finalOrder.deliveryMethod || 'standard',
+            deliveryDate: finalOrder.deliveryDate,
+            senderName: finalOrder.customerName,
+            senderEmail: finalOrder.customerEmail || '',
+            cardMessage: finalOrder.floristNotes || '',
+            subtotal: finalOrder.subtotal,
+            deliveryFee: finalOrder.deliveryFee,
+            taxes: finalOrder.tax,
+            total: finalOrder.grandTotal,
+            priority: finalOrder.priority || 'normal',
+            internalNotes: finalOrder.internalNotes || '',
+            assignedStaffId: finalOrder.assignedStaffId || '',
+          },
+          isPaid,
+          'DEFAULT_COMPANY',
+          'Admin'
+        );
+
+        await fetchJournalEntries();
+
+        addOrder({
+          ...finalOrder,
+          id: res.orderId,
+          documentId: res.orderId,
+        });
+
+        // Audit Trail
+        await writeAuditLog({
+          actor: 'Admin',
+          action: 'CREATE_ORDER',
+          entityType: 'order',
+          entityId: res.orderId,
+          before: null,
+          after: { status: finalOrder.status, total: finalOrder.grandTotal },
+        });
+
+        addToast('New order created successfully & General Ledger updated.', 'success');
+      } else {
+        const orderId = finalOrder.id;
+        const oldOrder = orders.find((o) => o.id === orderId);
+
+        updateOrderDetails(orderId, finalOrder);
+
+        // Audit Trail
+        await writeAuditLog({
+          actor: 'Admin',
+          action: 'UPDATE_ORDER',
+          entityType: 'order',
+          entityId: orderId,
+          before: oldOrder ? { status: oldOrder.status, total: oldOrder.total } : null,
+          after: { status: finalOrder.status, total: finalOrder.grandTotal },
+        });
+
+        addToast(`Order ${orderId.substring(0, 8)} updated successfully.`, 'success');
+      }
+      onClose();
+    } catch (e) {
+      console.error(e);
+      addToast('Failed to save order details.', 'error');
+    }
+  };
+
+  const handleDuplicate = async (values: Record<string, any>) => {
+    try {
+      const normalized = normalizeOrder(values);
+      const totals = calculateOrderTotals(normalized);
+      const dupId = `ord-${Date.now()}`;
+      const duplicateOrder = {
+        ...normalized,
+        ...totals,
+        id: dupId,
+        invoiceNumber: `INV-${dupId.replace('ord-', '')}`,
+        status: 'draft' as const,
+        paymentStatus: 'unpaid',
+        amountPaid: 0,
+        balanceDue: totals.grandTotal,
+        createdAt: new Date().toISOString(),
+        createdBy: 'Admin',
+        auditTrail: [`Order duplicated from ${normalized.id} on ${new Date().toLocaleDateString()}`],
+      };
+
+      addOrder(duplicateOrder);
+
+      await writeAuditLog({
+        actor: 'Admin',
+        action: 'DUPLICATE_ORDER',
+        entityType: 'order',
+        entityId: dupId,
+        before: { originalId: normalized.id },
+        after: { duplicateId: dupId },
+      });
+
+      addToast(`Order duplicated successfully as draft #${dupId.substring(0, 8)}`, 'success');
+      onClose();
+    } catch (e) {
+      console.error(e);
+      addToast('Failed to duplicate order.', 'error');
+    }
+  };
+
+  const handleDelete = async () => {
+    if (modalPayload?.id) {
+      const orderId = modalPayload.id;
+      const oldOrder = orders.find((o) => o.id === orderId);
+
+      deleteOrder(orderId);
+
+      await writeAuditLog({
+        actor: 'Admin',
+        action: 'DELETE_ORDER',
+        entityType: 'order',
+        entityId: orderId,
+        before: oldOrder ? { status: oldOrder.status, total: oldOrder.total } : null,
+        after: null,
+      });
+
+      addToast('Order successfully removed from store.', 'success');
+      onClose();
+    }
+  };
+
+  // Build Tabs Config
+  const tabs: TabConfig[] = [
+    {
+      id: 'overview',
+      label: 'Overview',
+      fields: [
+        { name: 'id', label: 'Order Number', type: 'text', readOnly: true, colSpan: 1 },
+        { name: 'createdAt', label: 'Order Date', type: 'date', readOnly: true, colSpan: 1 },
+        { name: 'dueDate', label: 'Due Date', type: 'date', required: true, colSpan: 1 },
+        { name: 'deliveryDate', label: 'Delivery Date', type: 'date', required: true, colSpan: 1 },
+        {
+          name: 'deliveryWindow',
+          label: 'Delivery Window',
+          type: 'select',
+          colSpan: 1,
+          options: [
+            { value: 'morning', label: 'Morning (8am-12pm)' },
+            { value: 'afternoon', label: 'Afternoon (12pm-5pm)' },
+            { value: 'evening', label: 'Evening (5pm-8pm)' },
+          ],
+        },
+        {
+          name: 'status',
+          label: 'Order Status',
+          type: 'select',
+          required: true,
+          colSpan: 1,
+          options: [
+            { value: 'draft', label: 'Draft' },
+            { value: 'confirmed', label: 'Confirmed' },
+            { value: 'preparing', label: 'Preparing' },
+            { value: 'out_for_delivery', label: 'Out for Delivery' },
+            { value: 'delivered', label: 'Delivered' },
+            { value: 'cancelled', label: 'Cancelled' },
+          ],
+        },
+        {
+          name: 'fulfillmentStatus',
+          label: 'Fulfillment Status',
+          type: 'select',
+          colSpan: 1,
+          options: [
+            { value: 'unfulfilled', label: 'Unfulfilled' },
+            { value: 'preparing', label: 'Preparing' },
+            { value: 'fulfilled', label: 'Fulfilled' },
+            { value: 'returned', label: 'Returned' },
+          ],
+        },
+        {
+          name: 'priority',
+          label: 'Priority Level',
+          type: 'select',
+          colSpan: 1,
+          options: [
+            { value: 'low', label: 'Low' },
+            { value: 'normal', label: 'Normal' },
+            { value: 'high', label: 'High' },
+            { value: 'critical', label: 'Critical' },
+          ],
+        },
+        {
+          name: 'assignedStaffId',
+          label: 'Assigned Staff',
+          type: 'select',
+          colSpan: 1,
+          options: [
+            { value: 'Marcus T.', label: 'Marcus T. (Courier)' },
+            { value: 'Elena R.', label: 'Elena R. (Arranger)' },
+            { value: 'James K.', label: 'James K. (Director)' },
+          ],
+        },
+        { name: 'salesChannel', label: 'Sales Channel', type: 'text', colSpan: 1 },
+        { name: 'storeLocation', label: 'Store Location / Branch', type: 'text', colSpan: 1 },
+        { name: 'customerSource', label: 'Customer Source', type: 'text', colSpan: 1 },
+        { name: 'occasion', label: 'Occasion', type: 'text', colSpan: 1 },
+        { name: 'internalOrderType', label: 'Internal Order Type', type: 'text', colSpan: 1 },
+        { name: 'tags', label: 'Tags (comma separated)', type: 'text', colSpan: 1 },
+      ],
+    },
+    {
+      id: 'customer',
+      label: 'Customer / Recipient',
+      fields: [
+        { name: 'customerName', label: 'Customer Name *', type: 'text', required: true, colSpan: 1 },
+        { name: 'customerEmail', label: 'Customer Email', type: 'email', colSpan: 1 },
+        { name: 'customerPhone', label: 'Customer Phone', type: 'tel', colSpan: 1 },
+        {
+          name: 'customerType',
+          label: 'Customer Type',
+          type: 'select',
+          colSpan: 1,
+          options: [
+            { value: 'retail', label: 'Retail' },
+            { value: 'corporate', label: 'Corporate' },
+          ],
+        },
+        { name: 'accountNumber', label: 'Account Number', type: 'text', colSpan: 1 },
+        { name: 'loyaltyStatus', label: 'Loyalty Status', type: 'text', colSpan: 1 },
+        { name: 'preferredContactMethod', label: 'Preferred Contact Method', type: 'text', colSpan: 1 },
+        { name: 'recipientName', label: 'Recipient Name *', type: 'text', required: true, colSpan: 1 },
+        { name: 'recipientPhone', label: 'Recipient Phone', type: 'tel', colSpan: 1 },
+        { name: 'relationshipToSender', label: 'Relationship to Sender', type: 'text', colSpan: 1 },
+        { name: 'addressLine1', label: 'Address Line 1 *', type: 'text', required: true, colSpan: 2 },
+        { name: 'addressLine2', label: 'Address Line 2', type: 'text', colSpan: 1 },
+        { name: 'city', label: 'City *', type: 'text', required: true, colSpan: 1 },
+        { name: 'state', label: 'State *', type: 'text', required: true, colSpan: 1 },
+        { name: 'zipCode', label: 'ZIP *', type: 'text', required: true, colSpan: 1 },
+        { name: 'deliveryInstructions', label: 'Delivery Instructions', type: 'textarea', colSpan: 3 },
+        { name: 'gateCode', label: 'Gate / Access Code', type: 'text', colSpan: 1 },
+        { name: 'safeDropAllowed', label: 'Safe Drop Allowed', type: 'checkbox', colSpan: 1 },
+        { name: 'signatureRequired', label: 'Signature Required', type: 'checkbox', colSpan: 1 },
+      ],
+    },
+    {
+      id: 'items',
+      label: 'Products / Line Items',
+      fields: [
+        {
+          name: 'line_items_editor',
+          label: 'Line Item Configurator',
+          type: 'custom',
+          colSpan: 3,
+          render: (values, onChange) => {
+            const lineItems = values.lineItems || [];
+            const totals = calculateOrderTotals(values);
+
+            const handleAddLine = () => {
+              const newLine = {
+                productId: products[0]?.id || 'p1',
+                sku: products[0]?.sku || 'WR-001',
+                description: products[0]?.name || 'Juliet Rose',
+                quantity: 1,
+                unitPrice: products[0]?.price || 85.00,
+                discount: 0,
+                taxable: true,
+                lineTotal: products[0]?.price || 85.00,
+                substitutionAllowed: true,
+                designerNotes: '',
+              };
+              onChange('lineItems', [...lineItems, newLine]);
+            };
+
+            const handleRemoveLine = (index: number) => {
+              const updated = lineItems.filter((_: any, i: number) => i !== index);
+              onChange('lineItems', updated);
+            };
+
+            const handleLineChange = (index: number, fieldName: string, value: any) => {
+              const updated = lineItems.map((item: any, i: number) => {
+                if (i !== index) return item;
+                const newItem = { ...item, [fieldName]: value };
+                if (fieldName === 'productId') {
+                  const matched = products.find((p) => p.id === value);
+                  if (matched) {
+                    newItem.description = matched.name;
+                    newItem.unitPrice = matched.price;
+                  }
+                }
+                const qty = parseInt(newItem.quantity) || 0;
+                const price = parseFloat(newItem.unitPrice) || 0;
+                const disc = parseFloat(newItem.discount) || 0;
+                newItem.lineTotal = Math.max(0, qty * price - disc);
+                return newItem;
+              });
+              onChange('lineItems', updated);
+            };
+
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%' }}>
+                <div style={{ maxHeight: '250px', overflowY: 'auto', border: '1px solid #E8EAE6', borderRadius: '8px' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8125rem', textAlign: 'left' }}>
+                    <thead style={{ background: '#FAFAF8', position: 'sticky', top: 0, borderBottom: '1px solid #E8EAE6' }}>
+                      <tr>
+                        <th style={{ padding: '0.5rem' }}>Product</th>
+                        <th style={{ padding: '0.5rem', width: '70px' }}>Qty</th>
+                        <th style={{ padding: '0.5rem', width: '90px' }}>Price</th>
+                        <th style={{ padding: '0.5rem', width: '80px' }}>Disc.</th>
+                        <th style={{ padding: '0.5rem', width: '50px' }}>Tax</th>
+                        <th style={{ padding: '0.5rem', width: '90px' }}>Total</th>
+                        <th style={{ padding: '0.5rem', width: '50px' }}>Sub.</th>
+                        <th style={{ padding: '0.5rem' }}>Notes</th>
+                        <th style={{ padding: '0.5rem', width: '40px' }}></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {lineItems.map((item: any, idx: number) => (
+                        <tr key={idx} style={{ borderBottom: '1px solid #E8EAE6' }}>
+                          <td style={{ padding: '0.25rem' }}>
+                            <select
+                              value={item.productId}
+                              onChange={(e) => handleLineChange(idx, 'productId', e.target.value)}
+                              style={{ width: '100%', padding: '0.25rem', border: '1px solid #E8EAE6', borderRadius: '4px' }}
+                            >
+                              {products.map((p) => (
+                                <option key={p.id} value={p.id}>
+                                  {p.name} (${p.price})
+                                </option>
+                              ))}
+                            </select>
+                          </td>
+                          <td style={{ padding: '0.25rem' }}>
+                            <input
+                              type="number"
+                              value={item.quantity}
+                              min="1"
+                              onChange={(e) => handleLineChange(idx, 'quantity', parseInt(e.target.value) || 0)}
+                              style={{ width: '100%', padding: '0.25rem', border: '1px solid #E8EAE6', borderRadius: '4px' }}
+                            />
+                          </td>
+                          <td style={{ padding: '0.25rem' }}>
+                            <input
+                              type="number"
+                              value={item.unitPrice}
+                              onChange={(e) => handleLineChange(idx, 'unitPrice', parseFloat(e.target.value) || 0)}
+                              style={{ width: '100%', padding: '0.25rem', border: '1px solid #E8EAE6', borderRadius: '4px' }}
+                            />
+                          </td>
+                          <td style={{ padding: '0.25rem' }}>
+                            <input
+                              type="number"
+                              value={item.discount}
+                              onChange={(e) => handleLineChange(idx, 'discount', parseFloat(e.target.value) || 0)}
+                              style={{ width: '100%', padding: '0.25rem', border: '1px solid #E8EAE6', borderRadius: '4px' }}
+                            />
+                          </td>
+                          <td style={{ padding: '0.25rem', textAlign: 'center' }}>
+                            <input
+                              type="checkbox"
+                              checked={!!item.taxable}
+                              onChange={(e) => handleLineChange(idx, 'taxable', e.target.checked)}
+                            />
+                          </td>
+                          <td style={{ padding: '0.5rem', fontWeight: 600 }}>
+                            ${item.lineTotal.toFixed(2)}
+                          </td>
+                          <td style={{ padding: '0.25rem', textAlign: 'center' }}>
+                            <input
+                              type="checkbox"
+                              checked={!!item.substitutionAllowed}
+                              onChange={(e) => handleLineChange(idx, 'substitutionAllowed', e.target.checked)}
+                            />
+                          </td>
+                          <td style={{ padding: '0.25rem' }}>
+                            <input
+                              type="text"
+                              value={item.designerNotes || ''}
+                              placeholder="e.g. Keep pink"
+                              onChange={(e) => handleLineChange(idx, 'designerNotes', e.target.value)}
+                              style={{ width: '100%', padding: '0.25rem', border: '1px solid #E8EAE6', borderRadius: '4px' }}
+                            />
+                          </td>
+                          <td style={{ padding: '0.25rem', textAlign: 'center' }}>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveLine(idx)}
+                              style={{ color: '#EF4444', border: 'none', background: 'none', cursor: 'pointer' }}
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                  <button
+                    type="button"
+                    onClick={handleAddLine}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.25rem',
+                      padding: '0.35rem 0.75rem',
+                      fontSize: '0.75rem',
+                      background: '#F0F5F1',
+                      border: '1px dashed #B4C5B6',
+                      borderRadius: '6px',
+                      color: '#4A6B50',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <Plus size={14} /> Add Product Line
+                  </button>
+                </div>
+
+                {/* Recalculated totals view */}
+                <div style={{ background: '#FDFCFA', border: '1px solid #E8EAE6', borderRadius: '10px', padding: '1rem', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
+                  <div>
+                    <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Subtotal:</div>
+                    <div style={{ fontSize: '1rem', fontWeight: 600 }}>${totals.subtotal.toFixed(2)}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Discount:</div>
+                    <div style={{ fontSize: '1rem', fontWeight: 600 }}>${totals.discount.toFixed(2)}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Taxes:</div>
+                    <div style={{ fontSize: '1rem', fontWeight: 600 }}>${totals.tax.toFixed(2)}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Delivery Fee:</div>
+                    <div style={{ fontSize: '1rem', fontWeight: 600 }}>${totals.deliveryFee.toFixed(2)}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Grand Total:</div>
+                    <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--color-sage-dark)' }}>${totals.grandTotal.toFixed(2)}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Estimated Margin:</div>
+                    <div style={{ fontSize: '1rem', fontWeight: 600, color: '#047857' }}>${totals.estimatedMargin.toFixed(2)} ({totals.marginPercentage}%)</div>
+                  </div>
+                </div>
+              </div>
+            );
+          },
+        },
+      ],
+    },
+    {
+      id: 'finance',
+      label: 'Payment / Finance',
+      fields: [
+        {
+          name: 'paymentStatus',
+          label: 'Payment Status',
+          type: 'select',
+          colSpan: 1,
+          options: [
+            { value: 'unpaid', label: 'Unpaid' },
+            { value: 'partial', label: 'Partially Paid' },
+            { value: 'paid', label: 'Fully Paid' },
+            { value: 'refunded', label: 'Refunded' },
+          ],
+        },
+        { name: 'paymentMethod', label: 'Payment Method', type: 'text', colSpan: 1 },
+        { name: 'amountPaid', label: 'Amount Paid ($)', type: 'number', colSpan: 1 },
+        { name: 'balanceDue', label: 'Balance Due ($)', type: 'display', colSpan: 1 },
+        { name: 'paymentReference', label: 'Payment Reference', type: 'text', colSpan: 1 },
+        { name: 'stripeId', label: 'Stripe ID', type: 'text', colSpan: 1 },
+        { name: 'invoiceNumber', label: 'Invoice Number', type: 'text', colSpan: 1 },
+        { name: 'taxJurisdiction', label: 'Tax Jurisdiction', type: 'text', colSpan: 1 },
+        { name: 'taxRate', label: 'Tax Rate', type: 'number', colSpan: 1 },
+        {
+          name: 'glPostingStatus',
+          label: 'GL Posting Status',
+          type: 'select',
+          colSpan: 1,
+          options: [
+            { value: 'unposted', label: 'Unposted' },
+            { value: 'posted', label: 'Posted' },
+          ],
+        },
+        { name: 'revenueAccount', label: 'Revenue Account', type: 'text', colSpan: 1 },
+        { name: 'arAccount', label: 'AR Account', type: 'text', colSpan: 1 },
+        { name: 'cashAccount', label: 'Cash Account', type: 'text', colSpan: 1 },
+        { name: 'refundStatus', label: 'Refund Status', type: 'text', colSpan: 1 },
+        { name: 'refundAmount', label: 'Refund Amount ($)', type: 'number', colSpan: 1 },
+        { name: 'financeNotes', label: 'Finance Notes', type: 'textarea', colSpan: 3 },
+        {
+          name: 'finance_warnings',
+          label: 'Finance Warnings',
+          type: 'custom',
+          colSpan: 3,
+          render: (values) => {
+            const totals = calculateOrderTotals(values);
+            const warnings = [];
+
+            if (values.status === 'delivered' && totals.balanceDue > 0) {
+              warnings.push('⚠️ Order is marked DELIVERED but has an unpaid balance.');
+            }
+            if (values.paymentStatus === 'paid' && values.glPostingStatus === 'unposted') {
+              warnings.push('⚠️ Order is paid but has not been posted to the General Ledger.');
+            }
+            if (totals.balanceDue < 0) {
+              warnings.push('⚠️ Negative balance due (Customer has overpaid).');
+            }
+            if (values.isTaxable !== false && totals.tax === 0) {
+              warnings.push('⚠️ Tax is missing for a taxable order.');
+            }
+
+            if (warnings.length === 0) return null;
+
+            return (
+              <div style={{ background: '#FFFBEB', border: '1px solid #FCD34D', borderRadius: '8px', padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.35rem', fontSize: '0.8125rem', color: '#B45309' }}>
+                {warnings.map((w, idx) => (
+                  <div key={idx}>{w}</div>
+                ))}
+              </div>
+            );
+          },
+        },
+      ],
+    },
+    {
+      id: 'fulfillment',
+      label: 'Fulfillment / Delivery',
+      fields: [
+        { name: 'deliveryMethod', label: 'Delivery Method', type: 'text', colSpan: 1 },
+        { name: 'courier', label: 'Courier / Driver', type: 'text', colSpan: 1 },
+        { name: 'routeNumber', label: 'Route Number', type: 'text', colSpan: 1 },
+        { name: 'deliveryZone', label: 'Delivery Zone', type: 'text', colSpan: 1 },
+        { name: 'pickupWindow', label: 'Pickup/Delivery Window', type: 'text', colSpan: 1 },
+        { name: 'dispatchTime', label: 'Dispatch Time', type: 'text', colSpan: 1 },
+        { name: 'deliveredTime', label: 'Delivered Time', type: 'text', colSpan: 1 },
+        { name: 'proofOfDelivery', label: 'Proof of Delivery Notes', type: 'text', colSpan: 1 },
+        { name: 'deliveryPhotoUrl', label: 'Delivery Photo URL', type: 'text', colSpan: 2 },
+        { name: 'deliveryAttemptCount', label: 'Delivery Attempts', type: 'number', colSpan: 1 },
+        { name: 'failedReason', label: 'Failed Attempt Reason', type: 'text', colSpan: 1 },
+        { name: 'redeliveryRequired', label: 'Redelivery Required', type: 'checkbox', colSpan: 1 },
+        { name: 'driverNotes', label: 'Driver Notes', type: 'textarea', colSpan: 3 },
+        { name: 'customerDeliveryNotes', label: 'Customer Delivery Notes', type: 'textarea', colSpan: 3 },
+      ],
+    },
+    {
+      id: 'internal',
+      label: 'Internal / Audit',
+      fields: [
+        { name: 'internalNotes', label: 'Internal Office Notes', type: 'textarea', colSpan: 3 },
+        { name: 'floristNotes', label: 'Florist / Gift Card Message', type: 'textarea', colSpan: 3 },
+        { name: 'documentId', label: 'Firestore Document ID', type: 'text', readOnly: true, colSpan: 1 },
+        { name: 'sourceType', label: 'Source Type', type: 'text', readOnly: true, colSpan: 1 },
+        { name: 'lastExportDate', label: 'Last Export Date', type: 'text', readOnly: true, colSpan: 1 },
+        {
+          name: 'audit_timeline',
+          label: 'System Audit Trail',
+          type: 'custom',
+          colSpan: 3,
+          render: (values) => {
+            const auditList = values.auditTrail || [];
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
+                <label style={{ fontSize: '0.8125rem', fontWeight: 600 }}>System Audit Timeline</label>
+                <div style={{ maxHeight: '180px', overflowY: 'auto', border: '1px solid #E8EAE6', borderRadius: '8px', padding: '0.75rem', background: '#FAFAF8', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {auditList.length === 0 ? (
+                    <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>No logs recorded yet.</div>
+                  ) : (
+                    auditList.map((log: string, i: number) => (
+                      <div key={i} style={{ display: 'flex', gap: '0.5rem', fontSize: '0.75rem', borderBottom: '1px solid #F0EDE6', paddingBottom: '0.25rem' }}>
+                        <span style={{ color: '#4A6B50', fontWeight: 600 }}>⏱</span>
+                        <span>{log}</span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            );
+          },
+        },
+      ],
+    },
+  ];
+
+  // Dynamically calculate status text for ribbon
+  const statusBadgeText = initialValues.status || 'draft';
+  const statusBadgeClass = `status-${statusBadgeText}`;
+
+  return (
+    <MaintenanceModal
+      isOpen={isOpen}
+      onClose={onClose}
+      onSave={handleSave}
+      onDelete={handleDelete}
+      title={mode === 'create' ? 'Create New Order' : `Order Console: #${initialValues.id.substring(0, 8)}`}
+      subtitle="Complete client sales and schedule courier dispatch."
+      mode={mode}
+      initialValues={initialValues}
+      tabs={tabs}
+      statusBadgeText={statusBadgeText}
+      statusBadgeClass={statusBadgeClass}
+      showDraftButton={mode === 'create'}
+      onSaveDraft={handleSave}
+      validate={handleValidate}
+    >
+      {/* Duplicate Action */}
+      {mode === 'edit' && (
+        <button
+          type="button"
+          onClick={() => handleDuplicate(initialValues)}
+          style={{
+            marginRight: '0.75rem',
+            padding: '0.5rem 1rem',
+            borderRadius: '10px',
+            border: '1px solid #D5D1C8',
+            background: '#FFFFFF',
+            fontSize: '0.8125rem',
+            fontWeight: 500,
+            cursor: 'pointer',
+          }}
+        >
+          Duplicate Order
+        </button>
+      )}
+    </MaintenanceModal>
+  );
+};
