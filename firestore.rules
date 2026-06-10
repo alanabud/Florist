@@ -274,7 +274,7 @@ service cloud.firestore {
       allow read: if isStaff();
       allow create: if isStaff();
       allow update: if isStaff() && (
-        !resource.data.keys().contains('isSystem') || 
+        !('isSystem' in resource.data) || 
         resource.data.isSystem != true || 
         !request.resource.data.diff(resource.data).affectedKeys().hasAny([
           'code', 'name', 'type', 'normalBalance', 'isSystem',
@@ -283,7 +283,7 @@ service cloud.firestore {
         ])
       );
       allow delete: if isAdmin() && (
-        !resource.data.keys().contains('isSystem') || 
+        !('isSystem' in resource.data) || 
         resource.data.isSystem != true
       );
     }
