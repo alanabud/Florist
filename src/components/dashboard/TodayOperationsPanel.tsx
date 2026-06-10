@@ -19,23 +19,24 @@ export const TodayOperationsPanel: React.FC = () => {
   );
   
   const productionQueue = orders.filter(o => 
-    o.status === 'confirmed' || o.status === 'preparing'
+    o.status === 'confirmed' || o.status === 'scheduled' || o.status === 'in_design'
   );
 
   const urgentAlerts = orders.filter(o => 
     (o.priority === 'high' || o.deliveryDate === todayStr) && 
     o.status !== 'delivered' && 
-    o.status !== 'cancelled'
+    o.status !== 'cancelled' &&
+    o.status !== 'refunded'
   );
 
   const handleStartProduction = (id: string) => {
-    updateOrderStatus(id, 'preparing');
-    addToast(`Order #${id.substring(0, 8).toUpperCase()} moved to preparing.`, 'success');
+    updateOrderStatus(id, 'in_design');
+    addToast(`Order #${id.substring(0, 8).toUpperCase()} moved to design.`, 'success');
   };
 
   const handleCompleteProduction = (id: string) => {
-    updateOrderStatus(id, 'out_for_delivery');
-    addToast(`Order #${id.substring(0, 8).toUpperCase()} marked ready & out for delivery.`, 'success');
+    updateOrderStatus(id, 'ready');
+    addToast(`Order #${id.substring(0, 8).toUpperCase()} marked ready for courier.`, 'success');
   };
 
   const handleMarkDelivered = (id: string) => {
@@ -93,7 +94,7 @@ export const TodayOperationsPanel: React.FC = () => {
               productionQueue.map(order => (
                 <div key={order.id} className={styles.card}>
                   <div className={styles.cardLeft}>
-                    <span className={`${styles.dot} ${order.status === 'preparing' ? styles.dotPreparing : styles.dotConfirmed}`} />
+                    <span className={`${styles.dot} ${order.status === 'in_design' ? styles.dotPreparing : styles.dotConfirmed}`} />
                     <div>
                       <h4 className={styles.cardTitle}>{order.customerName}</h4>
                       <p className={styles.cardMeta}>
@@ -102,7 +103,7 @@ export const TodayOperationsPanel: React.FC = () => {
                     </div>
                   </div>
                   <div className={styles.cardRight}>
-                    {order.status === 'confirmed' ? (
+                    {['confirmed', 'scheduled'].includes(order.status) ? (
                       <button 
                         className={styles.btnAction} 
                         onClick={() => handleStartProduction(order.id)}
@@ -195,10 +196,13 @@ export const TodayOperationsPanel: React.FC = () => {
                     <button 
                       className={styles.btnUrgentSolve}
                       onClick={() => {
-                        if (order.status === 'draft' || order.status === 'confirmed') {
+                        if (order.status === 'draft' || order.status === 'confirmed' || order.status === 'scheduled') {
                           handleStartProduction(order.id);
-                        } else if (order.status === 'preparing') {
+                        } else if (order.status === 'in_design') {
                           handleCompleteProduction(order.id);
+                        } else if (order.status === 'ready') {
+                          updateOrderStatus(order.id, 'out_for_delivery');
+                          addToast(`Order #${order.id.substring(0, 8).toUpperCase()} dispatched to courier.`, 'success');
                         } else {
                           handleMarkDelivered(order.id);
                         }

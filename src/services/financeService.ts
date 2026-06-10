@@ -210,37 +210,76 @@ export const postOrderFinancials = async (
       status?: string; 
       paymentStatus?: string;
       orderNumber?: string;
+      amountPaid?: number;
     };
 
+    // Safeguards
     if (orderData.glPostingStatus === 'posted') {
       throw new Error(`Order ${orderId} is already posted to the General Ledger.`);
     }
 
-    // 2. Determine if it is paid
-    const isPaid = orderData.paymentStatus === 'paid' || orderData.status === 'paid' || orderData.status === 'delivered';
-    const total = orderData.total;
-
-    // 3. Create Journal Lines
-    const lines: JournalLine[] = [];
-
-    // Debit Cash (if paid) or Accounts Receivable (if unpaid)
-    if (isPaid) {
-      lines.push({ account: 'Cash', debit: total, credit: 0 });
-    } else {
-      lines.push({ account: 'Accounts Receivable', debit: total, credit: 0 });
+    if (orderData.status === 'cancelled' || orderData.status === 'refunded') {
+      throw new Error(`Cannot post cancelled or refunded orders directly to the General Ledger.`);
     }
 
-    // Credit Revenues and Liabilities
+    // 2. Resolve Chart of Accounts definitions (Firestore first, fallback to static defaults)
+    let coa: any[] = [];
+    try {
+      const snap = await getDocs(collection(db, 'chartOfAccounts'));
+      coa = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (e) {
+      console.warn("Could not query chartOfAccounts for journal enrichment:", e);
+    }
+    if (!coa || coa.length === 0) {
+      coa = CHART_OF_ACCOUNTS;
+    }
+
+    const getAccountInfo = (codeOrName: string) => {
+      const matched = coa.find(a => a.code === codeOrName || a.name === codeOrName);
+      if (matched) {
+        return {
+          accountId: matched.id || '',
+          accountName: matched.name,
+          account: matched.name
+        };
+      }
+      return {
+        accountId: '',
+        accountName: codeOrName,
+        account: codeOrName
+      };
+    };
+
+    const total = orderData.total || 0;
+    const amountPaid = orderData.amountPaid || 0;
+    const balanceDue = Math.round((total - amountPaid) * 100) / 100;
+
+    // 3. Create Journal Lines using the partial-payment model
+    const lines: JournalLine[] = [];
+
+    if (amountPaid >= total || orderData.paymentStatus === 'paid') {
+      // Fully paid
+      lines.push({ ...getAccountInfo('1010'), debit: total, credit: 0 });
+    } else if (amountPaid <= 0 || orderData.paymentStatus === 'unpaid') {
+      // Unpaid
+      lines.push({ ...getAccountInfo('1200'), debit: total, credit: 0 });
+    } else {
+      // Partially paid
+      lines.push({ ...getAccountInfo('1010'), debit: amountPaid, credit: 0 });
+      lines.push({ ...getAccountInfo('1200'), debit: balanceDue, credit: 0 });
+    }
+
+    // Credits
     if (orderData.subtotal > 0) {
-      lines.push({ account: 'Sales Revenue', debit: 0, credit: orderData.subtotal });
+      lines.push({ ...getAccountInfo('4000'), debit: 0, credit: orderData.subtotal });
     }
     
     if (orderData.deliveryFee > 0) {
-      lines.push({ account: 'Delivery Revenue', debit: 0, credit: orderData.deliveryFee });
+      lines.push({ ...getAccountInfo('4100'), debit: 0, credit: orderData.deliveryFee });
     }
     
     if (orderData.taxes > 0) {
-      lines.push({ account: 'Sales Tax Payable', debit: 0, credit: orderData.taxes });
+      lines.push({ ...getAccountInfo('2100'), debit: 0, credit: orderData.taxes });
     }
 
     const shortId = orderData.orderNumber || orderId.substring(0, 8).toUpperCase();
@@ -259,9 +298,10 @@ export const postOrderFinancials = async (
 
     const jeId = await postJournalEntry(je);
 
-    // 5. Update glPostingStatus in Firestore
+    // 5. Update glPostingStatus & journalEntryId in Firestore
     await updateDoc(orderDocRef, {
       glPostingStatus: 'posted',
+      journalEntryId: jeId,
       updatedAt: serverTimestamp()
     });
 
@@ -272,7 +312,7 @@ export const postOrderFinancials = async (
       entityType: 'finance',
       entityId: jeId,
       before: { glPostingStatus: 'unposted' },
-      after: { glPostingStatus: 'posted', orderId },
+      after: { glPostingStatus: 'posted', orderId, journalEntryId: jeId },
       journalEntryId: jeId
     });
 

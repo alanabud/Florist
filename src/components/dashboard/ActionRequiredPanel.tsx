@@ -17,7 +17,7 @@ export const ActionRequiredPanel: React.FC = () => {
 
   // 2. Filter Unassigned Delivery Orders
   const unassignedOrders = orders.filter(o => 
-    o.status === 'preparing' && !o.driver
+    (o.status === 'in_design' || o.status === 'ready') && !o.driver
   );
 
   // 3. Filter Urgent Drafts/Unconfirmed

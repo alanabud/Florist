@@ -21,29 +21,53 @@ function computeTabErrorCounts(
 export function validateOrder(order: any): ValidationResult {
   const errors: Record<string, string> = {};
 
-  // Map fields to tabs
+  // Map fields to O2C tabs
   const fieldToTabMap: Record<string, string> = {
-    dueDate: 'overview',
-    deliveryDate: 'overview',
-    status: 'overview',
-    priority: 'overview',
-    assignedStaffId: 'overview',
+    id: 'order',
+    status: 'order',
+    sourceType: 'order',
+    internalOrderType: 'order',
+    priority: 'order',
+    salesChannel: 'order',
+    storeLocation: 'order',
+    
     customerName: 'customer',
     customerEmail: 'customer',
     customerPhone: 'customer',
     recipientName: 'customer',
     recipientPhone: 'customer',
-    addressLine1: 'customer',
-    city: 'customer',
-    state: 'customer',
-    zipCode: 'customer',
-    amountPaid: 'finance',
-    paymentMethod: 'finance',
-    taxRate: 'finance',
-    deliveryMethod: 'fulfillment',
+    relationshipToSender: 'customer',
+    
+    dueDate: 'delivery',
+    deliveryDate: 'delivery',
+    deliveryWindow: 'delivery',
+    addressLine1: 'delivery',
+    addressLine2: 'delivery',
+    city: 'delivery',
+    state: 'delivery',
+    zipCode: 'delivery',
+    deliveryInstructions: 'delivery',
+    gateCode: 'delivery',
+    
+    lineItems: 'items',
+    
+    paymentStatus: 'payment',
+    paymentMethod: 'payment',
+    amountPaid: 'payment',
+    balanceDue: 'payment',
+    paymentReference: 'payment',
+    stripeId: 'payment',
+    taxRate: 'payment',
+    
+    assignedStaffId: 'fulfillment',
     courier: 'fulfillment',
+    driver: 'fulfillment',
+    fulfillmentStatus: 'fulfillment',
     deliveredTime: 'fulfillment',
     failedReason: 'fulfillment',
+    
+    glPostingStatus: 'gl_audit',
+    journalEntryId: 'gl_audit',
   };
 
   // 1. Basic Required Fields
@@ -62,9 +86,9 @@ export function validateOrder(order: any): ValidationResult {
   // 2. Calculations check
   const totals = calculateOrderTotals(order);
   
-  // Rule: Completed/Delivered order cannot have unpaid balance
-  if ((order.status === 'delivered' || order.status === 'paid') && totals.balanceDue > 0) {
-    errors.amountPaid = `Completed order has an unpaid balance of $${totals.balanceDue.toFixed(2)}`;
+  // Rule: Completed/Delivered order must not have unpaid balance
+  if (order.status === 'delivered' && totals.balanceDue > 0) {
+    errors.amountPaid = `Delivered order must have a zero balance due. Current balance: $${totals.balanceDue.toFixed(2)}`;
   }
 
   // Rule: Delivered order must have delivery date/time

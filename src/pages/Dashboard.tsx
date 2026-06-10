@@ -67,10 +67,10 @@ export const Dashboard: React.FC = () => {
 
   const todaysPaidOrders = orders.filter(o => {
     const orderDate = toDate(o.createdAt);
-    return isToday(orderDate) && ['preparing', 'out_for_delivery', 'delivered', 'paid'].includes(o.status);
+    return isToday(orderDate) && !['draft', 'cancelled', 'refunded'].includes(o.status);
   });
   const todaysRevenue = todaysPaidOrders.reduce((sum, o) => sum + o.total, 0);
-  const inProduction = orders.filter(o => o.status === 'preparing').length;
+  const inProduction = orders.filter(o => o.status === 'in_design').length;
   const lowStockItems = inventory.filter(i => i.quantity <= i.reorderPoint);
 
   // Chart data and sparkline metrics over last 7 days
@@ -89,7 +89,7 @@ export const Dashboard: React.FC = () => {
         orderDate.getFullYear() === targetDate.getFullYear() &&
         orderDate.getMonth() === targetDate.getMonth() &&
         orderDate.getDate() === targetDate.getDate() &&
-        ['preparing', 'out_for_delivery', 'delivered', 'paid'].includes(o.status)
+        !['draft', 'cancelled', 'refunded'].includes(o.status)
       );
     });
     return {
@@ -102,27 +102,31 @@ export const Dashboard: React.FC = () => {
   const statusData = [
     { name: 'Draft', value: orders.filter(o => o.status === 'draft').length, color: '#94A3B8' },
     { name: 'Confirmed', value: orders.filter(o => o.status === 'confirmed').length, color: '#3B82F6' },
-    { name: 'Preparing', value: orders.filter(o => o.status === 'preparing').length, color: '#F59E0B' },
+    { name: 'Scheduled', value: orders.filter(o => o.status === 'scheduled').length, color: '#60A5FA' },
+    { name: 'In Design', value: orders.filter(o => o.status === 'in_design').length, color: '#F59E0B' },
+    { name: 'Ready', value: orders.filter(o => o.status === 'ready').length, color: '#FBBF24' },
     { name: 'In Delivery', value: orders.filter(o => o.status === 'out_for_delivery').length, color: '#8B5CF6' },
     { name: 'Delivered', value: orders.filter(o => o.status === 'delivered').length, color: '#10B981' },
+    { name: 'Cancelled', value: orders.filter(o => o.status === 'cancelled').length, color: '#EF4444' },
+    { name: 'Refunded', value: orders.filter(o => o.status === 'refunded').length, color: '#EC4899' },
   ].filter(d => d.value > 0);
 
   // Unified financial derivations to prevent double-counting
   const totalLifetimeRevenue = orders
-    .filter(o => ['preparing', 'out_for_delivery', 'delivered', 'paid'].includes(o.status))
+    .filter(o => !['draft', 'cancelled', 'refunded'].includes(o.status))
     .reduce((sum, o) => sum + o.total, 0);
 
   const arAsset = orders
-    .filter(o => ['draft', 'confirmed', 'pending_payment'].includes(o.status))
-    .reduce((sum, o) => sum + o.total, 0);
+    .filter(o => ['confirmed', 'scheduled', 'in_design', 'ready', 'out_for_delivery'].includes(o.status) && (o.balanceDue !== undefined ? o.balanceDue > 0 : o.total > 0))
+    .reduce((sum, o) => sum + (o.balanceDue !== undefined ? o.balanceDue : o.total), 0);
 
   const taxLiabilities = orders
-    .filter(o => o.status !== 'cancelled')
+    .filter(o => !['draft', 'cancelled', 'refunded'].includes(o.status))
     .reduce((sum, o) => sum + (o.taxes !== undefined ? o.taxes : o.total * 0.08875), 0);
 
   const paidOrCompletedOrderTotals = orders
-    .filter(o => ['preparing', 'out_for_delivery', 'delivered', 'paid'].includes(o.status))
-    .reduce((sum, o) => sum + o.total, 0);
+    .filter(o => !['draft', 'cancelled', 'refunded'].includes(o.status))
+    .reduce((sum, o) => sum + (o.amountPaid !== undefined ? o.amountPaid : 0), 0);
 
   const cashAcct = useFinanceStore(s => s.chartOfAccounts.find(a => a.code === '1010'));
   const cashAcctId = cashAcct?.id;

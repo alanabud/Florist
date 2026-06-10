@@ -30,7 +30,7 @@ export const Orders: React.FC = () => {
   const grossRevenue = orders
     .filter(o => o.status !== 'cancelled')
     .reduce((sum, o) => sum + (o.total || 0), 0);
-  const activePreparing = orders.filter(o => o.status === 'preparing').length;
+  const activePreparing = orders.filter(o => o.status === 'in_design').length;
   const inTransitCount = orders.filter(o => o.status === 'out_for_delivery').length;
   const unpaidBalance = orders
     .filter(o => o.status !== 'cancelled' && o.paymentStatus !== 'paid')
@@ -40,7 +40,7 @@ export const Orders: React.FC = () => {
   const allCount = orders.length;
   const draftCount = orders.filter(o => o.status === 'draft').length;
   const confirmedCount = orders.filter(o => o.status === 'confirmed').length;
-  const preparingCount = orders.filter(o => o.status === 'preparing').length;
+  const preparingCount = orders.filter(o => o.status === 'in_design').length;
   const transitCount = orders.filter(o => o.status === 'out_for_delivery').length;
   const deliveredCount = orders.filter(o => o.status === 'delivered').length;
   const cancelledCount = orders.filter(o => o.status === 'cancelled').length;
@@ -205,7 +205,7 @@ export const Orders: React.FC = () => {
             { key: 'all', label: 'All Orders', count: allCount },
             { key: 'draft', label: 'Drafts', count: draftCount },
             { key: 'confirmed', label: 'Confirmed', count: confirmedCount },
-            { key: 'preparing', label: 'Preparing', count: preparingCount },
+            { key: 'in_design', label: 'In Design', count: preparingCount },
             { key: 'out_for_delivery', label: 'Transit', count: transitCount },
             { key: 'delivered', label: 'Delivered', count: deliveredCount },
             { key: 'cancelled', label: 'Cancelled', count: cancelledCount },

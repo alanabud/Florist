@@ -13,8 +13,8 @@ export const WorkQueuePanel: React.FC = () => {
   const { orders, inventory, updateOrderStatus } = useAdminStore();
   const addToast = useToastStore((s) => s.addToast);
 
-  const needsAttention = orders.filter(o => o.status === 'draft' || o.status === 'confirmed').slice(0, 5);
-  const inProduction = orders.filter(o => o.status === 'preparing').slice(0, 5);
+  const needsAttention = orders.filter(o => o.status === 'draft' || o.status === 'confirmed' || o.status === 'scheduled').slice(0, 5);
+  const inProduction = orders.filter(o => o.status === 'in_design').slice(0, 5);
   const deliveries = orders.filter(o => o.status === 'out_for_delivery').slice(0, 5);
   const lowStock = inventory.filter(i => i.quantity <= i.reorderPoint);
 
@@ -23,9 +23,12 @@ export const WorkQueuePanel: React.FC = () => {
       updateOrderStatus(orderId, 'confirmed');
       addToast(`Order ${orderId.substring(0,8)} confirmed.`, 'success');
     } else if (action === 'start') {
-      updateOrderStatus(orderId, 'preparing');
-      addToast(`Order ${orderId.substring(0,8)} moved to production.`, 'success');
+      updateOrderStatus(orderId, 'in_design');
+      addToast(`Order ${orderId.substring(0,8)} moved to design.`, 'success');
     } else if (action === 'complete') {
+      updateOrderStatus(orderId, 'ready');
+      addToast(`Order ${orderId.substring(0,8)} marked ready for courier.`, 'success');
+    } else if (action === 'delivered') {
       updateOrderStatus(orderId, 'delivered');
       addToast(`Delivery ${orderId.substring(0,8)} completed.`, 'success');
     }
@@ -70,10 +73,10 @@ export const WorkQueuePanel: React.FC = () => {
         </div>
         <button className={styles.actionBtn} onClick={() => {
           if (activeTab === 0) handleAction(order.id, 'confirm');
-          else if (activeTab === 1) handleAction(order.id, 'start');
-          else handleAction(order.id, 'complete');
+          else if (activeTab === 1) handleAction(order.id, 'complete');
+          else handleAction(order.id, 'delivered');
         }}>
-          {activeTab === 0 ? 'Review' : activeTab === 1 ? 'Complete' : 'Mark Delivered'}
+          {activeTab === 0 ? 'Review' : activeTab === 1 ? 'Mark Ready' : 'Mark Delivered'}
           <ArrowRight size={14} />
         </button>
       </div>

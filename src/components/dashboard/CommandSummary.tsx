@@ -69,19 +69,19 @@ export const CommandSummary: React.FC<CommandSummaryProps> = ({ onOpenModal }) =
   });
 
   const activeDeliveries = orders.filter(o => o.status === 'out_for_delivery').length;
-  const inProduction = orders.filter(o => o.status === 'preparing').length;
+  const inProduction = orders.filter(o => o.status === 'in_design').length;
   const needsReview = orders.filter(o => o.status === 'draft').length; // matching 'Draft Orders' metric
   const lowStock = inventory.filter(i => i.quantity <= i.reorderPoint);
 
   // Target orders completed logic
-  const todaysCompletedCount = todaysOrders.filter(o => ['preparing', 'out_for_delivery', 'delivered', 'paid'].includes(o.status)).length;
+  const todaysCompletedCount = todaysOrders.filter(o => !['draft', 'cancelled', 'refunded'].includes(o.status)).length;
   const targetOrders = 39;
   const progressPercent = Math.min(100, Math.round((todaysCompletedCount / targetOrders) * 100));
 
   // Compute live cash collected avoiding double counting
   const paidOrCompletedOrderTotals = orders
-    .filter(o => ['preparing', 'out_for_delivery', 'delivered', 'paid'].includes(o.status))
-    .reduce((sum, o) => sum + o.total, 0);
+    .filter(o => !['draft', 'cancelled', 'refunded'].includes(o.status))
+    .reduce((sum, o) => sum + (o.amountPaid !== undefined ? o.amountPaid : 0), 0);
 
   const standaloneCash = journalEntries.reduce((total, entry) => {
     // If it's a primary order sale, we already count it via orders, so skip to avoid double counting.

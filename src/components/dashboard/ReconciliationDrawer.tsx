@@ -96,11 +96,11 @@ export const ReconciliationDrawer: React.FC<ReconciliationDrawerProps> = ({
 
   // Derivations matching Dashboard.tsx logic
   const paidOrCompletedOrders = orders.filter((o) =>
-    ['preparing', 'out_for_delivery', 'delivered', 'paid'].includes(o.status)
+    !['draft', 'cancelled', 'refunded'].includes(o.status) && o.amountPaid !== undefined && o.amountPaid > 0
   );
   
   const paidOrCompletedOrderTotals = paidOrCompletedOrders.reduce(
-    (sum, o) => sum + o.total,
+    (sum, o) => sum + (o.amountPaid !== undefined ? o.amountPaid : 0),
     0
   );
 
@@ -146,23 +146,23 @@ export const ReconciliationDrawer: React.FC<ReconciliationDrawerProps> = ({
 
   // Revenue
   const todayPaidOrders = orders.filter((o) => {
-    return isTodayDate(o.createdAt) && ['preparing', 'out_for_delivery', 'delivered', 'paid'].includes(o.status);
+    return isTodayDate(o.createdAt) && !['draft', 'cancelled', 'refunded'].includes(o.status);
   });
   const todayRevenueTotal = todayPaidOrders.reduce((sum, o) => sum + o.total, 0);
 
   const lifetimePaidOrders = orders.filter((o) =>
-    ['preparing', 'out_for_delivery', 'delivered', 'paid'].includes(o.status)
+    !['draft', 'cancelled', 'refunded'].includes(o.status)
   );
   const lifetimeRevenueTotal = lifetimePaidOrders.reduce((sum, o) => sum + o.total, 0);
 
   // Accounts Receivable
   const arOrders = orders.filter((o) =>
-    ['draft', 'confirmed', 'pending_payment'].includes(o.status)
+    ['confirmed', 'scheduled', 'in_design', 'ready', 'out_for_delivery'].includes(o.status) && (o.balanceDue !== undefined ? o.balanceDue > 0 : o.total > 0)
   );
-  const arAssetTotal = arOrders.reduce((sum, o) => sum + o.total, 0);
+  const arAssetTotal = arOrders.reduce((sum, o) => sum + (o.balanceDue !== undefined ? o.balanceDue : o.total), 0);
 
   // Tax Liabilities
-  const taxOrders = orders.filter((o) => o.status !== 'cancelled');
+  const taxOrders = orders.filter((o) => !['draft', 'cancelled', 'refunded'].includes(o.status));
   const taxLiabilitiesTotal = taxOrders.reduce(
     (sum, o) => sum + (o.taxes !== undefined ? o.taxes : o.total * 0.08875),
     0
@@ -427,7 +427,7 @@ export const ReconciliationDrawer: React.FC<ReconciliationDrawerProps> = ({
               <div className={styles.formulaCard}>
                 <div className={styles.formulaTitle}>Formula Derivation</div>
                 <div className={styles.formulaMath}>
-                  Sum of Totals for Draft + Confirmed + Pending Payment Orders
+                  Sum of Balances for Confirmed, Scheduled, In Design, Ready, and Out for Delivery Orders
                 </div>
                 <div className={styles.formulaSummary}>
                   <span className={styles.summaryLabel}>Total Accounts Receivable</span>
@@ -450,6 +450,7 @@ export const ReconciliationDrawer: React.FC<ReconciliationDrawerProps> = ({
                           <th>Status</th>
                           <th>Date</th>
                           <th style={{ textAlign: 'right' }}>Total</th>
+                          <th style={{ textAlign: 'right' }}>Balance Due</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -471,8 +472,11 @@ export const ReconciliationDrawer: React.FC<ReconciliationDrawerProps> = ({
                               </span>
                             </td>
                             <td>{toDateString(order.createdAt)}</td>
-                            <td style={{ textAlign: 'right', fontWeight: 600 }}>
+                            <td style={{ textAlign: 'right' }}>
                               ${order.total.toFixed(2)}
+                            </td>
+                            <td style={{ textAlign: 'right', fontWeight: 600 }}>
+                              ${(order.balanceDue !== undefined ? order.balanceDue : order.total).toFixed(2)}
                             </td>
                           </tr>
                         ))}
@@ -490,7 +494,7 @@ export const ReconciliationDrawer: React.FC<ReconciliationDrawerProps> = ({
               <div className={styles.formulaCard}>
                 <div className={styles.formulaTitle}>Formula Derivation</div>
                 <div className={styles.formulaMath}>
-                  Estimated Tax (8.875% of total) from Non-Cancelled Orders
+                  Estimated Tax from Active Orders (Excluding Draft, Cancelled, and Refunded)
                 </div>
                 <div className={styles.formulaSummary}>
                   <span className={styles.summaryLabel}>Total Tax Liabilities</span>

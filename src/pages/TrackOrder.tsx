@@ -65,7 +65,8 @@ export const TrackOrder: React.FC = () => {
 
   const trackingSteps = [
     { key: 'placed', label: 'Placed', desc: 'Order received and confirmed' },
-    { key: 'preparing', label: 'In Assembly', desc: 'Florists are selecting and arranging stems' },
+    { key: 'preparing', label: 'In Design', desc: 'Florists are selecting and arranging stems' },
+    { key: 'ready', label: 'Ready', desc: 'Bouquet completed and quality checked' },
     { key: 'out_for_delivery', label: 'In Transit', desc: 'Assigned to courier route' },
     { key: 'delivered', label: 'Delivered', desc: 'Successfully hand-delivered to recipient' }
   ];

@@ -72,7 +72,8 @@ service cloud.firestore {
       return [
         'orderNumber', 'orderNumberNormalized', 'senderEmailNormalized',
         'status', 'deliveryDate', 'recipientFirstName',
-        'city', 'state', 'itemsSummary', 'timeline', 'updatedAt'
+        'city', 'state', 'itemsSummary', 'timeline', 'updatedAt',
+        'deliveryWindow', 'trackingMessage'
       ];
     }
 

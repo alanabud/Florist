@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useAdminStore } from '../store/adminStore';
+import { useAdminStore, type OrderStatus } from '../store/adminStore';
 import { Button } from '../components/ui/Button';
 import { MapPin, Printer, Truck, CheckCircle2, Clock } from 'lucide-react';
 import { useToastStore } from '../store/toastStore';
@@ -19,29 +19,31 @@ export const Deliveries: React.FC = () => {
   }, [fetchOrders]);
 
   // Filters local states
-  const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>('active');
+  const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>('today');
   const [driverFilter, setDriverFilter] = useState<string>('all');
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
 
   const searchTerm = searchParams.get('search') || '';
 
   // 1. Calculate KPI Metrics
+  const todayStr = new Date().toISOString().split('T')[0];
   const totalActiveDeliveries = orders.filter(o => 
-    o.status === 'confirmed' || o.status === 'preparing' || o.status === 'out_for_delivery'
+    ['confirmed', 'scheduled', 'in_design', 'ready', 'out_for_delivery'].includes(o.status)
   ).length;
-  const inAssembly = orders.filter(o => o.status === 'preparing').length;
+  const inAssembly = orders.filter(o => o.status === 'in_design').length;
   const inTransit = orders.filter(o => o.status === 'out_for_delivery').length;
   const deliveredToday = orders.filter(o => o.status === 'delivered').length;
 
   // Status Tab Counts
-  const allActiveCount = orders.filter(o => o.status === 'confirmed' || o.status === 'preparing' || o.status === 'out_for_delivery').length;
-  const assemblyCount = orders.filter(o => o.status === 'preparing').length;
-  const transitCount = orders.filter(o => o.status === 'out_for_delivery').length;
+  const todayCount = orders.filter(o => o.deliveryDate === todayStr && !['cancelled', 'refunded', 'draft'].includes(o.status)).length;
+  const designCount = orders.filter(o => o.status === 'in_design').length;
+  const readyCount = orders.filter(o => o.status === 'ready').length;
+  const deliveryCount = orders.filter(o => o.status === 'out_for_delivery').length;
   const completedCount = orders.filter(o => o.status === 'delivered').length;
 
   const filteredDeliveries = orders.filter(o => {
-    // Delivery records are backed by Orders that are confirmed, preparing, out_for_delivery, or delivered
-    const isDelivery = ['confirmed', 'preparing', 'out_for_delivery', 'delivered'].includes(o.status);
+    // Delivery records are backed by active O2C orders
+    const isDelivery = !['draft', 'cancelled', 'refunded'].includes(o.status);
     if (!isDelivery) return false;
 
     // Search filter
@@ -53,13 +55,15 @@ export const Deliveries: React.FC = () => {
     if (!matchesSearch) return false;
 
     // Tab Status Filter
-    if (selectedStatusFilter === 'active') {
-      if (!['confirmed', 'preparing', 'out_for_delivery'].includes(o.status)) return false;
-    } else if (selectedStatusFilter === 'preparing') {
-      if (o.status !== 'preparing') return false;
-    } else if (selectedStatusFilter === 'transit') {
+    if (selectedStatusFilter === 'today') {
+      if (o.deliveryDate !== todayStr) return false;
+    } else if (selectedStatusFilter === 'design') {
+      if (o.status !== 'in_design') return false;
+    } else if (selectedStatusFilter === 'ready') {
+      if (o.status !== 'ready') return false;
+    } else if (selectedStatusFilter === 'delivery') {
       if (o.status !== 'out_for_delivery') return false;
-    } else if (selectedStatusFilter === 'delivered') {
+    } else if (selectedStatusFilter === 'completed') {
       if (o.status !== 'delivered') return false;
     }
 
@@ -87,40 +91,27 @@ export const Deliveries: React.FC = () => {
     setSearchParams(searchParams);
   };
 
-  const handleDispatch = async (id: string) => {
+  const handleStatusTransition = async (id: string, newStatus: OrderStatus, successMsg: string) => {
     const order = orders.find(o => o.id === id);
     const oldStatus = order ? order.status : null;
 
-    updateOrderStatus(id, 'out_for_delivery');
+    try {
+      await updateOrderStatus(id, newStatus);
 
-    await writeAuditLog({
-      actor: 'Logistics',
-      action: 'DELIVERY_STATUS_CHANGE',
-      entityType: 'order',
-      entityId: id,
-      before: oldStatus ? { status: oldStatus } : null,
-      after: { status: 'out_for_delivery' }
-    });
+      await writeAuditLog({
+        actor: 'Logistics',
+        action: 'DELIVERY_STATUS_CHANGE',
+        entityType: 'order',
+        entityId: id,
+        before: oldStatus ? { status: oldStatus } : null,
+        after: { status: newStatus }
+      });
 
-    addToast(`Order ${id.substring(0,8)} dispatched to driver.`, 'success');
-  };
-
-  const handleComplete = async (id: string) => {
-    const order = orders.find(o => o.id === id);
-    const oldStatus = order ? order.status : null;
-
-    updateOrderStatus(id, 'delivered');
-
-    await writeAuditLog({
-      actor: 'Logistics',
-      action: 'DELIVERY_STATUS_CHANGE',
-      entityType: 'order',
-      entityId: id,
-      before: oldStatus ? { status: oldStatus } : null,
-      after: { status: 'delivered' }
-    });
-
-    addToast(`Order ${id.substring(0,8)} marked as delivered.`, 'success');
+      addToast(successMsg, 'success');
+    } catch (err: any) {
+      console.error(err);
+      addToast(err.message || `Failed to transition order to ${newStatus}.`, 'error');
+    }
   };
 
   const handleOptimize = () => {
@@ -224,10 +215,11 @@ export const Deliveries: React.FC = () => {
         {/* Status Counters Tab-bar */}
         <div style={{ display: 'flex', borderBottom: '1px solid #E8EAE6', gap: '0.25rem', padding: '1rem 1.5rem 0 1.5rem', overflowX: 'auto', background: '#FDFCFA', borderRadius: '16px 16px 0 0' }}>
           {[
-            { key: 'active', label: 'Active Queue', count: allActiveCount },
-            { key: 'preparing', label: 'In Assembly', count: assemblyCount },
-            { key: 'transit', label: 'Out for Delivery', count: transitCount },
-            { key: 'delivered', label: 'Completed Deliveries', count: completedCount },
+            { key: 'today', label: "Today's Orders", count: todayCount },
+            { key: 'design', label: 'Designer Queue', count: designCount },
+            { key: 'ready', label: 'Ready Queue', count: readyCount },
+            { key: 'delivery', label: 'Delivery Queue', count: deliveryCount },
+            { key: 'completed', label: 'Completed', count: completedCount },
           ].map((tab) => {
             const isActive = selectedStatusFilter === tab.key;
             return (
@@ -309,12 +301,12 @@ export const Deliveries: React.FC = () => {
             </select>
           </div>
 
-          {(driverFilter !== 'all' || priorityFilter !== 'all' || selectedStatusFilter !== 'active' || searchTerm) && (
+          {(driverFilter !== 'all' || priorityFilter !== 'all' || selectedStatusFilter !== 'today' || searchTerm) && (
             <button
               onClick={() => {
                 setDriverFilter('all');
                 setPriorityFilter('all');
-                setSelectedStatusFilter('active');
+                setSelectedStatusFilter('today');
                 searchParams.delete('search');
                 setSearchParams(searchParams);
               }}
@@ -392,13 +384,23 @@ export const Deliveries: React.FC = () => {
                     </td>
                     <td style={{ padding: '1.125rem 1.5rem', textAlign: 'right' }} onClick={(e) => e.stopPropagation()}>
                       <div style={{ display: 'inline-flex', gap: '0.5rem', alignItems: 'center' }}>
-                        {order.status !== 'out_for_delivery' && order.status !== 'delivered' && (
-                          <button className={styles.actionBtn} onClick={() => handleDispatch(order.id)} style={{ padding: '0.35rem 0.75rem', fontSize: '0.8125rem', border: '1px solid #E8EAE6', borderRadius: '6px', background: '#F0F5F1', color: '#4A6B50', fontWeight: 600, cursor: 'pointer' }}>
+                        {['confirmed', 'scheduled'].includes(order.status) && (
+                          <button className={styles.actionBtn} onClick={() => handleStatusTransition(order.id, 'in_design', `Order ${order.id.substring(0,8)} started crafting.`)} style={{ padding: '0.35rem 0.75rem', fontSize: '0.8125rem', border: '1px solid #E8EAE6', borderRadius: '6px', background: '#FEF3C7', color: '#D97706', fontWeight: 600, cursor: 'pointer' }}>
+                            Start Crafting
+                          </button>
+                        )}
+                        {order.status === 'in_design' && (
+                          <button className={styles.actionBtn} onClick={() => handleStatusTransition(order.id, 'ready', `Order ${order.id.substring(0,8)} marked as ready.`)} style={{ padding: '0.35rem 0.75rem', fontSize: '0.8125rem', border: '1px solid #E8EAE6', borderRadius: '6px', background: '#F0F5F1', color: '#4A6B50', fontWeight: 600, cursor: 'pointer' }}>
+                            Mark Ready
+                          </button>
+                        )}
+                        {order.status === 'ready' && (
+                          <button className={styles.actionBtn} onClick={() => handleStatusTransition(order.id, 'out_for_delivery', `Order ${order.id.substring(0,8)} dispatched to driver.`)} style={{ padding: '0.35rem 0.75rem', fontSize: '0.8125rem', border: '1px solid #E8EAE6', borderRadius: '6px', background: '#E0F2FE', color: '#0369A1', fontWeight: 600, cursor: 'pointer' }}>
                             Dispatch
                           </button>
                         )}
                         {order.status === 'out_for_delivery' && (
-                          <button className={styles.actionBtn} onClick={() => handleComplete(order.id)} style={{ padding: '0.35rem 0.75rem', fontSize: '0.8125rem', border: '1px solid #E8EAE6', borderRadius: '6px', background: '#E0F2FE', color: '#0369A1', fontWeight: 600, cursor: 'pointer' }}>
+                          <button className={styles.actionBtn} onClick={() => handleStatusTransition(order.id, 'delivered', `Order ${order.id.substring(0,8)} marked as delivered.`)} style={{ padding: '0.35rem 0.75rem', fontSize: '0.8125rem', border: '1px solid #E8EAE6', borderRadius: '6px', background: '#D1FAE5', color: '#065F46', fontWeight: 600, cursor: 'pointer' }}>
                             Complete
                           </button>
                         )}

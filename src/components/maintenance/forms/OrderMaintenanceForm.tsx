@@ -6,7 +6,9 @@ import { useToastStore } from '../../../store/toastStore';
 import { calculateOrderTotals } from '../../../services/orderCalculationService';
 import { validateOrder } from '../../../services/validators';
 import { writeAuditLog } from '../../../services/auditService';
-import { createOrderAndPostFinancials } from '../../../services/financeService';
+import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
+import { db } from '../../../firebase/config';
+import { postOrderFinancials } from '../../../services/financeService';
 import { normalizeOrder } from '../../../services/normalizers';
 import { Plus, Trash2 } from 'lucide-react';
 
@@ -17,7 +19,7 @@ interface OrderMaintenanceFormProps {
 
 export const OrderMaintenanceForm: React.FC<OrderMaintenanceFormProps> = ({ isOpen, onClose }) => {
   const addToast = useToastStore((s) => s.addToast);
-  const { orders, products, addOrder, updateOrderDetails, deleteOrder, modalPayload } = useAdminStore();
+  const { orders, products, addOrder, updateOrderDetails, deleteOrder, modalPayload, postOrderFinancialsAction } = useAdminStore();
   const fetchJournalEntries = useFinanceStore((s) => s.fetchJournalEntries);
 
   const mode = modalPayload?.id ? 'edit' : 'create';
@@ -41,38 +43,42 @@ export const OrderMaintenanceForm: React.FC<OrderMaintenanceFormProps> = ({ isOp
       };
 
       if (mode === 'create') {
-        const isPaid = finalOrder.paymentStatus === 'paid' || finalOrder.status === 'delivered';
-        const res = await createOrderAndPostFinancials(
-          {
-            customerName: finalOrder.customerName,
-            recipientName: finalOrder.recipientName || finalOrder.customerName,
-            recipientPhone: finalOrder.recipientPhone || '',
-            recipientAddress: `${finalOrder.addressLine1} ${finalOrder.addressLine2 || ''}`.trim(),
-            recipientState: finalOrder.state || 'NY',
-            deliveryType: finalOrder.deliveryMethod || 'standard',
-            deliveryDate: finalOrder.deliveryDate,
-            senderName: finalOrder.customerName,
-            senderEmail: finalOrder.customerEmail || '',
-            cardMessage: finalOrder.floristNotes || '',
-            subtotal: finalOrder.subtotal,
-            deliveryFee: finalOrder.deliveryFee,
-            taxes: finalOrder.tax,
-            total: finalOrder.grandTotal,
-            priority: finalOrder.priority || 'normal',
-            internalNotes: finalOrder.internalNotes || '',
-            assignedStaffId: finalOrder.assignedStaffId || '',
-          },
-          isPaid,
-          'DEFAULT_COMPANY',
-          'Admin'
-        );
+        const orderRef = collection(db, 'orders');
+        const docRef = await addDoc(orderRef, {
+          ...finalOrder,
+          id: '',
+          documentId: '',
+          glPostingStatus: 'unposted',
+          createdAt: new Date().toISOString(),
+          createdBy: 'Admin'
+        });
+
+        const newId = docRef.id;
+        
+        await updateDoc(doc(db, 'orders', newId), {
+          id: newId,
+          documentId: newId,
+          orderNumber: `BLM-${newId.substring(0, 5).toUpperCase()}`,
+          orderNumberNormalized: `blm-${newId.substring(0, 5).toLowerCase()}`
+        });
+
+        let jeId = '';
+        try {
+          jeId = await postOrderFinancials(newId, 'DEFAULT_COMPANY', 'Admin');
+        } catch (e: any) {
+          console.error("Failed to post financials on create:", e);
+          addToast("Order created, but GL posting failed: " + e.message, "error");
+        }
 
         await fetchJournalEntries();
 
         addOrder({
           ...finalOrder,
-          id: res.orderId,
-          documentId: res.orderId,
+          id: newId,
+          documentId: newId,
+          orderNumber: `BLM-${newId.substring(0, 5).toUpperCase()}`,
+          glPostingStatus: jeId ? 'posted' : 'unposted',
+          journalEntryId: jeId || ''
         });
 
         // Audit Trail
@@ -80,9 +86,9 @@ export const OrderMaintenanceForm: React.FC<OrderMaintenanceFormProps> = ({ isOp
           actor: 'Admin',
           action: 'CREATE_ORDER',
           entityType: 'order',
-          entityId: res.orderId,
+          entityId: newId,
           before: null,
-          after: { status: finalOrder.status, total: finalOrder.grandTotal },
+          after: { status: finalOrder.status, total: finalOrder.grandTotal, journalEntryId: jeId },
         });
 
         addToast('New order created successfully & General Ledger updated.', 'success');
@@ -105,9 +111,9 @@ export const OrderMaintenanceForm: React.FC<OrderMaintenanceFormProps> = ({ isOp
         addToast(`Order ${orderId.substring(0, 8)} updated successfully.`, 'success');
       }
       onClose();
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      addToast('Failed to save order details.', 'error');
+      addToast(`Failed to save order details: ${e.message || e}`, 'error');
     }
   };
 
@@ -173,51 +179,30 @@ export const OrderMaintenanceForm: React.FC<OrderMaintenanceFormProps> = ({ isOp
   // Build Tabs Config
   const tabs: TabConfig[] = [
     {
-      id: 'overview',
-      label: 'Overview',
+      id: 'order',
+      label: 'Order',
       fields: [
         { name: 'id', label: 'Order Number', type: 'text', readOnly: true, colSpan: 1 },
-        { name: 'createdAt', label: 'Order Date', type: 'date', readOnly: true, colSpan: 1 },
-        { name: 'dueDate', label: 'Due Date', type: 'date', required: true, colSpan: 1 },
-        { name: 'deliveryDate', label: 'Delivery Date', type: 'date', required: true, colSpan: 1 },
-        {
-          name: 'deliveryWindow',
-          label: 'Delivery Window',
-          type: 'select',
-          colSpan: 1,
-          options: [
-            { value: 'morning', label: 'Morning (8am-12pm)' },
-            { value: 'afternoon', label: 'Afternoon (12pm-5pm)' },
-            { value: 'evening', label: 'Evening (5pm-8pm)' },
-          ],
-        },
         {
           name: 'status',
-          label: 'Order Status',
+          label: 'Order Status *',
           type: 'select',
           required: true,
           colSpan: 1,
           options: [
             { value: 'draft', label: 'Draft' },
             { value: 'confirmed', label: 'Confirmed' },
-            { value: 'preparing', label: 'Preparing' },
+            { value: 'scheduled', label: 'Scheduled' },
+            { value: 'in_design', label: 'In Design' },
+            { value: 'ready', label: 'Ready for Dispatch' },
             { value: 'out_for_delivery', label: 'Out for Delivery' },
             { value: 'delivered', label: 'Delivered' },
             { value: 'cancelled', label: 'Cancelled' },
+            { value: 'refunded', label: 'Refunded' },
           ],
         },
-        {
-          name: 'fulfillmentStatus',
-          label: 'Fulfillment Status',
-          type: 'select',
-          colSpan: 1,
-          options: [
-            { value: 'unfulfilled', label: 'Unfulfilled' },
-            { value: 'preparing', label: 'Preparing' },
-            { value: 'fulfilled', label: 'Fulfilled' },
-            { value: 'returned', label: 'Returned' },
-          ],
-        },
+        { name: 'sourceType', label: 'Order Source', type: 'text', readOnly: true, colSpan: 1 },
+        { name: 'internalOrderType', label: 'Internal Order Type', type: 'text', colSpan: 1 },
         {
           name: 'priority',
           label: 'Priority Level',
@@ -230,30 +215,17 @@ export const OrderMaintenanceForm: React.FC<OrderMaintenanceFormProps> = ({ isOp
             { value: 'critical', label: 'Critical' },
           ],
         },
-        {
-          name: 'assignedStaffId',
-          label: 'Assigned Staff',
-          type: 'select',
-          colSpan: 1,
-          options: [
-            { value: 'Marcus T.', label: 'Marcus T. (Courier)' },
-            { value: 'Elena R.', label: 'Elena R. (Arranger)' },
-            { value: 'James K.', label: 'James K. (Director)' },
-          ],
-        },
         { name: 'salesChannel', label: 'Sales Channel', type: 'text', colSpan: 1 },
         { name: 'storeLocation', label: 'Store Location / Branch', type: 'text', colSpan: 1 },
-        { name: 'customerSource', label: 'Customer Source', type: 'text', colSpan: 1 },
         { name: 'occasion', label: 'Occasion', type: 'text', colSpan: 1 },
-        { name: 'internalOrderType', label: 'Internal Order Type', type: 'text', colSpan: 1 },
         { name: 'tags', label: 'Tags (comma separated)', type: 'text', colSpan: 1 },
       ],
     },
     {
       id: 'customer',
-      label: 'Customer / Recipient',
+      label: 'Customer',
       fields: [
-        { name: 'customerName', label: 'Customer Name *', type: 'text', required: true, colSpan: 1 },
+        { name: 'customerName', label: 'Customer Name (Sender) *', type: 'text', required: true, colSpan: 1 },
         { name: 'customerEmail', label: 'Customer Email', type: 'email', colSpan: 1 },
         { name: 'customerPhone', label: 'Customer Phone', type: 'tel', colSpan: 1 },
         {
@@ -272,11 +244,30 @@ export const OrderMaintenanceForm: React.FC<OrderMaintenanceFormProps> = ({ isOp
         { name: 'recipientName', label: 'Recipient Name *', type: 'text', required: true, colSpan: 1 },
         { name: 'recipientPhone', label: 'Recipient Phone', type: 'tel', colSpan: 1 },
         { name: 'relationshipToSender', label: 'Relationship to Sender', type: 'text', colSpan: 1 },
+      ],
+    },
+    {
+      id: 'delivery',
+      label: 'Delivery',
+      fields: [
+        { name: 'deliveryDate', label: 'Delivery Date *', type: 'date', required: true, colSpan: 1 },
+        { name: 'dueDate', label: 'Due Date *', type: 'date', required: true, colSpan: 1 },
+        {
+          name: 'deliveryWindow',
+          label: 'Delivery Window',
+          type: 'select',
+          colSpan: 1,
+          options: [
+            { value: 'morning', label: 'Morning (8am-12pm)' },
+            { value: 'afternoon', label: 'Afternoon (12pm-5pm)' },
+            { value: 'evening', label: 'Evening (5pm-8pm)' },
+          ],
+        },
         { name: 'addressLine1', label: 'Address Line 1 *', type: 'text', required: true, colSpan: 2 },
         { name: 'addressLine2', label: 'Address Line 2', type: 'text', colSpan: 1 },
         { name: 'city', label: 'City *', type: 'text', required: true, colSpan: 1 },
         { name: 'state', label: 'State *', type: 'text', required: true, colSpan: 1 },
-        { name: 'zipCode', label: 'ZIP *', type: 'text', required: true, colSpan: 1 },
+        { name: 'zipCode', label: 'ZIP Code *', type: 'text', required: true, colSpan: 1 },
         { name: 'deliveryInstructions', label: 'Delivery Instructions', type: 'textarea', colSpan: 3 },
         { name: 'gateCode', label: 'Gate / Access Code', type: 'text', colSpan: 1 },
         { name: 'safeDropAllowed', label: 'Safe Drop Allowed', type: 'checkbox', colSpan: 1 },
@@ -285,7 +276,7 @@ export const OrderMaintenanceForm: React.FC<OrderMaintenanceFormProps> = ({ isOp
     },
     {
       id: 'items',
-      label: 'Products / Line Items',
+      label: 'Items',
       fields: [
         {
           name: 'line_items_editor',
@@ -357,7 +348,7 @@ export const OrderMaintenanceForm: React.FC<OrderMaintenanceFormProps> = ({ isOp
                     <tbody>
                       {lineItems.map((item: any, idx: number) => (
                         <tr key={idx} style={{ borderBottom: '1px solid #E8EAE6' }}>
-                          <td style={{ padding: '0.25rem' }}>
+                           <td style={{ padding: '0.25rem' }}>
                             <select
                               value={item.productId}
                               onChange={(e) => handleLineChange(idx, 'productId', e.target.value)}
@@ -491,13 +482,14 @@ export const OrderMaintenanceForm: React.FC<OrderMaintenanceFormProps> = ({ isOp
       ],
     },
     {
-      id: 'finance',
-      label: 'Payment / Finance',
+      id: 'payment',
+      label: 'Payment',
       fields: [
         {
           name: 'paymentStatus',
-          label: 'Payment Status',
+          label: 'Payment Status *',
           type: 'select',
+          required: true,
           colSpan: 1,
           options: [
             { value: 'unpaid', label: 'Unpaid' },
@@ -506,27 +498,26 @@ export const OrderMaintenanceForm: React.FC<OrderMaintenanceFormProps> = ({ isOp
             { value: 'refunded', label: 'Refunded' },
           ],
         },
-        { name: 'paymentMethod', label: 'Payment Method', type: 'text', colSpan: 1 },
-        { name: 'amountPaid', label: 'Amount Paid ($)', type: 'number', colSpan: 1 },
-        { name: 'balanceDue', label: 'Balance Due ($)', type: 'display', colSpan: 1 },
-        { name: 'paymentReference', label: 'Payment Reference', type: 'text', colSpan: 1 },
-        { name: 'stripeId', label: 'Stripe ID', type: 'text', colSpan: 1 },
-        { name: 'invoiceNumber', label: 'Invoice Number', type: 'text', colSpan: 1 },
-        { name: 'taxJurisdiction', label: 'Tax Jurisdiction', type: 'text', colSpan: 1 },
-        { name: 'taxRate', label: 'Tax Rate', type: 'number', colSpan: 1 },
         {
-          name: 'glPostingStatus',
-          label: 'GL Posting Status',
+          name: 'paymentMethod',
+          label: 'Payment Method',
           type: 'select',
           colSpan: 1,
           options: [
-            { value: 'unposted', label: 'Unposted' },
-            { value: 'posted', label: 'Posted' },
+            { value: 'cash', label: 'Cash' },
+            { value: 'check', label: 'Check' },
+            { value: 'credit_card', label: 'Credit Card' },
+            { value: 'stripe', label: 'Stripe' },
+            { value: 'other', label: 'Other' },
           ],
         },
-        { name: 'revenueAccount', label: 'Revenue Account', type: 'text', colSpan: 1 },
-        { name: 'arAccount', label: 'AR Account', type: 'text', colSpan: 1 },
-        { name: 'cashAccount', label: 'Cash Account', type: 'text', colSpan: 1 },
+        { name: 'amountPaid', label: 'Amount Paid ($)', type: 'number', colSpan: 1 },
+        { name: 'balanceDue', label: 'Balance Due ($)', type: 'display', colSpan: 1 },
+        { name: 'paymentReference', label: 'Payment Reference (e.g. Check #, Card ref)', type: 'text', colSpan: 1 },
+        { name: 'stripeId', label: 'Stripe Reference / Transaction ID', type: 'text', colSpan: 1 },
+        { name: 'invoiceNumber', label: 'Invoice Number', type: 'text', colSpan: 1 },
+        { name: 'taxJurisdiction', label: 'Tax Jurisdiction', type: 'text', colSpan: 1 },
+        { name: 'taxRate', label: 'Tax Rate (%)', type: 'number', colSpan: 1 },
         { name: 'refundStatus', label: 'Refund Status', type: 'text', colSpan: 1 },
         { name: 'refundAmount', label: 'Refund Amount ($)', type: 'number', colSpan: 1 },
         { name: 'financeNotes', label: 'Finance Notes', type: 'textarea', colSpan: 3 },
@@ -567,33 +558,75 @@ export const OrderMaintenanceForm: React.FC<OrderMaintenanceFormProps> = ({ isOp
     },
     {
       id: 'fulfillment',
-      label: 'Fulfillment / Delivery',
+      label: 'Fulfillment',
       fields: [
+        {
+          name: 'designer',
+          label: 'Assigned Designer',
+          type: 'select',
+          colSpan: 1,
+          options: [
+            { value: 'Elena R.', label: 'Elena R. (Arranger)' },
+            { value: 'James K.', label: 'James K. (Director)' },
+          ]
+        },
+        {
+          name: 'courier',
+          label: 'Assigned Courier Driver',
+          type: 'select',
+          colSpan: 1,
+          options: [
+            { value: 'Marcus T.', label: 'Marcus T. (Courier)' },
+            { value: 'Elena R.', label: 'Elena R. (Arranger)' },
+          ]
+        },
+        {
+          name: 'fulfillmentStatus',
+          label: 'Fulfillment / Delivery Status',
+          type: 'select',
+          colSpan: 1,
+          options: [
+            { value: 'unfulfilled', label: 'Unfulfilled' },
+            { value: 'preparing', label: 'Preparing' },
+            { value: 'fulfilled', label: 'Fulfilled' },
+            { value: 'returned', label: 'Returned' },
+          ],
+        },
         { name: 'deliveryMethod', label: 'Delivery Method', type: 'text', colSpan: 1 },
-        { name: 'courier', label: 'Courier / Driver', type: 'text', colSpan: 1 },
         { name: 'routeNumber', label: 'Route Number', type: 'text', colSpan: 1 },
         { name: 'deliveryZone', label: 'Delivery Zone', type: 'text', colSpan: 1 },
         { name: 'pickupWindow', label: 'Pickup/Delivery Window', type: 'text', colSpan: 1 },
-        { name: 'dispatchTime', label: 'Dispatch Time', type: 'text', colSpan: 1 },
-        { name: 'deliveredTime', label: 'Delivered Time', type: 'text', colSpan: 1 },
+        { name: 'dispatchTime', label: 'Dispatch Timestamp', type: 'text', colSpan: 1 },
+        { name: 'deliveredTime', label: 'Delivered Timestamp', type: 'text', colSpan: 1 },
         { name: 'proofOfDelivery', label: 'Proof of Delivery Notes', type: 'text', colSpan: 1 },
         { name: 'deliveryPhotoUrl', label: 'Delivery Photo URL', type: 'text', colSpan: 2 },
         { name: 'deliveryAttemptCount', label: 'Delivery Attempts', type: 'number', colSpan: 1 },
         { name: 'failedReason', label: 'Failed Attempt Reason', type: 'text', colSpan: 1 },
         { name: 'redeliveryRequired', label: 'Redelivery Required', type: 'checkbox', colSpan: 1 },
-        { name: 'driverNotes', label: 'Driver Notes', type: 'textarea', colSpan: 3 },
+        { name: 'driverNotes', label: 'Driver Exception Notes', type: 'textarea', colSpan: 3 },
         { name: 'customerDeliveryNotes', label: 'Customer Delivery Notes', type: 'textarea', colSpan: 3 },
       ],
     },
     {
-      id: 'internal',
-      label: 'Internal / Audit',
+      id: 'gl_audit',
+      label: 'GL / Audit',
       fields: [
+        {
+          name: 'glPostingStatus',
+          label: 'GL Posting Status',
+          type: 'display',
+          colSpan: 1,
+        },
+        { name: 'journalEntryId', label: 'Journal Entry ID', type: 'display', colSpan: 1 },
+        { name: 'reversalJournalEntryId', label: 'Reversal Entry ID', type: 'display', colSpan: 1 },
+        { name: 'reversalReason', label: 'Reversal Reason', type: 'display', colSpan: 1 },
+        { name: 'reversalDate', label: 'Reversal Date', type: 'display', colSpan: 1 },
+        { name: 'createdBy', label: 'Created By', type: 'text', readOnly: true, colSpan: 1 },
+        { name: 'createdAt', label: 'Created Date', type: 'text', readOnly: true, colSpan: 1 },
+        { name: 'lastUpdatedBy', label: 'Last Updated By', type: 'text', readOnly: true, colSpan: 1 },
+        { name: 'lastUpdatedDate', label: 'Last Updated Date', type: 'text', readOnly: true, colSpan: 1 },
         { name: 'internalNotes', label: 'Internal Office Notes', type: 'textarea', colSpan: 3 },
-        { name: 'floristNotes', label: 'Florist / Gift Card Message', type: 'textarea', colSpan: 3 },
-        { name: 'documentId', label: 'Firestore Document ID', type: 'text', readOnly: true, colSpan: 1 },
-        { name: 'sourceType', label: 'Source Type', type: 'text', readOnly: true, colSpan: 1 },
-        { name: 'lastExportDate', label: 'Last Export Date', type: 'text', readOnly: true, colSpan: 1 },
+        { name: 'floristNotes', label: 'Florist Notes / Card Message', type: 'textarea', colSpan: 3 },
         {
           name: 'audit_timeline',
           label: 'System Audit Trail',
@@ -645,24 +678,52 @@ export const OrderMaintenanceForm: React.FC<OrderMaintenanceFormProps> = ({ isOp
       onSaveDraft={handleSave}
       validate={handleValidate}
     >
-      {/* Duplicate Action */}
+      {/* Duplicate & Post Actions */}
       {mode === 'edit' && (
-        <button
-          type="button"
-          onClick={() => handleDuplicate(initialValues)}
-          style={{
-            marginRight: '0.75rem',
-            padding: '0.5rem 1rem',
-            borderRadius: '10px',
-            border: '1px solid #D5D1C8',
-            background: '#FFFFFF',
-            fontSize: '0.8125rem',
-            fontWeight: 500,
-            cursor: 'pointer',
-          }}
-        >
-          Duplicate Order
-        </button>
+        <div style={{ display: 'inline-flex', gap: '0.5rem' }}>
+          <button
+            type="button"
+            onClick={() => handleDuplicate(initialValues)}
+            style={{
+              padding: '0.5rem 1rem',
+              borderRadius: '10px',
+              border: '1px solid #D5D1C8',
+              background: '#FFFFFF',
+              fontSize: '0.8125rem',
+              fontWeight: 500,
+              cursor: 'pointer',
+            }}
+          >
+            Duplicate Order
+          </button>
+          {initialValues.glPostingStatus === 'unposted' && (
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  await postOrderFinancialsAction(initialValues.id);
+                  await fetchJournalEntries();
+                  addToast(`Order #${initialValues.orderNumber || initialValues.id.substring(0, 8).toUpperCase()} posted to General Ledger.`, 'success');
+                  onClose();
+                } catch (err: any) {
+                  addToast(`GL Posting failed: ${err.message}`, 'error');
+                }
+              }}
+              style={{
+                padding: '0.5rem 1rem',
+                borderRadius: '10px',
+                border: '1px solid #4A6B50',
+                background: '#F0F5F1',
+                color: '#4A6B50',
+                fontSize: '0.8125rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              Post to Ledger
+            </button>
+          )}
+        </div>
       )}
     </MaintenanceModal>
   );

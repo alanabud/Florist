@@ -5,9 +5,10 @@ import { PRODUCTS, type Product } from '../data/products';
 import { normalizeOrder, normalizeProduct, normalizeCustomer, normalizeInventoryItem, normalizeSubscription, normalizeEvent } from '../services/normalizers';
 import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, getDoc, setDoc, query, orderBy } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { postOrderFinancials } from '../services/financeService';
+import { postOrderFinancials, reverseJournalEntry } from '../services/financeService';
+import { calculateOrderTotals } from '../services/orderCalculationService';
 
-export type OrderStatus = 'draft' | 'confirmed' | 'preparing' | 'out_for_delivery' | 'delivered' | 'cancelled';
+export type OrderStatus = 'draft' | 'confirmed' | 'scheduled' | 'in_design' | 'ready' | 'out_for_delivery' | 'delivered' | 'cancelled' | 'refunded';
 
 export interface OrderLineItem {
   productId: string;
@@ -85,6 +86,10 @@ export interface Order {
   taxJurisdiction?: string;
   taxRate?: number;
   glPostingStatus?: string;
+  journalEntryId?: string;
+  reversalJournalEntryId?: string;
+  reversalReason?: string;
+  reversalDate?: string;
   revenueAccount?: string;
   arAccount?: string;
   cashAccount?: string;
@@ -358,7 +363,7 @@ interface AdminState {
 
 export const useAdminStore = create<AdminState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       orders: (DEMO_ORDERS || []).map(normalizeOrder),
       inventory: (DEMO_INVENTORY || []).map(normalizeInventoryItem),
       customers: (DEMO_CUSTOMERS || []).map(normalizeCustomer),
@@ -438,9 +443,9 @@ export const useAdminStore = create<AdminState>()(
 
       postOrderFinancialsAction: async (orderId: string) => {
         try {
-          await postOrderFinancials(orderId, 'DEFAULT_COMPANY', 'Admin');
+          const jeId = await postOrderFinancials(orderId, 'DEFAULT_COMPANY', 'Admin');
           set(state => ({
-            orders: state.orders.map(o => o.id === orderId ? { ...o, glPostingStatus: 'posted' } : o)
+            orders: state.orders.map(o => o.id === orderId ? { ...o, glPostingStatus: 'posted', journalEntryId: jeId } : o)
           }));
         } catch (error) {
           console.error("Failed to post financials action:", error);
@@ -449,9 +454,65 @@ export const useAdminStore = create<AdminState>()(
       },
 
       updateOrderStatus: async (id, status) => {
+        const order = get().orders.find((o: Order) => o.id === id);
+        if (!order) throw new Error("Order not found");
+
+        const oldStatus = order.status;
+        
+        // Terminal state guards
+        if (oldStatus === 'cancelled' || oldStatus === 'refunded') {
+          throw new Error(`Cannot change status of a terminal ${oldStatus} order.`);
+        }
+
+        if (status === 'cancelled') {
+          if (oldStatus === 'delivered') {
+            throw new Error("Delivered orders cannot be cancelled. Use refund instead.");
+          }
+        }
+
+        if (status === 'refunded') {
+          if (oldStatus !== 'delivered') {
+            throw new Error("Only delivered orders can be refunded.");
+          }
+        }
+
+        if (status === 'delivered') {
+          const totals = calculateOrderTotals(order);
+          if (totals.balanceDue > 0) {
+            throw new Error(`Cannot deliver order with unpaid balance of $${totals.balanceDue.toFixed(2)}.`);
+          }
+        }
+
+        let reversalUpdates = {};
+
         try {
           const orderRef = doc(db, 'orders', id);
-          await updateDoc(orderRef, { status });
+          
+          // Reversal logic if already posted to GL
+          if ((status === 'cancelled' || status === 'refunded') && order.glPostingStatus === 'posted' && order.journalEntryId) {
+            const revJeId = await reverseJournalEntry(order.journalEntryId, 'Admin');
+            reversalUpdates = {
+              glPostingStatus: 'reversed',
+              reversalJournalEntryId: revJeId,
+              reversalReason: status === 'cancelled' ? 'Order Cancelled' : 'Order Refunded',
+              reversalDate: new Date().toISOString()
+            };
+          }
+
+          const deliveredTimeUpdate = status === 'delivered' && !order.deliveredTime 
+            ? { deliveredTime: new Date().toISOString() } 
+            : {};
+
+          const updates = { 
+            status, 
+            ...reversalUpdates,
+            ...deliveredTimeUpdate,
+            updatedAt: new Date().toISOString()
+          };
+
+          await updateDoc(orderRef, updates);
+
+          // Update public order tracking
           const orderSnap = await getDoc(orderRef);
           if (orderSnap.exists()) {
             const orderData = orderSnap.data();
@@ -461,17 +522,23 @@ export const useAdminStore = create<AdminState>()(
               const trackingSnap = await getDoc(trackingRef);
               if (trackingSnap.exists()) {
                 let trackingStatus = 'placed';
-                if (status === 'preparing') trackingStatus = 'preparing';
+                if (status === 'in_design') trackingStatus = 'preparing';
+                else if (status === 'ready') trackingStatus = 'ready';
                 else if (status === 'out_for_delivery') trackingStatus = 'out_for_delivery';
                 else if (status === 'delivered') trackingStatus = 'delivered';
+                else if (status === 'cancelled') trackingStatus = 'cancelled';
+                else if (status === 'refunded') trackingStatus = 'refunded';
                 
                 const trackingData = trackingSnap.data();
                 const updatedTimeline = [...(trackingData.timeline || [])];
                 if (!updatedTimeline.some(t => t.status === trackingStatus)) {
                   let label = 'Order Placed';
                   if (trackingStatus === 'preparing') label = 'In Assembly';
+                  else if (trackingStatus === 'ready') label = 'Ready for Pickup/Delivery';
                   else if (trackingStatus === 'out_for_delivery') label = 'In Transit';
                   else if (trackingStatus === 'delivered') label = 'Delivered';
+                  else if (trackingStatus === 'cancelled') label = 'Cancelled';
+                  else if (trackingStatus === 'refunded') label = 'Refunded';
 
                   updatedTimeline.push({
                     status: trackingStatus,
@@ -483,17 +550,27 @@ export const useAdminStore = create<AdminState>()(
                 await updateDoc(trackingRef, {
                   status: trackingStatus,
                   timeline: updatedTimeline,
-                  updatedAt: new Date().toISOString()
+                  updatedAt: new Date().toISOString(),
+                  deliveryWindow: orderData.deliveryWindow || null,
+                  trackingMessage: orderData.customerDeliveryNotes || orderData.driverNotes || null
                 });
               }
             }
           }
-        } catch (e) {
+
+          // Update local store state
+          set((state) => ({
+            orders: state.orders.map(o => o.id === id ? { 
+              ...o, 
+              status, 
+              ...reversalUpdates,
+              ...deliveredTimeUpdate
+            } : o)
+          }));
+        } catch (e: any) {
           console.error("Failed to update order status in Firestore:", e);
+          throw e;
         }
-        set((state) => ({
-          orders: state.orders.map(o => o.id === id ? { ...o, status } : o)
-        }));
       },
 
       updateOrderDetails: async (id, updates) => {

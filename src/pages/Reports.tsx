@@ -116,7 +116,7 @@ export const Reports: React.FC = () => {
     },
     {
       title: 'Order Fulfillment',
-      description: `${deliveredOrders} delivered · ${orders.filter(o => o.status === 'preparing').length} in production`,
+      description: `${deliveredOrders} delivered · ${orders.filter(o => o.status === 'in_design').length} in production`,
       icon: Receipt,
       iconBg: '#DBEAFE',
       iconColor: '#1E40AF',
