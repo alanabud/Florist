@@ -8,9 +8,11 @@ import { validateOrder } from '../../../services/validators';
 import { writeAuditLog } from '../../../services/auditService';
 import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../../firebase/config';
-import { postOrderFinancials } from '../../../services/financeService';
+import { postOrderFinancials, reverseCOGSForOrder } from '../../../services/financeService';
+import { useAuthStore } from '../../../store/authStore';
 import { normalizeOrder } from '../../../services/normalizers';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, RefreshCw } from 'lucide-react';
+
 
 interface OrderMaintenanceFormProps {
   isOpen: boolean;
@@ -19,6 +21,7 @@ interface OrderMaintenanceFormProps {
 
 export const OrderMaintenanceForm: React.FC<OrderMaintenanceFormProps> = ({ isOpen, onClose }) => {
   const addToast = useToastStore((s) => s.addToast);
+  const { role, user } = useAuthStore();
   const { orders, products, addOrder, updateOrderDetails, deleteOrder, modalPayload, postOrderFinancialsAction } = useAdminStore();
   const fetchJournalEntries = useFinanceStore((s) => s.fetchJournalEntries);
 
@@ -627,6 +630,145 @@ export const OrderMaintenanceForm: React.FC<OrderMaintenanceFormProps> = ({ isOp
         { name: 'lastUpdatedDate', label: 'Last Updated Date', type: 'text', readOnly: true, colSpan: 1 },
         { name: 'internalNotes', label: 'Internal Office Notes', type: 'textarea', colSpan: 3 },
         { name: 'floristNotes', label: 'Florist Notes / Card Message', type: 'textarea', colSpan: 3 },
+        {
+          name: 'cogs_details',
+          label: 'COGS & Inventory Costing Details',
+          type: 'custom',
+          colSpan: 3,
+          render: (values) => {
+            const cogsPosted = values.cogsPosted === true;
+            const cogsReversed = values.cogsReversed === true;
+            const amount = values.cogsAmount || 0;
+            const jeId = values.cogsJournalEntryId || '';
+            const postedAt = values.cogsPostedAt;
+            const snapshot = values.cogsSnapshot || [];
+            
+            const formatTimestamp = (ts: any) => {
+              if (!ts) return 'N/A';
+              if (ts.seconds) return new Date(ts.seconds * 1000).toLocaleString();
+              if (typeof ts === 'string') return new Date(ts).toLocaleString();
+              if (ts instanceof Date) return ts.toLocaleString();
+              return String(ts);
+            };
+
+            const handleReverseCOGS = async () => {
+              const reason = window.prompt("Enter reason for reversing COGS:");
+              if (!reason || !reason.trim()) {
+                if (reason !== null) {
+                  addToast("A reason is required to reverse COGS.", "error");
+                }
+                return;
+              }
+              try {
+                const revId = await reverseCOGSForOrder(values.id, reason, user?.email || 'Admin');
+                addToast(`COGS reversed successfully. Reversal entry: ${revId}`, "success");
+                onClose();
+              } catch (err: any) {
+                addToast(`Failed to reverse COGS: ${err.message}`, "error");
+              }
+            };
+
+            const canReverse = cogsPosted && !cogsReversed && (role === 'admin' || role === 'owner');
+
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.5rem', border: '1px solid #E8EAE6', borderRadius: '12px', padding: '1rem', background: '#FAFAF8' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#2C302E' }}>COGS Valuation Snapshot</span>
+                  {cogsPosted && !cogsReversed && (
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.5rem', borderRadius: '6px', background: '#DEF7EC', color: '#03543F' }}>
+                      POSTED INSTANTLY
+                    </span>
+                  )}
+                  {cogsReversed && (
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.5rem', borderRadius: '6px', background: '#FDE8E8', color: '#9B1C1C' }}>
+                      REVERSED
+                    </span>
+                  )}
+                  {!cogsPosted && !cogsReversed && (
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.5rem', borderRadius: '6px', background: '#E5E7EB', color: '#4B5563' }}>
+                      UNPOSTED
+                    </span>
+                  )}
+                </div>
+
+                {cogsPosted && (
+                  <div style={{ fontSize: '0.8125rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', padding: '0.5rem', borderBottom: '1px solid #E8EAE6' }}>
+                    <div><strong>COGS Amount:</strong> ${amount.toFixed(2)}</div>
+                    <div><strong>Posting Date:</strong> {formatTimestamp(postedAt)}</div>
+                    <div><strong>Journal Entry ID:</strong> {jeId || 'N/A'}</div>
+                    {canReverse && (
+                      <button
+                        type="button"
+                        onClick={handleReverseCOGS}
+                        style={{
+                          gridColumn: 'span 2',
+                          marginTop: '0.5rem',
+                          padding: '0.4rem 0.75rem',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          backgroundColor: '#FEF2F2',
+                          border: '1px solid #FCA5A5',
+                          borderRadius: '6px',
+                          color: '#991B1B',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '0.25rem'
+                        }}
+                      >
+                        <RefreshCw size={12} /> Reverse COGS Posting (Admin correction)
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {cogsReversed && (
+                  <div style={{ fontSize: '0.8125rem', display: 'flex', flexDirection: 'column', gap: '0.25rem', padding: '0.5rem', borderBottom: '1px solid #E8EAE6', color: '#9B1C1C', backgroundColor: '#FDF2F2', borderRadius: '8px' }}>
+                    <div><strong>Reversal JE:</strong> {values.cogsReversalJournalEntryId || 'N/A'}</div>
+                    <div><strong>Reversal Date:</strong> {formatTimestamp(values.cogsReversedAt)}</div>
+                    <div><strong>Reversal Reason:</strong> "{values.cogsReversalReason || 'N/A'}"</div>
+                  </div>
+                )}
+
+                {snapshot.length > 0 ? (
+                  <div>
+                    <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#6B7280', display: 'block', marginBottom: '0.25rem' }}>Raw Materials Consumed (WAC frozen at delivery)</label>
+                    <table style={{ width: '100%', fontSize: '0.75rem', borderCollapse: 'collapse' }}>
+                      <thead>
+                        <tr style={{ borderBottom: '1px solid #E8EAE6', color: '#6B7280', textAlign: 'left' }}>
+                          <th style={{ padding: '0.25rem 0' }}>SKU</th>
+                          <th style={{ padding: '0.25rem 0' }}>Item</th>
+                          <th style={{ padding: '0.25rem 0', textAlign: 'right' }}>Qty</th>
+                          <th style={{ padding: '0.25rem 0', textAlign: 'right' }}>WAC</th>
+                          <th style={{ padding: '0.25rem 0', textAlign: 'right' }}>Cost</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {snapshot.map((line: any, idx: number) => (
+                          <tr key={idx} style={{ borderBottom: '1px solid #F3F4F6', textDecoration: cogsReversed ? 'line-through' : 'none' }}>
+                            <td style={{ padding: '0.25rem 0', fontWeight: 500 }}>{line.sku}</td>
+                            <td style={{ padding: '0.25rem 0' }}>{line.name}</td>
+                            <td style={{ padding: '0.25rem 0', textAlign: 'right' }}>{line.quantityConsumed}</td>
+                            <td style={{ padding: '0.25rem 0', textAlign: 'right' }}>${(line.unitWac || 0).toFixed(2)}</td>
+                            <td style={{ padding: '0.25rem 0', textAlign: 'right', fontWeight: 600 }}>${(line.extendedCost || 0).toFixed(2)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div style={{ fontSize: '0.75rem', color: '#6B7280', fontStyle: 'italic' }}>
+                    {values.status === 'delivered' 
+                      ? 'No recipe components consumed (verify product configs).'
+                      : 'Recipe configuration and Weighted Average Cost will freeze when this order is marked Delivered.'
+                    }
+                  </div>
+                )}
+              </div>
+            );
+          }
+        },
         {
           name: 'audit_timeline',
           label: 'System Audit Trail',

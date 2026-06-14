@@ -4,6 +4,8 @@ import { ShoppingBag, User, Menu } from 'lucide-react';
 import { useCartStore } from '../../store/cartStore';
 import { CartDrawer } from '../ui/CartDrawer/CartDrawer';
 import { Drawer } from '../ui/Drawer';
+import { useI18n } from '../../i18n/I18nProvider';
+import { LanguageSwitcher } from '../common/LanguageSwitcher';
 import styles from './StorefrontLayout.module.css';
 
 export const StorefrontLayout: React.FC = () => {
@@ -12,6 +14,7 @@ export const StorefrontLayout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toggleDrawer, getTotalItems } = useCartStore();
+  const { t } = useI18n();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -31,11 +34,11 @@ export const StorefrontLayout: React.FC = () => {
 
   const renderNavLinks = () => (
     <>
-      <Link to="/" className={`${styles.navLink} ${isActive('/') ? styles.active : ''}`}>Home</Link>
-      <Link to="/shop" className={`${styles.navLink} ${isActive('/shop') ? styles.active : ''}`}>Shop Flowers</Link>
-      <Link to="/occasions" className={`${styles.navLink} ${isActive('/occasions') ? styles.active : ''}`}>Occasions</Link>
-      <Link to="/contact" className={`${styles.navLink} ${isActive('/contact') ? styles.active : ''}`}>Weddings & Events</Link>
-      <Link to="/track-order" className={`${styles.navLink} ${isActive('/track-order') ? styles.active : ''}`}>Track Order</Link>
+      <Link to="/" className={`${styles.navLink} ${isActive('/') ? styles.active : ''}`}>{t('storefront.home')}</Link>
+      <Link to="/shop" className={`${styles.navLink} ${isActive('/shop') ? styles.active : ''}`}>{t('storefront.shopFlowers')}</Link>
+      <Link to="/occasions" className={`${styles.navLink} ${isActive('/occasions') ? styles.active : ''}`}>{t('storefront.occasions')}</Link>
+      <Link to="/contact" className={`${styles.navLink} ${isActive('/contact') ? styles.active : ''}`}>{t('storefront.weddingsEvents')}</Link>
+      <Link to="/track-order" className={`${styles.navLink} ${isActive('/track-order') ? styles.active : ''}`}>{t('storefront.trackOrder')}</Link>
     </>
   );
 
@@ -63,6 +66,7 @@ export const StorefrontLayout: React.FC = () => {
           </nav>
  
           <div className={styles.actions}>
+            <LanguageSwitcher />
             <button 
               className={styles.cartBtn} 
               onClick={toggleDrawer}
@@ -78,7 +82,7 @@ export const StorefrontLayout: React.FC = () => {
               onClick={() => navigate('/admin/login')}
             >
               <User size={18} />
-              <span>Staff Login</span>
+              <span>{t('storefront.staffLogin')}</span>
             </button>
           </div>
         </div>
@@ -100,12 +104,15 @@ export const StorefrontLayout: React.FC = () => {
             {renderNavLinks()}
           </nav>
           <div className={styles.mobileMenuFooter}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.25rem' }}>
+              <LanguageSwitcher />
+            </div>
             <button 
               className={styles.mobileLoginBtn}
               onClick={() => navigate('/admin/login')}
             >
               <User size={18} />
-              Staff Login
+              {t('storefront.staffLogin')}
             </button>
           </div>
         </div>
@@ -121,31 +128,31 @@ export const StorefrontLayout: React.FC = () => {
         <div className={styles.footerContainer}>
           <div className={styles.footerBrand}>
             <h3><span className={styles.logoIcon}>❁</span> BloomPro Florals</h3>
-            <p>Premium, handcrafted floral arrangements delivered with care.</p>
+            <p>{t('landing.footer.brandDesc')}</p>
           </div>
           <div className={styles.footerLinks}>
             <div>
-              <h4>Shop</h4>
-              <Link to="/shop">All Products</Link>
-              <Link to="/occasions">Occasions</Link>
-              <Link to="/custom">Custom Bouquet</Link>
+              <h4>{t('landing.footer.shop')}</h4>
+              <Link to="/shop">{t('landing.footer.allProducts')}</Link>
+              <Link to="/occasions">{t('storefront.occasions')}</Link>
+              <Link to="/custom">{t('landing.hero.customBouquet')}</Link>
             </div>
             <div>
-              <h4>Company</h4>
-              <Link to="/about">About Us</Link>
-              <Link to="/contact">Contact</Link>
-              <Link to="/track-order">Track Order</Link>
+              <h4>{t('landing.footer.about')}</h4>
+              <Link to="/about">{t('landing.footer.ourStory')}</Link>
+              <Link to="/contact">{t('landing.footer.contact')}</Link>
+              <Link to="/track-order">{t('storefront.trackOrder')}</Link>
             </div>
             <div>
-              <h4>Operations</h4>
-              <Link to="/admin/login" style={{ fontWeight: 600, color: 'var(--color-sage-dark)' }}>Staff Login</Link>
-              <Link to="/about">Terms of Service</Link>
-              <Link to="/about">Privacy Policy</Link>
+              <h4>{t('landing.footer.policies')}</h4>
+              <Link to="/admin/login" style={{ fontWeight: 600, color: 'var(--color-sage-dark)' }}>{t('storefront.staffLogin')}</Link>
+              <Link to="/about">{t('landing.footer.terms')}</Link>
+              <Link to="/about">{t('landing.footer.privacy')}</Link>
             </div>
           </div>
         </div>
         <div className={styles.footerBottom}>
-          <p>&copy; {new Date().getFullYear()} BloomPro Florals. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} BloomPro Florals. {t('landing.footer.rightsReserved')}</p>
         </div>
       </footer>
     </div>

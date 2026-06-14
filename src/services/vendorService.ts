@@ -25,9 +25,11 @@ export async function createVendor(
 ): Promise<Vendor> {
   const sequenceId = await getNextSequenceNumber('vendors');
   const now = new Date().toISOString();
+  const companyId = localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
 
-  const newVendor: Vendor = {
+  const newVendor: Vendor & { companyId: string } = {
     ...vendorData,
+    companyId,
     id: sequenceId,
     balance: 0,
     openBillsCount: 0,
@@ -45,6 +47,7 @@ export async function createVendor(
   await setDoc(docRef, newVendor);
 
   await writeAuditLog({
+    companyId,
     actor,
     action: 'CREATE_VENDOR',
     entityType: 'vendor',
@@ -77,10 +80,12 @@ export async function updateVendor(
 
   const beforeSnap = await getDoc(vendorRef);
   const beforeData = beforeSnap.exists() ? beforeSnap.data() : null;
+  const companyId = beforeData?.companyId || localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
 
   await updateDoc(vendorRef, cleanUpdates);
 
   await writeAuditLog({
+    companyId,
     actor,
     action: 'UPDATE_VENDOR',
     entityType: 'vendor',
@@ -97,8 +102,11 @@ export async function updateVendor(
  * Recalculates vendor balances and aging buckets based on open bills.
  */
 export async function recalculateVendorBalances(vendorId: string): Promise<void> {
+  const companyId = localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
+  
   const billsQuery = query(
     collection(db, BILLS_COLLECTION),
+    where('companyId', '==', companyId),
     where('vendorId', '==', vendorId)
   );
   
@@ -144,6 +152,7 @@ export async function recalculateVendorBalances(vendorId: string): Promise<void>
   // Get last payment date
   const paymentsQuery = query(
     collection(db, PAYMENTS_COLLECTION),
+    where('companyId', '==', companyId),
     where('vendorId', '==', vendorId),
     where('status', '==', 'posted')
   );

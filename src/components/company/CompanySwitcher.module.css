@@ -1,0 +1,37 @@
+.switcherContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #FAF8F5; /* Delicate ivory background */
+  border: 1px solid #ECE7E1;
+  padding: 0.375rem 0.75rem;
+  border-radius: 10px;
+  transition: all 200ms ease;
+}
+
+.switcherContainer:hover {
+  border-color: #6C8271;
+  background-color: #FFFFFF;
+}
+
+.icon {
+  color: #6C8271;
+  flex-shrink: 0;
+}
+
+.select {
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #24221E;
+  outline: none;
+  cursor: pointer;
+  padding-right: 0.5rem;
+}
+
+.select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

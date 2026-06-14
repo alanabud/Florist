@@ -6,20 +6,83 @@ import { useToastStore } from '../store/toastStore';
 import { Button } from '../components/ui/Button';
 import { PackagePlus, Download, Package, AlertTriangle, AlertOctagon, TrendingUp } from 'lucide-react';
 import { restockInventoryAndPostFinancials } from '../services/financeService';
+import { postInventoryAdjustment } from '../services/inventoryAdjustmentService';
 import { exportInventoryPDF } from '../services/pdfExportService';
 import { exportInventoryExcel } from '../services/excelExportService';
 import { EmptyState } from '../components/ui/EmptyState';
+import { useCompany } from '../context/CompanyContext';
+import { useI18n } from '../i18n/I18nProvider';
 import styles from '../components/layout/AdminList.module.css';
 
 export const Inventory: React.FC = () => {
+  const { selectedCompany, companySettings } = useCompany();
   const { inventory, setActiveModal } = useAdminStore();
   const fetchJournalEntries = useFinanceStore(s => s.fetchJournalEntries);
   const [searchParams, setSearchParams] = useSearchParams();
   const addToast = useToastStore((state) => state.addToast);
+  const { language } = useI18n();
 
   // Filters local states
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+
+  // Adjustment modal states
+  const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
+  const [adjustItem, setAdjustItem] = useState<any>(null);
+  const [adjustQty, setAdjustQty] = useState<number>(0);
+  const [adjustType, setAdjustType] = useState<'spoilage' | 'shrinkage' | 'damage' | 'write_off' | 'correction'>('spoilage');
+  const [adjustDirection, setAdjustDirection] = useState<'decrease' | 'increase'>('decrease');
+  const [adjustReason, setAdjustReason] = useState('');
+  const [isSubmittingAdjustment, setIsSubmittingAdjustment] = useState(false);
+
+  const openAdjustModal = (item: any) => {
+    setAdjustItem(item);
+    setAdjustQty(1);
+    setAdjustType('spoilage');
+    setAdjustDirection('decrease');
+    setAdjustReason('');
+    setIsAdjustModalOpen(true);
+  };
+
+  const handleAdjustSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!adjustItem) return;
+    if (adjustQty <= 0) {
+      addToast("Quantity must be greater than zero.", "error");
+      return;
+    }
+    if (!adjustReason.trim()) {
+      addToast("A justification reason is required.", "error");
+      return;
+    }
+
+    const qtyChange = adjustDirection === 'decrease' ? -adjustQty : adjustQty;
+    
+    // Check if decrease exceeds on-hand quantity
+    if (adjustDirection === 'decrease' && adjustQty > adjustItem.quantity) {
+      addToast(`Cannot adjust below 0. Maximum decrease is ${adjustItem.quantity} units.`, "error");
+      return;
+    }
+
+    setIsSubmittingAdjustment(true);
+    try {
+      await postInventoryAdjustment({
+        sku: adjustItem.sku,
+        qtyChange,
+        type: adjustType,
+        reason: adjustReason,
+        actor: 'Admin'
+      });
+      await fetchJournalEntries();
+      addToast(`Successfully adjusted SKU ${adjustItem.sku} stock.`, "success");
+      setIsAdjustModalOpen(false);
+    } catch (err: any) {
+      console.error(err);
+      addToast(err.message || "Failed to post inventory adjustment.", "error");
+    } finally {
+      setIsSubmittingAdjustment(false);
+    }
+  };
 
   const searchParam = searchParams.get('search') || '';
 
@@ -86,14 +149,24 @@ export const Inventory: React.FC = () => {
   const handleExport = () => {
     const dateStr = new Date().toISOString().split('T')[0];
     const filename = `bloompro-inventory-${selectedStatusFilter}-${dateStr}.pdf`;
-    exportInventoryPDF(filteredInventory, filename);
+    exportInventoryPDF(filteredInventory, filename, {
+      companyName: selectedCompany?.displayName,
+      currencyCode: companySettings?.baseCurrencyCode,
+      locale: language,
+      reportFooterText: companySettings?.reportFooterText
+    });
     addToast(`Exported ${filteredInventory.length} inventory items as PDF.`, 'success');
   };
 
   const handleExportExcel = () => {
     const dateStr = new Date().toISOString().split('T')[0];
     const filename = `bloompro-inventory-${selectedStatusFilter}-${dateStr}.xlsx`;
-    exportInventoryExcel(filteredInventory, filename);
+    exportInventoryExcel(filteredInventory, filename, {
+      companyName: selectedCompany?.displayName,
+      currencyCode: companySettings?.baseCurrencyCode,
+      locale: language,
+      reportFooterText: companySettings?.reportFooterText
+    });
     addToast(`Exported ${filteredInventory.length} inventory items as Excel.`, 'success');
   };
 
@@ -332,6 +405,13 @@ export const Inventory: React.FC = () => {
                           </button>
                           <button 
                             className={styles.actionBtn} 
+                            onClick={() => openAdjustModal(item)}
+                            style={{ padding: '0.35rem 0.75rem', fontSize: '0.8125rem', border: '1px solid #E8EAE6', borderRadius: '6px', background: '#FEF2F2', color: '#991B1B', fontWeight: 600, cursor: 'pointer' }}
+                          >
+                            Adjust
+                          </button>
+                          <button 
+                            className={styles.actionBtn} 
                             onClick={() => setActiveModal('newInventory', item)}
                             style={{ padding: '0.35rem 0.75rem', fontSize: '0.8125rem', border: '1px solid #E8EAE6', borderRadius: '6px', background: '#FFFFFF', cursor: 'pointer', fontWeight: 500 }}
                           >
@@ -347,6 +427,145 @@ export const Inventory: React.FC = () => {
           </div>
         )}
       </div>
+
+      {isAdjustModalOpen && adjustItem && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.4)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: '#FFFFFF',
+            borderRadius: '16px',
+            padding: '2rem',
+            width: '100%',
+            maxWidth: '500px',
+            boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)',
+            border: '1px solid #E8EAE6'
+          }}>
+            <h3 style={{
+              fontSize: '1.25rem',
+              fontWeight: 600,
+              color: '#2C302E',
+              margin: '0 0 1.5rem 0',
+              fontFamily: 'var(--font-serif)'
+            }}>
+              Adjust Material Inventory
+            </h3>
+
+            <form onSubmit={handleAdjustSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#8a8f8c', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
+                  Material Item
+                </label>
+                <div style={{ fontSize: '0.875rem', fontWeight: 500, color: '#2C302E', background: '#FAFAF8', padding: '0.75rem', borderRadius: '8px', border: '1px solid #E8EAE6' }}>
+                  <strong>{adjustItem.sku}</strong> — {adjustItem.name}
+                  <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
+                    Current Stock: {adjustItem.quantity} units | Unit WAC: ${adjustItem.unitCost.toFixed(2)}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#8a8f8c', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
+                    Direction
+                  </label>
+                  <select
+                    value={adjustDirection}
+                    onChange={(e) => {
+                      setAdjustDirection(e.target.value as any);
+                      if (e.target.value === 'increase') {
+                        setAdjustType('correction');
+                      } else {
+                        setAdjustType('spoilage');
+                      }
+                    }}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #E8EAE6', borderRadius: '8px', background: '#FFFFFF', fontSize: '0.875rem', color: '#2C302E' }}
+                  >
+                    <option value="decrease">Decrease (Loss/Write-off)</option>
+                    <option value="increase">Increase (Correction/Found)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#8a8f8c', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
+                    Adjustment Type
+                  </label>
+                  <select
+                    value={adjustType}
+                    onChange={(e) => setAdjustType(e.target.value as any)}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #E8EAE6', borderRadius: '8px', background: '#FFFFFF', fontSize: '0.875rem', color: '#2C302E' }}
+                  >
+                    {adjustDirection === 'decrease' ? (
+                      <>
+                        <option value="spoilage">Spoilage</option>
+                        <option value="shrinkage">Shrinkage</option>
+                        <option value="damage">Damage</option>
+                        <option value="write_off">Write-Off</option>
+                      </>
+                    ) : (
+                      <option value="correction">Correction / Count</option>
+                    )}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#8a8f8c', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
+                  Quantity to Adjust
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  required
+                  value={adjustQty || ''}
+                  onChange={(e) => setAdjustQty(parseInt(e.target.value, 10) || 0)}
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #E8EAE6', borderRadius: '8px', fontSize: '0.875rem' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#8a8f8c', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
+                  Reason / Justification
+                </label>
+                <textarea
+                  required
+                  rows={2}
+                  placeholder="Provide audit detail for this stock change..."
+                  value={adjustReason}
+                  onChange={(e) => setAdjustReason(e.target.value)}
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #E8EAE6', borderRadius: '8px', fontSize: '0.875rem', fontFamily: 'inherit' }}
+                />
+              </div>
+
+              <div style={{ background: '#FDFCFA', border: '1px dashed #E8EAE6', borderRadius: '8px', padding: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.75rem', color: '#8a8f8c', fontWeight: 600, textTransform: 'uppercase' }}>Financial Impact</span>
+                <span style={{ fontSize: '1rem', fontWeight: 700, color: adjustDirection === 'decrease' ? '#B91C1C' : '#047857' }}>
+                  {adjustDirection === 'decrease' ? '-' : '+'}${ (adjustQty * adjustItem.unitCost).toFixed(2) }
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
+                <Button type="button" variant="outline" onClick={() => setIsAdjustModalOpen(false)} style={{ border: '1px solid #E8EAE6', background: '#FFFFFF', color: '#2C302E' }}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmittingAdjustment} style={{ background: adjustDirection === 'decrease' ? '#DC2626' : '#4A6B50', border: 'none', color: '#FFFFFF' }}>
+                  {isSubmittingAdjustment ? 'Posting...' : 'Post Adjustment'}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

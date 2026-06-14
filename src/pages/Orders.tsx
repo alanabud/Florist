@@ -8,12 +8,16 @@ import { exportOrdersPDF } from '../services/pdfExportService';
 import { exportOrdersExcel } from '../services/excelExportService';
 import { writeAuditLog } from '../services/auditService';
 import { EmptyState } from '../components/ui/EmptyState';
+import { useCompany } from '../context/CompanyContext';
+import { useI18n } from '../i18n/I18nProvider';
 import styles from '../components/layout/AdminList.module.css';
 
 export const Orders: React.FC = () => {
+  const { selectedCompany, companySettings } = useCompany();
   const { orders, updateOrderStatus, setActiveModal, fetchOrders, ordersLoading, postOrderFinancialsAction } = useAdminStore();
   const [searchParams, setSearchParams] = useSearchParams();
   const addToast = useToastStore((state) => state.addToast);
+  const { language } = useI18n();
 
   useEffect(() => {
     fetchOrders();
@@ -104,14 +108,24 @@ export const Orders: React.FC = () => {
   const handleExport = () => {
     const dateStr = new Date().toISOString().split('T')[0];
     const filename = `bloompro-orders-${selectedStatusFilter}-${dateStr}.pdf`;
-    exportOrdersPDF(filteredOrders, filename);
+    exportOrdersPDF(filteredOrders, filename, {
+      companyName: selectedCompany?.displayName,
+      currencyCode: companySettings?.baseCurrencyCode,
+      locale: language,
+      reportFooterText: companySettings?.reportFooterText
+    });
     addToast(`Exported ${filteredOrders.length} orders to PDF.`, 'success');
   };
 
   const handleExportExcel = () => {
     const dateStr = new Date().toISOString().split('T')[0];
     const filename = `bloompro-orders-${selectedStatusFilter}-${dateStr}.xlsx`;
-    exportOrdersExcel(filteredOrders, filename);
+    exportOrdersExcel(filteredOrders, filename, {
+      companyName: selectedCompany?.displayName,
+      currencyCode: companySettings?.baseCurrencyCode,
+      locale: language,
+      reportFooterText: companySettings?.reportFooterText
+    });
     addToast(`Exported ${filteredOrders.length} orders as Excel.`, 'success');
   };
 

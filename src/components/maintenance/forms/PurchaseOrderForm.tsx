@@ -4,6 +4,7 @@ import { FormModal } from '../../ui/FormModal';
 import { useAdminStore, type PurchaseOrder, type PurchaseOrderLine } from '../../../store/adminStore';
 import { useToastStore } from '../../../store/toastStore';
 import { createPurchaseOrder, updatePurchaseOrder, approvePurchaseOrder } from '../../../services/purchaseOrderService';
+import { useCompany } from '../../../context/CompanyContext';
 import modalStyles from '../../ui/FormModal.module.css';
 
 interface PurchaseOrderFormProps {
@@ -12,6 +13,7 @@ interface PurchaseOrderFormProps {
 }
 
 export const PurchaseOrderForm: React.FC<PurchaseOrderFormProps> = ({ isOpen, onClose }) => {
+  const { selectedCompanyId } = useCompany();
   const addToast = useToastStore((s) => s.addToast);
   const { modalPayload, vendors, inventory, fetchVendors } = useAdminStore();
 
@@ -140,6 +142,7 @@ export const PurchaseOrderForm: React.FC<PurchaseOrderFormProps> = ({ isOpen, on
     setIsSubmitting(true);
     try {
       const poPayload = {
+        companyId: selectedCompanyId || 'DEFAULT_COMPANY',
         vendorId: selectedVendor.id,
         vendorName: selectedVendor.name,
         orderDate: new Date(orderDate).toISOString(),

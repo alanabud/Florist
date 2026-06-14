@@ -17,52 +17,57 @@ import {
   FileText
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
+import { useI18n } from '../../i18n/I18nProvider';
 import styles from './Sidebar.module.css';
 
 const navGroups = [
   {
-    label: 'Operations',
+    id: 'operations',
+    labelKey: 'navigation.operations',
     items: [
-      { name: 'Dashboard', to: '/admin', icon: LayoutDashboard },
-      { name: 'Orders', to: '/admin/orders', icon: ShoppingBag },
-      { name: 'Deliveries', to: '/admin/deliveries', icon: Truck },
-      { name: 'Events', to: '/admin/events', icon: CalendarHeart },
+      { id: 'dashboard', labelKey: 'navigation.dashboard', to: '/admin', icon: LayoutDashboard },
+      { id: 'orders', labelKey: 'navigation.orders', to: '/admin/orders', icon: ShoppingBag },
+      { id: 'deliveries', labelKey: 'navigation.deliveries', to: '/admin/deliveries', icon: Truck },
+      { id: 'events', labelKey: 'navigation.events', to: '/admin/events', icon: CalendarHeart },
     ]
   },
   {
-    label: 'Commerce',
+    id: 'commerce',
+    labelKey: 'navigation.commerce',
     items: [
-      { name: 'Storefront', to: '/', icon: Store },
-      { name: 'Products', to: '/admin/products', icon: Flower2 },
-      { name: 'Customers', to: '/admin/customers', icon: Users },
-      { name: 'Subscriptions', to: '/admin/subscriptions', icon: Repeat },
+      { id: 'storefront', labelKey: 'navigation.storefront', to: '/', icon: Store },
+      { id: 'products', labelKey: 'navigation.products', to: '/admin/products', icon: Flower2 },
+      { id: 'customers', labelKey: 'navigation.customers', to: '/admin/customers', icon: Users },
+      { id: 'subscriptions', labelKey: 'navigation.subscriptions', to: '/admin/subscriptions', icon: Repeat },
     ]
   },
   {
-    label: 'Business',
+    id: 'business',
+    labelKey: 'navigation.business',
     items: [
-      { name: 'Inventory', to: '/admin/inventory', icon: Package },
-      { name: 'Finance', to: '/admin/finance', icon: Landmark },
-      { name: 'Receivables', to: '/admin/receivables', icon: FileText },
-      { name: 'Purchasing', to: '/admin/purchasing', icon: Truck },
-      { name: 'Reports', to: '/admin/reports', icon: BarChart3 },
-      { name: 'Operational QA', to: '/admin/qa', icon: ShieldCheck },
-      { name: 'Settings', to: '/admin/settings', icon: Settings },
+      { id: 'inventory', labelKey: 'navigation.inventory', to: '/admin/inventory', icon: Package },
+      { id: 'finance', labelKey: 'navigation.finance', to: '/admin/finance', icon: Landmark },
+      { id: 'receivables', labelKey: 'navigation.receivables', to: '/admin/receivables', icon: FileText },
+      { id: 'purchasing', labelKey: 'navigation.purchasing', to: '/admin/purchasing', icon: Truck },
+      { id: 'reports', labelKey: 'navigation.reports', to: '/admin/reports', icon: BarChart3 },
+      { id: 'qa', labelKey: 'navigation.qa', to: '/admin/qa', icon: ShieldCheck },
+      { id: 'settings', labelKey: 'navigation.settings', to: '/admin/settings', icon: Settings },
     ]
   }
 ];
 
 export const Sidebar: React.FC = () => {
   const { role } = useAuthStore();
+  const { t } = useI18n();
 
   const filteredGroups = navGroups.map(group => {
     const items = group.items.filter(item => {
       if (role === 'staff') {
         if (
-          item.name === 'Finance' || 
-          item.name === 'Receivables' || 
-          item.name === 'Purchasing' || 
-          item.name === 'QA Checks'
+          item.id === 'finance' || 
+          item.id === 'receivables' || 
+          item.id === 'purchasing' || 
+          item.id === 'qa'
         ) {
           return false;
         }
@@ -86,11 +91,11 @@ export const Sidebar: React.FC = () => {
       
       <nav className={styles.nav}>
         {filteredGroups.map((group) => (
-          <div key={group.label} className={styles.navGroup}>
-            <span className={styles.groupLabel}>{group.label}</span>
+          <div key={group.id} className={styles.navGroup}>
+            <span className={styles.groupLabel}>{t(group.labelKey)}</span>
             {group.items.map((item) => (
               <NavLink
-                key={item.name}
+                key={item.id}
                 to={item.to}
                 className={({ isActive }) => 
                   `${styles.navItem} ${isActive ? styles.active : ''}`
@@ -100,7 +105,7 @@ export const Sidebar: React.FC = () => {
                 <div className={styles.navIconWrap}>
                   <item.icon className={styles.navIcon} />
                 </div>
-                <span>{item.name}</span>
+                <span>{t(item.labelKey)}</span>
               </NavLink>
             ))}
           </div>

@@ -36,11 +36,12 @@ export function calculatePOTotals(
  * Create a new Purchase Order in draft status.
  */
 export async function createPurchaseOrder(
-  poData: Omit<PurchaseOrder, 'id' | 'status' | 'createdAt' | 'updatedAt' | 'subtotal' | 'totalCost'>,
+  poData: Omit<PurchaseOrder, 'id' | 'status' | 'createdAt' | 'updatedAt' | 'subtotal' | 'totalCost'> & { companyId?: string },
   actor: string = 'Admin'
 ): Promise<PurchaseOrder> {
   const sequenceId = await getNextSequenceNumber('purchaseOrders');
   const now = new Date().toISOString();
+  const companyId = poData.companyId || localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
 
   const { lines, subtotal, totalCost } = calculatePOTotals(
     poData.lines,
@@ -49,8 +50,9 @@ export async function createPurchaseOrder(
     poData.discountAmount
   );
 
-  const newPO: PurchaseOrder = {
+  const newPO: PurchaseOrder & { companyId: string } = {
     ...poData,
+    companyId,
     id: sequenceId,
     lines,
     subtotal,
@@ -64,6 +66,7 @@ export async function createPurchaseOrder(
   await setDoc(docRef, newPO);
 
   await writeAuditLog({
+    companyId,
     actor,
     action: 'CREATE_PURCHASE_ORDER',
     entityType: 'purchase_order',
@@ -99,6 +102,7 @@ export async function updatePurchaseOrder(
   }
 
   const now = new Date().toISOString();
+  const companyId = (currentPO as any).companyId || localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
   
   // Merge lines and other cost inputs for totals calculation
   const lines = updates.lines || currentPO.lines;
@@ -119,6 +123,7 @@ export async function updatePurchaseOrder(
   await updateDoc(poRef, cleanUpdates);
 
   await writeAuditLog({
+    companyId,
     actor,
     action: 'UPDATE_PURCHASE_ORDER',
     entityType: 'purchase_order',
@@ -148,6 +153,7 @@ export async function approvePurchaseOrder(id: string, actor: string = 'Admin'):
   }
 
   const now = new Date().toISOString();
+  const companyId = (currentPO as any).companyId || localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
   const updates: Partial<PurchaseOrder> = {
     status: 'ordered',
     approvedAt: now,
@@ -158,6 +164,7 @@ export async function approvePurchaseOrder(id: string, actor: string = 'Admin'):
   await updateDoc(poRef, updates);
 
   await writeAuditLog({
+    companyId,
     actor,
     action: 'APPROVE_PURCHASE_ORDER',
     entityType: 'purchase_order',
@@ -193,6 +200,7 @@ export async function cancelPurchaseOrder(id: string, actor: string = 'Admin'): 
   }
 
   const now = new Date().toISOString();
+  const companyId = (currentPO as any).companyId || localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
   const updates: Partial<PurchaseOrder> = {
     status: 'cancelled',
     updatedAt: now,
@@ -201,6 +209,7 @@ export async function cancelPurchaseOrder(id: string, actor: string = 'Admin'): 
   await updateDoc(poRef, updates);
 
   await writeAuditLog({
+    companyId,
     actor,
     action: 'CANCEL_PURCHASE_ORDER',
     entityType: 'purchase_order',

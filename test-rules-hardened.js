@@ -115,6 +115,7 @@ async function runTests() {
       status: 'confirmed',
       paymentStatus: 'paid',
       glPostingStatus: 'unposted',
+      companyId: 'DEFAULT_COMPANY',
       createdAt: new Date().toISOString()
     });
   });
@@ -149,6 +150,7 @@ async function runTests() {
       timeline: [
         { status: 'placed', label: 'Order Placed', timestamp: new Date().toISOString() }
       ],
+      companyId: 'DEFAULT_COMPANY',
       updatedAt: new Date().toISOString()
     });
   });

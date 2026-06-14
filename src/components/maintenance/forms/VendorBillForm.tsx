@@ -6,6 +6,7 @@ import { useToastStore } from '../../../store/toastStore';
 import { createVendorBill, postVendorBill, voidVendorBill } from '../../../services/vendorBillService';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../../../firebase/config';
+import { useCompany } from '../../../context/CompanyContext';
 import modalStyles from '../../ui/FormModal.module.css';
 
 interface VendorBillFormProps {
@@ -14,6 +15,7 @@ interface VendorBillFormProps {
 }
 
 export const VendorBillForm: React.FC<VendorBillFormProps> = ({ isOpen, onClose }) => {
+  const { selectedCompanyId } = useCompany();
   const addToast = useToastStore((s) => s.addToast);
   const { modalPayload, vendors, purchaseOrders, fetchVendors, fetchPurchaseOrders } = useAdminStore();
 
@@ -198,6 +200,7 @@ export const VendorBillForm: React.FC<VendorBillFormProps> = ({ isOpen, onClose 
     setIsSubmitting(true);
     try {
       const billPayload = {
+        companyId: selectedCompanyId || 'DEFAULT_COMPANY',
         vendorId: selectedVendor.id,
         vendorName: selectedVendor.name,
         billNumber: billNumber.trim(),

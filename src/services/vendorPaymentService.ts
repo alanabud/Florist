@@ -14,17 +14,19 @@ const BILLS_COLLECTION = 'vendorBills';
  * Updates bill balances, posts GL entries (with prepayment support), and recalculates vendor balances.
  */
 export async function createVendorPayment(
-  paymentData: Omit<VendorPayment, 'id' | 'paymentNumber' | 'status' | 'glPostingStatus' | 'createdAt'>,
+  paymentData: Omit<VendorPayment, 'id' | 'paymentNumber' | 'status' | 'glPostingStatus' | 'createdAt'> & { companyId?: string },
   options?: { drawFromPrepayments?: boolean },
   actor: string = 'Admin'
 ): Promise<VendorPayment> {
   const sequenceId = await getNextSequenceNumber('vendorPayments');
   const now = new Date().toISOString();
+  const companyId = paymentData.companyId || localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
 
   const isPrepaymentApplication = !!options?.drawFromPrepayments;
 
-  const newPayment: VendorPayment = {
+  const newPayment: VendorPayment & { companyId: string } = {
     ...paymentData,
+    companyId,
     id: sequenceId,
     paymentNumber: sequenceId,
     status: 'posted',
@@ -119,7 +121,7 @@ export async function createVendorPayment(
   if (glLines.length > 0) {
     const journalEntry: JournalEntry = {
       orderId: 'VENDOR_AP_PAYMENT',
-      companyId: 'DEFAULT_COMPANY',
+      companyId,
       createdBy: actor,
       description: isPrepaymentApplication
         ? `Applied prepayment of $${totalApplied.toFixed(2)} to bills for ${paymentData.vendorName}`
@@ -142,6 +144,7 @@ export async function createVendorPayment(
   await recalculateVendorBalances(paymentData.vendorId);
 
   await writeAuditLog({
+    companyId,
     actor,
     action: 'CREATE_VENDOR_PAYMENT',
     entityType: 'vendor_payment',
@@ -173,6 +176,7 @@ export async function voidVendorPayment(id: string, actor: string = 'Admin'): Pr
   }
 
   const now = new Date().toISOString();
+  const companyId = payment.companyId || 'DEFAULT_COMPANY';
 
   // 1. Reverse GL entry
   let revJeId = '';
@@ -219,6 +223,7 @@ export async function voidVendorPayment(id: string, actor: string = 'Admin'): Pr
   await recalculateVendorBalances(payment.vendorId);
 
   await writeAuditLog({
+    companyId,
     actor,
     action: 'VOID_VENDOR_PAYMENT',
     entityType: 'vendor_payment',

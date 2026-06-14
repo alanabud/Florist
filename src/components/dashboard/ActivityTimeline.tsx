@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAdminStore } from '../../store/adminStore';
 import { getRecentAuditLogs, type AuditRecord } from '../../services/auditService';
+import { useCompany } from '../../context/CompanyContext';
 import styles from './ActivityTimeline.module.css';
 import { ShoppingBag, CreditCard, Flower2, Truck, Package, CalendarHeart, FileText } from 'lucide-react';
 
@@ -15,19 +16,20 @@ const activityTemplates = [
 
 export const ActivityTimeline: React.FC = () => {
   const { orders } = useAdminStore();
+  const { selectedCompanyId } = useCompany();
   const [logs, setLogs] = useState<AuditRecord[]>([]);
 
   useEffect(() => {
     const fetchLogs = async () => {
       try {
-        const recentLogs = await getRecentAuditLogs(8);
+        const recentLogs = await getRecentAuditLogs(selectedCompanyId || 'DEFAULT_COMPANY', 8);
         setLogs(recentLogs);
       } catch (error) {
         console.error("Failed to load activity logs:", error);
       }
     };
     fetchLogs();
-  }, [orders]); // Refresh logs when orders list changes
+  }, [orders, selectedCompanyId]); // Refresh logs when orders list or selected company changes
 
   const getLogTime = (log: AuditRecord) => {
     const date = log.createdAt 

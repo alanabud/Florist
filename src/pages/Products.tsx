@@ -7,12 +7,16 @@ import { Download, Plus, Flower2, Package, AlertTriangle, TrendingUp, Sparkles }
 import { exportProductsPDF } from '../services/pdfExportService';
 import { exportProductsExcel } from '../services/excelExportService';
 import { EmptyState } from '../components/ui/EmptyState';
+import { useCompany } from '../context/CompanyContext';
+import { useI18n } from '../i18n/I18nProvider';
 import styles from '../components/layout/AdminList.module.css';
 
 export const Products: React.FC = () => {
+  const { selectedCompany, companySettings } = useCompany();
   const { products, setActiveModal } = useAdminStore();
   const [searchParams, setSearchParams] = useSearchParams();
   const addToast = useToastStore((state) => state.addToast);
+  const { language } = useI18n();
 
   // Filter local states
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>('all');
@@ -81,14 +85,24 @@ export const Products: React.FC = () => {
   const handleExport = () => {
     const dateStr = new Date().toISOString().split('T')[0];
     const filename = `bloompro-products-${selectedStatusFilter}-${dateStr}.pdf`;
-    exportProductsPDF(filteredProducts, filename);
+    exportProductsPDF(filteredProducts, filename, {
+      companyName: selectedCompany?.displayName,
+      currencyCode: companySettings?.baseCurrencyCode,
+      locale: language,
+      reportFooterText: companySettings?.reportFooterText
+    });
     addToast(`Exported ${filteredProducts.length} products to PDF.`, 'success');
   };
 
   const handleExportExcel = () => {
     const dateStr = new Date().toISOString().split('T')[0];
     const filename = `bloompro-products-${selectedStatusFilter}-${dateStr}.xlsx`;
-    exportProductsExcel(filteredProducts, filename);
+    exportProductsExcel(filteredProducts, filename, {
+      companyName: selectedCompany?.displayName,
+      currencyCode: companySettings?.baseCurrencyCode,
+      locale: language,
+      reportFooterText: companySettings?.reportFooterText
+    });
     addToast(`Exported ${filteredProducts.length} products as Excel.`, 'success');
   };
 

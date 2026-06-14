@@ -40,7 +40,8 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
   fetchJournalEntries: async () => {
     set({ isLoading: true });
     try {
-      const entries = await getRecentJournalEntries();
+      const companyId = localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
+      const entries = await getRecentJournalEntries(companyId);
       set({ journalEntries: entries });
     } catch (error) {
       console.error("Failed to fetch journal entries", error);
@@ -52,7 +53,8 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
   fetchChartOfAccounts: async () => {
     set({ coaLoading: true });
     try {
-      const accounts = await fetchCOA();
+      const companyId = localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
+      const accounts = await fetchCOA(companyId);
       set({ chartOfAccounts: accounts });
     } catch (error) {
       console.error("Failed to fetch chart of accounts", error);
@@ -62,8 +64,9 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
   },
 
   addAccount: async (account, actor = 'Admin') => {
+    const companyId = localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
     const existing = get().chartOfAccounts;
-    const newAccount = await addCOAAccount(account, existing, actor);
+    const newAccount = await addCOAAccount({ ...account, companyId }, existing, actor);
     set({ chartOfAccounts: [...existing, newAccount] });
     return newAccount;
   },

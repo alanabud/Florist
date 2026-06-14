@@ -4,6 +4,7 @@ import { FormModal } from '../../ui/FormModal';
 import { useAdminStore, type VendorBill, type VendorPayment } from '../../../store/adminStore';
 import { useToastStore } from '../../../store/toastStore';
 import { createVendorPayment, voidVendorPayment } from '../../../services/vendorPaymentService';
+import { useCompany } from '../../../context/CompanyContext';
 import modalStyles from '../../ui/FormModal.module.css';
 
 interface VendorPaymentFormProps {
@@ -12,6 +13,7 @@ interface VendorPaymentFormProps {
 }
 
 export const VendorPaymentForm: React.FC<VendorPaymentFormProps> = ({ isOpen, onClose }) => {
+  const { selectedCompanyId } = useCompany();
   const addToast = useToastStore((s) => s.addToast);
   const { modalPayload, vendors, vendorBills, fetchVendors, fetchVendorBills } = useAdminStore();
 
@@ -62,6 +64,7 @@ export const VendorPaymentForm: React.FC<VendorPaymentFormProps> = ({ isOpen, on
         const histBills = currentPayment.allocations.map(alloc => ({
           bill: {
             id: alloc.billId,
+            companyId: currentPayment.companyId,
             billNumber: alloc.billNumber,
             totalAmount: alloc.originalBalance,
             balanceDue: alloc.remainingBalance,
@@ -194,6 +197,7 @@ export const VendorPaymentForm: React.FC<VendorPaymentFormProps> = ({ isOpen, on
     setIsSubmitting(true);
     try {
       const paymentPayload = {
+        companyId: selectedCompanyId || 'DEFAULT_COMPANY',
         vendorId: selectedVendor.id,
         vendorName: selectedVendor.name,
         paymentDate: new Date(paymentDate).toISOString(),

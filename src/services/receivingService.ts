@@ -45,6 +45,7 @@ export async function receivePurchaseOrder(
 
   const receiptId = await getNextSequenceNumber('inventoryReceipts');
   const now = new Date().toISOString();
+  const companyId = (currentPO as any).companyId || localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
 
   // 1. Calculate accepted quantities and allocate freight if capitalized
   const processedLines: InventoryReceiptLine[] = [];
@@ -124,8 +125,9 @@ export async function receivePurchaseOrder(
     if (line.quantityReceived <= 0) continue;
 
     const txRef = collection(db, TRANSACTIONS_COLLECTION);
-    const newTx: Omit<InventoryTransaction, 'id'> = {
+    const newTx: Omit<InventoryTransaction, 'id'> & { companyId: string } = {
       type: 'purchase_receipt',
+      companyId,
       itemId: line.itemId,
       sku: line.sku,
       quantityIn: line.quantityAccepted,
@@ -226,7 +228,7 @@ export async function receivePurchaseOrder(
   if (glLines.length > 0) {
     const journalEntry: JournalEntry = {
       orderId: currentPO.id,
-      companyId: 'DEFAULT_COMPANY',
+      companyId,
       createdBy: actor,
       description: `Inventory Receipt ${receiptId} for PO ${currentPO.id}`,
       lines: glLines,
@@ -238,8 +240,9 @@ export async function receivePurchaseOrder(
   }
 
   // 6. Write Inventory Receipt document
-  const finalReceipt: InventoryReceipt = {
+  const finalReceipt: InventoryReceipt & { companyId: string } = {
     id: receiptId,
+    companyId,
     poId: currentPO.id,
     poNumber: currentPO.id,
     vendorId: currentPO.vendorId,
@@ -259,6 +262,7 @@ export async function receivePurchaseOrder(
   await setDoc(receiptRef, finalReceipt);
 
   await writeAuditLog({
+    companyId,
     actor,
     action: 'RECEIVE_PURCHASE_ORDER',
     entityType: 'inventory_receipt',

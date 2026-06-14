@@ -7,12 +7,16 @@ import { Download, CalendarPlus, Calendar, Award, CheckSquare, DollarSign } from
 import { exportEventsPDF } from '../services/pdfExportService';
 import { exportEventsExcel } from '../services/excelExportService';
 import { EmptyState } from '../components/ui/EmptyState';
+import { useCompany } from '../context/CompanyContext';
+import { useI18n } from '../i18n/I18nProvider';
 import styles from '../components/layout/AdminList.module.css';
 
 export const Events: React.FC = () => {
+  const { selectedCompany, companySettings } = useCompany();
   const { events, setActiveModal } = useAdminStore();
   const [searchParams, setSearchParams] = useSearchParams();
   const addToast = useToastStore((state) => state.addToast);
+  const { language } = useI18n();
 
   // Filter local states
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>('all');
@@ -70,14 +74,24 @@ export const Events: React.FC = () => {
   const handleExport = () => {
     const dateStr = new Date().toISOString().split('T')[0];
     const filename = `bloompro-events-${selectedStatusFilter}-${dateStr}.pdf`;
-    exportEventsPDF(filteredEvents, filename);
+    exportEventsPDF(filteredEvents, filename, {
+      companyName: selectedCompany?.displayName,
+      currencyCode: companySettings?.baseCurrencyCode,
+      locale: language,
+      reportFooterText: companySettings?.reportFooterText
+    });
     addToast(`Exported ${filteredEvents.length} events to PDF.`, 'success');
   };
 
   const handleExportExcel = () => {
     const dateStr = new Date().toISOString().split('T')[0];
     const filename = `bloompro-events-${selectedStatusFilter}-${dateStr}.xlsx`;
-    exportEventsExcel(filteredEvents, filename);
+    exportEventsExcel(filteredEvents, filename, {
+      companyName: selectedCompany?.displayName,
+      currencyCode: companySettings?.baseCurrencyCode,
+      locale: language,
+      reportFooterText: companySettings?.reportFooterText
+    });
     addToast(`Exported ${filteredEvents.length} events as Excel.`, 'success');
   };
 

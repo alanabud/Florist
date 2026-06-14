@@ -7,12 +7,16 @@ import { Download, UserPlus, Users, Star, DollarSign, Activity, Mail } from 'luc
 import { exportCustomersPDF } from '../services/pdfExportService';
 import { exportCustomersExcel } from '../services/excelExportService';
 import { EmptyState } from '../components/ui/EmptyState';
+import { useCompany } from '../context/CompanyContext';
+import { useI18n } from '../i18n/I18nProvider';
 import styles from '../components/layout/AdminList.module.css';
 
 export const Customers: React.FC = () => {
+  const { selectedCompany, companySettings } = useCompany();
   const { customers, setActiveModal } = useAdminStore();
   const [searchParams, setSearchParams] = useSearchParams();
   const addToast = useToastStore((state) => state.addToast);
+  const { language } = useI18n();
 
   // Filter local states
   const [selectedTierFilter, setSelectedTierFilter] = useState<string>('all');
@@ -73,12 +77,22 @@ export const Customers: React.FC = () => {
   };
 
   const handleExport = () => {
-    exportCustomersPDF(filteredCustomers);
+    exportCustomersPDF(filteredCustomers, {
+      companyName: selectedCompany?.displayName,
+      currencyCode: companySettings?.baseCurrencyCode,
+      locale: language,
+      reportFooterText: companySettings?.reportFooterText
+    });
     addToast(`Exported ${filteredCustomers.length} customers to PDF.`, 'success');
   };
 
   const handleExportExcel = () => {
-    exportCustomersExcel(filteredCustomers);
+    exportCustomersExcel(filteredCustomers, {
+      companyName: selectedCompany?.displayName,
+      currencyCode: companySettings?.baseCurrencyCode,
+      locale: language,
+      reportFooterText: companySettings?.reportFooterText
+    });
     addToast(`Exported ${filteredCustomers.length} customers as Excel.`, 'success');
   };
 

@@ -3,6 +3,7 @@ import { MaintenanceModal, type TabConfig } from '../MaintenanceModal';
 import { useAdminStore, type Vendor } from '../../../store/adminStore';
 import { useToastStore } from '../../../store/toastStore';
 import { createVendor, updateVendor } from '../../../services/vendorService';
+import { useCompany } from '../../../context/CompanyContext';
 
 interface VendorMaintenanceFormProps {
   isOpen: boolean;
@@ -10,6 +11,7 @@ interface VendorMaintenanceFormProps {
 }
 
 export const VendorMaintenanceForm: React.FC<VendorMaintenanceFormProps> = ({ isOpen, onClose }) => {
+  const { selectedCompanyId } = useCompany();
   const addToast = useToastStore((s) => s.addToast);
   const { modalPayload } = useAdminStore();
 
@@ -47,6 +49,7 @@ export const VendorMaintenanceForm: React.FC<VendorMaintenanceFormProps> = ({ is
     try {
       if (mode === 'create') {
         const vendorData = {
+          companyId: selectedCompanyId || 'DEFAULT_COMPANY',
           name: values.name,
           contactName: values.contactName || '',
           email: values.email,

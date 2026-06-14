@@ -4,6 +4,8 @@ import { useAdminStore } from '../store/adminStore';
 import { useFinanceStore } from '../store/financeStore';
 import { useToastStore } from '../store/toastStore';
 import { restockInventoryAndPostFinancials } from '../services/financeService';
+import { useCompany } from '../context/CompanyContext';
+import { useI18n } from '../i18n/I18nProvider';
 import { 
   DollarSign, ShoppingBag, Hammer, Truck, AlertTriangle, 
   ShieldCheck, Landmark as BalanceIcon 
@@ -42,6 +44,9 @@ export const Dashboard: React.FC = () => {
   const { journalEntries, fetchJournalEntries } = useFinanceStore();
   const addToast = useToastStore(s => s.addToast);
   
+  const { selectedCompanyId, companySettings } = useCompany();
+  const { t, formatCurrency } = useI18n();
+
   // Protected loading state for restocking actions
   const [isRestockingSku, setIsRestockingSku] = useState<string | null>(null);
 
@@ -93,22 +98,22 @@ export const Dashboard: React.FC = () => {
       );
     });
     return {
-      name: new Date(dateStr).toLocaleDateString('en-US', { weekday: 'short' }),
+      name: new Date(dateStr).toLocaleDateString(document.documentElement.lang || 'en', { weekday: 'short' }),
       revenue: dayOrders.reduce((sum, o) => sum + o.total, 0),
       orders: dayOrders.length
     };
   });
 
   const statusData = [
-    { name: 'Draft', value: orders.filter(o => o.status === 'draft').length, color: '#94A3B8' },
-    { name: 'Confirmed', value: orders.filter(o => o.status === 'confirmed').length, color: '#3B82F6' },
-    { name: 'Scheduled', value: orders.filter(o => o.status === 'scheduled').length, color: '#60A5FA' },
-    { name: 'In Design', value: orders.filter(o => o.status === 'in_design').length, color: '#F59E0B' },
-    { name: 'Ready', value: orders.filter(o => o.status === 'ready').length, color: '#FBBF24' },
-    { name: 'In Delivery', value: orders.filter(o => o.status === 'out_for_delivery').length, color: '#8B5CF6' },
-    { name: 'Delivered', value: orders.filter(o => o.status === 'delivered').length, color: '#10B981' },
-    { name: 'Cancelled', value: orders.filter(o => o.status === 'cancelled').length, color: '#EF4444' },
-    { name: 'Refunded', value: orders.filter(o => o.status === 'refunded').length, color: '#EC4899' },
+    { name: t('status.draft'), value: orders.filter(o => o.status === 'draft').length, color: '#94A3B8' },
+    { name: t('status.confirmed'), value: orders.filter(o => o.status === 'confirmed').length, color: '#3B82F6' },
+    { name: t('status.scheduled'), value: orders.filter(o => o.status === 'scheduled').length, color: '#60A5FA' },
+    { name: t('status.in_design'), value: orders.filter(o => o.status === 'in_design').length, color: '#F59E0B' },
+    { name: t('status.ready'), value: orders.filter(o => o.status === 'ready').length, color: '#FBBF24' },
+    { name: t('status.out_for_delivery'), value: orders.filter(o => o.status === 'out_for_delivery').length, color: '#8B5CF6' },
+    { name: t('status.delivered'), value: orders.filter(o => o.status === 'delivered').length, color: '#10B981' },
+    { name: t('status.cancelled'), value: orders.filter(o => o.status === 'cancelled').length, color: '#EF4444' },
+    { name: t('status.refunded'), value: orders.filter(o => o.status === 'refunded').length, color: '#EC4899' },
   ].filter(d => d.value > 0);
 
   // Unified financial derivations to prevent double-counting
@@ -174,13 +179,13 @@ export const Dashboard: React.FC = () => {
       priority: 'Critical',
       type: 'Inventory',
       item: `${item.sku} ${item.name}`,
-      reason: `Below reorder point (${item.quantity} stems left)`,
+      reason: `${t('dashboard.lowStockAlerts')} (${item.quantity} stems left)`,
       owner: 'Inventory',
-      actionLabel: 'Restock',
+      actionLabel: t('dashboard.restock'),
       action: async () => {
         setIsRestockingSku(item.sku);
         try {
-          await restockInventoryAndPostFinancials(item.sku, 50, item.unitCost, 'DEFAULT_COMPANY', 'Priority Queue Restock');
+          await restockInventoryAndPostFinancials(item.sku, 50, item.unitCost, selectedCompanyId || 'DEFAULT_COMPANY', 'Priority Queue Restock');
           await fetchJournalEntries();
           addToast(`Restocked 50 stems of ${item.name}. GL entry verified.`, 'success');
         } catch (err: unknown) {
@@ -203,7 +208,7 @@ export const Dashboard: React.FC = () => {
       item: `${draftOrders.length} Draft Orders`,
       reason: 'Not confirmed',
       owner: 'Sales',
-      actionLabel: 'Review',
+      actionLabel: t('dashboard.review'),
       action: () => navigate('/admin/orders?status=draft')
     });
   }
@@ -217,8 +222,8 @@ export const Dashboard: React.FC = () => {
       type: 'Delivery',
       item: `${transitDeliveries.length} In Transit`,
       reason: 'Active workload',
-      owner: 'Logistics',
-      actionLabel: 'Track',
+      owner: 'Delivery',
+      actionLabel: t('dashboard.track'),
       action: () => navigate('/admin/deliveries?status=transit')
     });
   }
@@ -231,7 +236,7 @@ export const Dashboard: React.FC = () => {
     item: 'Ledger Audit',
     reason: 'Balanced',
     owner: 'Finance',
-    actionLabel: 'View',
+    actionLabel: t('dashboard.view'),
     action: () => navigate('/admin/finance?tab=ledger&date=today')
   });
 
@@ -243,7 +248,7 @@ export const Dashboard: React.FC = () => {
       {/* Premium Dashboard Command Bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
         <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.625rem', fontWeight: 600, color: 'var(--color-text-main)', margin: 0 }}>
-          Operations Command Center
+          {t('dashboard.operationsCommandCenter')}
         </h1>
         <QuickActionsMenu onOpenModal={setActiveModal} />
       </div>
@@ -256,9 +261,9 @@ export const Dashboard: React.FC = () => {
       {/* Refactored KPI Grid */}
       <div className={styles.kpiGrid}>
         <MetricCard
-          title="Revenue Today"
-          value={`$${todaysRevenue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`}
-          subtitle={`Lifetime: $${totalLifetimeRevenue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`}
+          title={t('dashboard.revenueToday')}
+          value={formatCurrency(todaysRevenue, companySettings?.baseCurrencyCode)}
+          subtitle={`${t('dashboard.lifetime')}: ${formatCurrency(totalLifetimeRevenue, companySettings?.baseCurrencyCode)}`}
           trend="+12.5%"
           trendDirection="up"
           icon={DollarSign}
@@ -272,9 +277,9 @@ export const Dashboard: React.FC = () => {
           }}
         />
         <MetricCard
-          title="Cash & Ledger"
-          value={`$${cashAsset.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`}
-          subtitle={`AR Pending: $${arAsset.toFixed(2)} • Tax: $${taxLiabilities.toFixed(2)}`}
+          title={t('dashboard.cashAndLedger')}
+          value={formatCurrency(cashAsset, companySettings?.baseCurrencyCode)}
+          subtitle={`${t('dashboard.arPending')}: ${formatCurrency(arAsset, companySettings?.baseCurrencyCode)} • ${t('dashboard.tax')}: ${formatCurrency(taxLiabilities, companySettings?.baseCurrencyCode)}`}
           trend="Balanced"
           trendDirection="neutral"
           icon={BalanceIcon}
@@ -286,9 +291,9 @@ export const Dashboard: React.FC = () => {
           }}
         />
         <MetricCard
-          title="Draft Orders"
+          title={t('dashboard.draftOrders')}
           value={draftOrdersCount.toString()}
-          subtitle={`${orders.length} total orders`}
+          subtitle={t('dashboard.totalOrders', { count: orders.length })}
           trend={draftOrdersCount > 10 ? 'Action Needed' : 'Healthy'}
           trendDirection={draftOrdersCount > 10 ? 'neutral' : 'up'}
           icon={ShoppingBag}
@@ -297,9 +302,9 @@ export const Dashboard: React.FC = () => {
           onClick={() => navigate('/admin/orders?status=draft')}
         />
         <MetricCard
-          title="Production Queue"
+          title={t('dashboard.productionQueue')}
           value={inProduction.toString()}
-          subtitle="Stems being arranged"
+          subtitle={t('dashboard.stemsCrafting')}
           trend={inProduction > 5 ? 'High Volume' : 'Normal'}
           trendDirection={inProduction > 5 ? 'neutral' : 'up'}
           icon={Hammer}
@@ -309,9 +314,9 @@ export const Dashboard: React.FC = () => {
           onClick={() => navigate('/admin/orders?stage=crafting')}
         />
         <MetricCard
-          title="Transit Workload"
+          title={t('dashboard.transitWorkload')}
           value={transitCount.toString()}
-          subtitle="Out for client courier dispatch"
+          subtitle={t('dashboard.courierDispatch')}
           trend="Ongoing"
           trendDirection="neutral"
           icon={Truck}
@@ -320,9 +325,9 @@ export const Dashboard: React.FC = () => {
           onClick={() => navigate('/admin/deliveries?status=transit')}
         />
         <MetricCard
-          title="Low Stock Alerts"
+          title={t('dashboard.lowStockAlerts')}
           value={lowStockItems.length.toString()}
-          subtitle={lowStockItems.length > 0 ? `${lowStockItems[0].name} critical` : 'All inventory healthy'}
+          subtitle={lowStockItems.length > 0 ? `${lowStockItems[0].name} ${t('dashboard.criticalStock', { count: lowStockItems.length })}` : t('dashboard.allStockHealthy')}
           icon={AlertTriangle}
           accentClass="accent-warning"
           isWarning={lowStockItems.length > 0}
@@ -334,26 +339,26 @@ export const Dashboard: React.FC = () => {
       {/* Today's Priority Queue Table */}
       <div className={styles.priorityCard}>
         <div className={styles.priorityHeader}>
-          <h3 className={styles.priorityTitle}>Today's Priority Queue</h3>
-          <span className={styles.prioritySubtitle}>Action Required</span>
+          <h3 className={styles.priorityTitle}>{t('dashboard.priorityQueue')}</h3>
+          <span className={styles.prioritySubtitle}>{t('dashboard.actionRequired')}</span>
         </div>
 
         {priorityQueue.length === 0 ? (
           <div className={styles.queueEmptyState}>
             <ShieldCheck className={styles.queueEmptyIcon} size={28} />
-            <p className={styles.queueEmptyText}>No urgent operational issues. Studio is running smoothly.</p>
+            <p className={styles.queueEmptyText}>{t('dashboard.noUrgentIssues')}</p>
           </div>
         ) : (
           <div className={styles.priorityTableWrapper}>
             <table className={styles.priorityTable}>
               <thead>
                 <tr>
-                  <th>Priority</th>
-                  <th>Type</th>
-                  <th>Item</th>
-                  <th>Reason</th>
-                  <th>Owner</th>
-                  <th>Action</th>
+                  <th>{t('dashboard.priority')}</th>
+                  <th>{t('dashboard.type')}</th>
+                  <th>{t('dashboard.item')}</th>
+                  <th>{t('dashboard.reason')}</th>
+                  <th>{t('dashboard.owner')}</th>
+                  <th>{t('dashboard.action')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -365,17 +370,17 @@ export const Dashboard: React.FC = () => {
                         row.priority === 'High' ? styles.badgeHigh : 
                         row.priority === 'Medium' ? styles.badgeMedium : styles.badgeLow
                       }`}>
-                        {row.priority}
+                        {t(`common.${row.priority.toLowerCase()}`)}
                       </span>
                     </td>
                     <td>
-                      <span className={styles.badgeType}>{row.type}</span>
+                      <span className={styles.badgeType}>{t(`common.${row.type.toLowerCase()}`)}</span>
                     </td>
                     <td className={styles.itemName}>{row.item}</td>
                     <td className={styles.statusText}>{row.reason}</td>
                     <td>
                       <span className={styles.ownerText} style={{ fontSize: '0.8125rem', color: '#726E64', fontWeight: 500 }}>
-                        {row.owner}
+                        {t(`common.${row.owner.toLowerCase()}`)}
                       </span>
                     </td>
                     <td>
@@ -384,7 +389,7 @@ export const Dashboard: React.FC = () => {
                         disabled={isRestockingSku !== null}
                         onClick={row.action}
                       >
-                        {isRestockingSku && row.id.includes(isRestockingSku) ? 'Processing...' : row.actionLabel}
+                        {isRestockingSku && row.id.includes(isRestockingSku) ? t('dashboard.processing') : row.actionLabel}
                       </button>
                     </td>
                   </tr>
@@ -399,8 +404,8 @@ export const Dashboard: React.FC = () => {
       <div className={styles.chartsRow}>
         <div className={styles.chartCard}>
           <div className={styles.chartHeader}>
-            <h3>Revenue Trend</h3>
-            <span className={styles.chartLabel}>Last 7 days</span>
+            <h3>{t('dashboard.revenueTrend')}</h3>
+            <span className={styles.chartLabel}>{t('dashboard.last7Days')}</span>
           </div>
           <div className={styles.chartBody}>
             <ResponsiveContainer width="100%" height={260}>
@@ -416,7 +421,7 @@ export const Dashboard: React.FC = () => {
                 <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6B7280', fontSize: 12 }} tickFormatter={(v) => `$${v}`} />
                 <Tooltip
                   contentStyle={{ borderRadius: '10px', border: '1px solid #E8EAE6', boxShadow: '0 4px 12px rgba(0,0,0,0.06)', fontSize: '0.8125rem' }}
-                  formatter={(value: unknown) => [`$${Number(value).toFixed(2)}`, 'Revenue']}
+                  formatter={(value: unknown) => [formatCurrency(Number(value), companySettings?.baseCurrencyCode), 'Revenue']}
                 />
                 <Area type="monotone" dataKey="revenue" stroke="#6C8271" strokeWidth={2.5} fillOpacity={1} fill="url(#revGrad)" />
               </AreaChart>
@@ -426,8 +431,8 @@ export const Dashboard: React.FC = () => {
 
         <div className={styles.chartCard}>
           <div className={styles.chartHeader}>
-            <h3>Orders by Status</h3>
-            <span className={styles.chartLabel}>All orders</span>
+            <h3>{t('dashboard.ordersByStatus')}</h3>
+            <span className={styles.chartLabel}>{t('dashboard.allOrders')}</span>
           </div>
           <div className={styles.chartBody} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <ResponsiveContainer width="100%" height={260}>

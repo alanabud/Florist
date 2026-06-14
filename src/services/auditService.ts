@@ -1,8 +1,9 @@
-import { collection, addDoc, serverTimestamp, getDocs, query, orderBy, limit } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, getDocs, query, orderBy, limit, where } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
 export interface AuditRecord {
   id?: string;
+  companyId: string;
   actor: string;
   action:
     | 'RESTOCK_INVENTORY'
@@ -46,9 +47,14 @@ export interface AuditRecord {
     | 'CREATE_VENDOR_PAYMENT'
     | 'VOID_VENDOR_PAYMENT'
     | 'CREATE_VENDOR'
-    | 'UPDATE_VENDOR';
+    | 'UPDATE_VENDOR'
+    | 'company.updated'
+    | 'settings.updated'
+    | 'member.invited'
+    | 'member.roleChanged'
+    | 'member.suspended';
 
-  entityType: 'inventory' | 'order' | 'product' | 'finance' | 'customer' | 'event' | 'subscription' | 'gl_account' | 'purchase_order' | 'inventory_receipt' | 'vendor_bill' | 'vendor_payment' | 'vendor';
+  entityType: 'inventory' | 'order' | 'product' | 'finance' | 'customer' | 'event' | 'subscription' | 'gl_account' | 'purchase_order' | 'inventory_receipt' | 'vendor_bill' | 'vendor_payment' | 'vendor' | 'branch' | 'company' | 'settings' | 'member';
   entityId: string;
 
   before: any | null;
@@ -58,11 +64,13 @@ export interface AuditRecord {
   createdAt?: unknown;
 }
 
-export const writeAuditLog = async (record: Omit<AuditRecord, 'id' | 'createdAt'>) => {
+export const writeAuditLog = async (record: Omit<AuditRecord, 'id' | 'createdAt' | 'companyId'> & { companyId?: string }) => {
   try {
+    const companyId = record.companyId || localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
     const ref = collection(db, 'auditLogs');
     await addDoc(ref, {
       ...record,
+      companyId,
       createdAt: serverTimestamp()
     });
   } catch (error) {
@@ -70,10 +78,11 @@ export const writeAuditLog = async (record: Omit<AuditRecord, 'id' | 'createdAt'
   }
 };
 
-export const getRecentAuditLogs = async (limitCount = 50) => {
+export const getRecentAuditLogs = async (companyId: string, limitCount = 50) => {
   try {
     const q = query(
       collection(db, 'auditLogs'), 
+      where('companyId', '==', companyId),
       orderBy('createdAt', 'desc'), 
       limit(limitCount)
     );

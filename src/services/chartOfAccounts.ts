@@ -4,6 +4,7 @@ export type NormalBalance = 'debit' | 'credit';
 export interface AccountDefinition {
   // Identity
   id?: string;
+  companyId?: string;
   code: string;
   name: string;
   alias?: string;
@@ -518,6 +519,33 @@ export const CHART_OF_ACCOUNTS: AccountDefinition[] = [
     cashFlowCategory: 'Operating',
     statementGrouping: 'Expense',
     description: 'Cost difference between purchase order unit cost and actual vendor billed cost.'
+  },
+  {
+    code: '5500',
+    name: 'Spoilage & Shrinkage Expense',
+    type: 'expense',
+    subtype: 'Operating Expense',
+    normalBalance: 'debit',
+    active: true,
+    isSystem: true,
+    isPostingAccount: true,
+    allowManualPosting: false,
+    allowSystemPosting: true,
+    isCashAccount: false,
+    isControlAccount: false,
+    allowManualJournals: false,
+    allowSystemPostings: true,
+    includeInTrialBalance: true,
+    includeInBalanceSheet: false,
+    includeInIncomeStatement: true,
+    cashAccount: false,
+    controlAccount: false,
+    taxRelated: false,
+    reportingSection: 'Operating Expenses',
+    displayOrder: 850,
+    cashFlowCategory: 'Operating',
+    statementGrouping: 'Expense',
+    description: 'Losses recognized from spoiled, damaged, or stolen flower inventory stems.'
   }
 ];
 

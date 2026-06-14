@@ -3,9 +3,9 @@ import { persist } from 'zustand/middleware';
 import { DEMO_ORDERS, DEMO_INVENTORY, DEMO_CUSTOMERS, DEMO_EVENTS, DEMO_SUBSCRIPTIONS } from '../data/demoData';
 import { PRODUCTS, type Product } from '../data/products';
 import { normalizeOrder, normalizeProduct, normalizeCustomer, normalizeInventoryItem, normalizeSubscription, normalizeEvent } from '../services/normalizers';
-import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, getDoc, setDoc, query, orderBy } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, getDoc, setDoc, query, orderBy, where } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { postOrderFinancials, reverseJournalEntry } from '../services/financeService';
+import { postOrderFinancials, reverseJournalEntry, postCOGSForDeliveredOrder } from '../services/financeService';
 import { calculateOrderTotals } from '../services/orderCalculationService';
 
 export type OrderStatus = 'draft' | 'confirmed' | 'scheduled' | 'in_design' | 'ready' | 'out_for_delivery' | 'delivered' | 'cancelled' | 'refunded';
@@ -30,6 +30,7 @@ export interface PaymentAllocation {
 
 export interface PaymentRecord {
   id: string;
+  companyId: string;
   paymentNumber: string;
   customerId: string;
   customerName: string;
@@ -59,10 +60,13 @@ export interface OrderLineItem {
   lineTotal: number;
   substitutionAllowed: boolean;
   designerNotes: string;
+  isCustom?: boolean;
+  customDetails?: any;
 }
 
 export interface Order {
   id: string;
+  companyId: string;
   customerId: string;
   customerName: string;
   status: OrderStatus;
@@ -78,7 +82,6 @@ export interface Order {
   taxes?: number;
   assignedStaffId?: string;
   
-  // New fields
   dueDate?: string;
   deliveryWindow?: string;
   fulfillmentStatus?: string;
@@ -133,6 +136,16 @@ export interface Order {
   cashAccount?: string;
   refundStatus?: string;
   refundAmount?: number;
+
+  cogsPosted?: boolean;
+  cogsJournalEntryId?: string;
+  cogsPostedAt?: any;
+  cogsAmount?: number;
+  cogsSnapshot?: any[];
+  cogsReversed?: boolean;
+  cogsReversalJournalEntryId?: string;
+  cogsReversalReason?: string;
+  cogsReversedAt?: any;
   financeNotes?: string;
   deliveryMethod?: string;
   courier?: string;
@@ -166,6 +179,7 @@ export interface Order {
 
 export interface InventoryItem {
   id: string;
+  companyId: string;
   name: string;
   sku: string;
   category: string;
@@ -202,6 +216,7 @@ export interface InventoryItem {
 
 export interface Customer {
   id: string;
+  companyId: string;
   name: string;
   email: string;
   phone: string;
@@ -241,7 +256,6 @@ export interface Customer {
   internalNotes?: string;
   auditTrail?: string[];
   
-  // AR & credit fields
   arBalance?: number;
   lastPaymentDate?: string;
   lastStatementDate?: string;
@@ -251,6 +265,7 @@ export interface Customer {
 
 export interface EventItem {
   id: string;
+  companyId: string;
   name: string;
   type: string;
   date: string;
@@ -304,6 +319,7 @@ export interface EventItem {
 
 export interface SubscriptionItem {
   id: string;
+  companyId: string;
   customerName: string;
   product: string;
   frequency: string;
@@ -346,7 +362,8 @@ export interface SubscriptionItem {
 }
 
 export interface Vendor {
-  id: string; // VND-10001
+  id: string;
+  companyId: string;
   name: string;
   contactName?: string;
   email: string;
@@ -384,7 +401,8 @@ export interface PurchaseOrderLine {
 }
 
 export interface PurchaseOrder {
-  id: string; // PO-20001
+  id: string;
+  companyId: string;
   vendorId: string;
   vendorName: string;
   orderDate: string;
@@ -416,7 +434,8 @@ export interface InventoryReceiptLine {
 }
 
 export interface InventoryReceipt {
-  id: string; // REC-50001
+  id: string;
+  companyId: string;
   poId: string;
   poNumber: string;
   vendorId: string;
@@ -443,7 +462,8 @@ export interface VendorBillLine {
 }
 
 export interface VendorBill {
-  id: string; // VBL-30001
+  id: string;
+  companyId: string;
   vendorId: string;
   vendorName: string;
   billNumber: string;
@@ -481,7 +501,8 @@ export interface VendorPaymentAllocation {
 }
 
 export interface VendorPayment {
-  id: string; // VPM-40001
+  id: string;
+  companyId: string;
   paymentNumber: string;
   vendorId: string;
   vendorName: string;
@@ -503,6 +524,7 @@ export interface VendorPayment {
 
 export interface InventoryTransaction {
   id: string;
+  companyId: string;
   type: 'purchase_receipt' | 'waste' | 'sale_fulfillment' | 'manual_adjustment';
   itemId: string;
   sku: string;
@@ -554,6 +576,18 @@ interface AdminState {
   fetchOrders: () => Promise<void>;
   postOrderFinancialsAction: (orderId: string) => Promise<void>;
   
+  inventoryLoading: boolean;
+  customersLoading: boolean;
+  productsLoading: boolean;
+  eventsLoading: boolean;
+  subscriptionsLoading: boolean;
+
+  fetchInventory: () => Promise<void>;
+  fetchCustomers: () => Promise<void>;
+  fetchProducts: () => Promise<void>;
+  fetchEvents: () => Promise<void>;
+  fetchSubscriptions: () => Promise<void>;
+
   // Actions
   updateOrderStatus: (id: string, status: OrderStatus) => Promise<void>;
   updateOrderDetails: (id: string, updates: Partial<Order>) => Promise<void>;
@@ -562,26 +596,26 @@ interface AdminState {
   adjustInventory: (id: string, newQuantity: number) => void;
   restockInventoryItem: (sku: string, amount: number) => void;
   deductStemsFromInventory: (stems: { [sku: string]: number }) => void;
-  updateInventoryItem: (id: string, updates: Partial<InventoryItem>) => void;
-  deleteInventoryItem: (id: string) => void;
-  addProduct: (product: Product) => void;
-  updateProductDetails: (id: string, updates: Partial<Product>) => void;
-  deleteProduct: (id: string) => void;
-  adjustRosePrices: () => void;
-  addCustomer: (customer: Customer) => void;
-  updateCustomerDetails: (id: string, updates: Partial<Customer>) => void;
-  deleteCustomer: (id: string) => void;
-  addEvent: (event: EventItem) => void;
-  updateEventDetails: (id: string, updates: Partial<EventItem>) => void;
-  deleteEvent: (id: string) => void;
-  addSubscription: (subscription: SubscriptionItem) => void;
-  updateSubscriptionDetails: (id: string, updates: Partial<SubscriptionItem>) => void;
-  deleteSubscription: (id: string) => void;
+  updateInventoryItem: (id: string, updates: Partial<InventoryItem>) => Promise<void>;
+  deleteInventoryItem: (id: string) => Promise<void>;
+  addProduct: (product: Product) => Promise<void>;
+  updateProductDetails: (id: string, updates: Partial<Product>) => Promise<void>;
+  deleteProduct: (id: string) => Promise<void>;
+  adjustRosePrices: () => Promise<void>;
+  addCustomer: (customer: Customer) => Promise<void>;
+  updateCustomerDetails: (id: string, updates: Partial<Customer>) => Promise<void>;
+  deleteCustomer: (id: string) => Promise<void>;
+  addEvent: (event: EventItem) => Promise<void>;
+  updateEventDetails: (id: string, updates: Partial<EventItem>) => Promise<void>;
+  deleteEvent: (id: string) => Promise<void>;
+  addSubscription: (subscription: SubscriptionItem) => Promise<void>;
+  updateSubscriptionDetails: (id: string, updates: Partial<SubscriptionItem>) => Promise<void>;
+  deleteSubscription: (id: string) => Promise<void>;
   resetToDemo: () => void;
   
   setActiveModal: (modal: AdminModal, payload?: Record<string, any>) => void;
   closeModal: () => void;
-  toggleSubscriptionStatus: (id: string) => void;
+  toggleSubscriptionStatus: (id: string) => Promise<void>;
 
   payments: PaymentRecord[];
   paymentsLoading: boolean;
@@ -594,7 +628,6 @@ interface AdminState {
   fetchCustomerStatements: () => Promise<void>;
   addCustomerStatement: (statement: any) => void;
 
-  // Sprint 1C additions
   vendors: Vendor[];
   vendorsLoading: boolean;
   fetchVendors: () => Promise<void>;
@@ -652,34 +685,38 @@ export const useAdminStore = create<AdminState>()(
       vendorBillsLoading: false,
       vendorPayments: [],
       vendorPaymentsLoading: false,
+      inventoryLoading: false,
+      customersLoading: false,
+      productsLoading: false,
+      eventsLoading: false,
+      subscriptionsLoading: false,
 
       fetchOrders: async () => {
-        // Prevent concurrent double fetches
         if (useAdminStore.getState().ordersLoading) return;
         set({ ordersLoading: true, ordersError: null });
         try {
-          const seedDocRef = doc(db, 'systemSeeds', 'ordersDemoSeed');
+          const companyId = localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
+          const seedDocRef = doc(db, 'systemSeeds', `ordersDemoSeed_${companyId}`);
           const seedDocSnap = await getDoc(seedDocRef);
           
           const ordersRef = collection(db, 'orders');
-          const q = query(ordersRef, orderBy('createdAt', 'desc'));
+          const q = query(ordersRef, where('companyId', '==', companyId), orderBy('createdAt', 'desc'));
           let snapshot = await getDocs(q);
 
           if (!seedDocSnap.exists() && snapshot.empty) {
-            // Seeding needs to be idempotent and deterministic
             for (const order of DEMO_ORDERS) {
-              const deterministicId = `demo-order-${order.id.replace('ord-', '')}`;
+              const deterministicId = `demo-order-${companyId}-${order.id.replace('ord-', '')}`;
               await setDoc(doc(db, 'orders', deterministicId), {
                 ...order,
                 id: deterministicId,
                 documentId: deterministicId,
+                companyId,
                 orderNumber: order.id.toUpperCase(),
                 orderNumberNormalized: order.id.toLowerCase().trim(),
                 senderEmailNormalized: (DEMO_CUSTOMERS[0].email).toLowerCase().trim(),
                 glPostingStatus: 'posted',
               });
 
-              // Write public tracking record
               const lookupId = `${order.id.toLowerCase().trim()}_${(DEMO_CUSTOMERS[0].email).toLowerCase().trim()}`;
               await setDoc(doc(db, 'publicOrderTracking', lookupId), {
                 orderNumber: order.id.toUpperCase(),
@@ -696,7 +733,8 @@ export const useAdminStore = create<AdminState>()(
                     timestamp: order.createdAt
                   }
                 ],
-                updatedAt: order.createdAt
+                updatedAt: order.createdAt,
+                companyId
               });
             }
 
@@ -719,9 +757,186 @@ export const useAdminStore = create<AdminState>()(
         }
       },
 
+      fetchInventory: async () => {
+        if (useAdminStore.getState().inventoryLoading) return;
+        set({ inventoryLoading: true });
+        try {
+          const companyId = localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
+          const seedDocRef = doc(db, 'systemSeeds', `inventoryDemoSeed_${companyId}`);
+          const seedDocSnap = await getDoc(seedDocRef);
+          
+          const ref = collection(db, 'inventory');
+          const q = query(ref, where('companyId', '==', companyId));
+          let snapshot = await getDocs(q);
+
+          if (!seedDocSnap.exists() && snapshot.empty) {
+            for (const item of DEMO_INVENTORY) {
+              const deterministicId = `demo-inv-${companyId}-${item.sku}`;
+              await setDoc(doc(db, 'inventory', deterministicId), {
+                ...item,
+                id: deterministicId,
+                companyId,
+                createdAt: new Date().toISOString()
+              });
+            }
+            await setDoc(seedDocRef, { seededAt: new Date().toISOString(), version: 1 });
+            snapshot = await getDocs(q);
+          }
+
+          const parsed = snapshot.docs.map(doc => normalizeInventoryItem({ id: doc.id, ...doc.data() }));
+          set({ inventory: parsed });
+        } catch (e) {
+          console.error("Failed to fetch inventory:", e);
+        } finally {
+          set({ inventoryLoading: false });
+        }
+      },
+
+      fetchCustomers: async () => {
+        if (useAdminStore.getState().customersLoading) return;
+        set({ customersLoading: true });
+        try {
+          const companyId = localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
+          const seedDocRef = doc(db, 'systemSeeds', `customersDemoSeed_${companyId}`);
+          const seedDocSnap = await getDoc(seedDocRef);
+          
+          const ref = collection(db, 'customers');
+          const q = query(ref, where('companyId', '==', companyId));
+          let snapshot = await getDocs(q);
+
+          if (!seedDocSnap.exists() && snapshot.empty) {
+            for (const cust of DEMO_CUSTOMERS) {
+              const deterministicId = `demo-cust-${companyId}-${cust.email.replace(/[@.]/g, '_')}`;
+              await setDoc(doc(db, 'customers', deterministicId), {
+                ...cust,
+                id: deterministicId,
+                companyId,
+                createdAt: new Date().toISOString()
+              });
+            }
+            await setDoc(seedDocRef, { seededAt: new Date().toISOString(), version: 1 });
+            snapshot = await getDocs(q);
+          }
+
+          const parsed = snapshot.docs.map(doc => normalizeCustomer({ id: doc.id, ...doc.data() }));
+          set({ customers: parsed });
+        } catch (e) {
+          console.error("Failed to fetch customers:", e);
+        } finally {
+          set({ customersLoading: false });
+        }
+      },
+
+      fetchProducts: async () => {
+        if (useAdminStore.getState().productsLoading) return;
+        set({ productsLoading: true });
+        try {
+          const companyId = localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
+          const seedDocRef = doc(db, 'systemSeeds', `productsDemoSeed_${companyId}`);
+          const seedDocSnap = await getDoc(seedDocRef);
+          
+          const ref = collection(db, 'products_admin');
+          const q = query(ref, where('companyId', '==', companyId));
+          let snapshot = await getDocs(q);
+
+          if (!seedDocSnap.exists() && snapshot.empty) {
+            for (const prod of PRODUCTS) {
+              const deterministicId = `demo-prod-${companyId}-${prod.id}`;
+              await setDoc(doc(db, 'products_admin', deterministicId), {
+                ...prod,
+                id: deterministicId,
+                companyId,
+                productStatus: 'active',
+                createdAt: new Date().toISOString()
+              });
+            }
+            await setDoc(seedDocRef, { seededAt: new Date().toISOString(), version: 1 });
+            snapshot = await getDocs(q);
+          }
+
+          const parsed = snapshot.docs.map(doc => normalizeProduct({ id: doc.id, ...doc.data() }));
+          set({ products: parsed });
+        } catch (e) {
+          console.error("Failed to fetch products:", e);
+        } finally {
+          set({ productsLoading: false });
+        }
+      },
+
+      fetchEvents: async () => {
+        if (useAdminStore.getState().eventsLoading) return;
+        set({ eventsLoading: true });
+        try {
+          const companyId = localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
+          const seedDocRef = doc(db, 'systemSeeds', `eventsDemoSeed_${companyId}`);
+          const seedDocSnap = await getDoc(seedDocRef);
+          
+          const ref = collection(db, 'events');
+          const q = query(ref, where('companyId', '==', companyId));
+          let snapshot = await getDocs(q);
+
+          if (!seedDocSnap.exists() && snapshot.empty) {
+            for (const ev of DEMO_EVENTS) {
+              const deterministicId = `demo-event-${companyId}-${ev.id}`;
+              await setDoc(doc(db, 'events', deterministicId), {
+                ...ev,
+                id: deterministicId,
+                companyId,
+                createdAt: new Date().toISOString()
+              });
+            }
+            await setDoc(seedDocRef, { seededAt: new Date().toISOString(), version: 1 });
+            snapshot = await getDocs(q);
+          }
+
+          const parsed = snapshot.docs.map(doc => normalizeEvent({ id: doc.id, ...doc.data() }));
+          set({ events: parsed });
+        } catch (e) {
+          console.error("Failed to fetch events:", e);
+        } finally {
+          set({ eventsLoading: false });
+        }
+      },
+
+      fetchSubscriptions: async () => {
+        if (useAdminStore.getState().subscriptionsLoading) return;
+        set({ subscriptionsLoading: true });
+        try {
+          const companyId = localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
+          const seedDocRef = doc(db, 'systemSeeds', `subscriptionsDemoSeed_${companyId}`);
+          const seedDocSnap = await getDoc(seedDocRef);
+          
+          const ref = collection(db, 'subscriptions');
+          const q = query(ref, where('companyId', '==', companyId));
+          let snapshot = await getDocs(q);
+
+          if (!seedDocSnap.exists() && snapshot.empty) {
+            for (const sub of DEMO_SUBSCRIPTIONS) {
+              const deterministicId = `demo-sub-${companyId}-${sub.id}`;
+              await setDoc(doc(db, 'subscriptions', deterministicId), {
+                ...sub,
+                id: deterministicId,
+                companyId,
+                createdAt: new Date().toISOString()
+              });
+            }
+            await setDoc(seedDocRef, { seededAt: new Date().toISOString(), version: 1 });
+            snapshot = await getDocs(q);
+          }
+
+          const parsed = snapshot.docs.map(doc => normalizeSubscription({ id: doc.id, ...doc.data() }));
+          set({ subscriptions: parsed });
+        } catch (e) {
+          console.error("Failed to fetch subscriptions:", e);
+        } finally {
+          set({ subscriptionsLoading: false });
+        }
+      },
+
       postOrderFinancialsAction: async (orderId: string) => {
         try {
-          const jeId = await postOrderFinancials(orderId, 'DEFAULT_COMPANY', 'Admin');
+          const companyId = localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
+          const jeId = await postOrderFinancials(orderId, companyId, 'Admin');
           set(state => ({
             orders: state.orders.map(o => o.id === orderId ? { ...o, glPostingStatus: 'posted', journalEntryId: jeId } : o)
           }));
@@ -737,7 +952,6 @@ export const useAdminStore = create<AdminState>()(
 
         const oldStatus = order.status;
         
-        // Terminal state guards
         if (oldStatus === 'cancelled' || oldStatus === 'refunded') {
           throw new Error(`Cannot change status of a terminal ${oldStatus} order.`);
         }
@@ -766,7 +980,6 @@ export const useAdminStore = create<AdminState>()(
         try {
           const orderRef = doc(db, 'orders', id);
           
-          // Reversal logic if already posted to GL
           if ((status === 'cancelled' || status === 'refunded') && order.glPostingStatus === 'posted' && order.journalEntryId) {
             const revJeId = await reverseJournalEntry(order.journalEntryId, 'Admin');
             reversalUpdates = {
@@ -790,7 +1003,10 @@ export const useAdminStore = create<AdminState>()(
 
           await updateDoc(orderRef, updates);
 
-          // Update public order tracking
+          if (status === 'delivered') {
+            await postCOGSForDeliveredOrder(id, 'Admin');
+          }
+
           const orderSnap = await getDoc(orderRef);
           if (orderSnap.exists()) {
             const orderData = orderSnap.data();
@@ -836,7 +1052,6 @@ export const useAdminStore = create<AdminState>()(
             }
           }
 
-          // Update local store state
           set((state) => ({
             orders: state.orders.map(o => o.id === id ? { 
               ...o, 
@@ -865,11 +1080,13 @@ export const useAdminStore = create<AdminState>()(
 
       addOrder: async (order) => {
         try {
+          const companyId = localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
           const docRef = await addDoc(collection(db, 'orders'), {
             ...order,
+            companyId,
             createdAt: new Date().toISOString()
           });
-          const normalized = normalizeOrder({ ...order, id: docRef.id, documentId: docRef.id });
+          const normalized = normalizeOrder({ ...order, id: docRef.id, documentId: docRef.id, companyId });
           set((state) => ({
             orders: [normalized, ...state.orders]
           }));
@@ -906,57 +1123,170 @@ export const useAdminStore = create<AdminState>()(
         })
       })),
 
-      updateInventoryItem: (id, updates) => set((state) => ({
-        inventory: state.inventory.map(i => i.id === id ? { ...i, ...updates } : i)
-      })),
+      updateInventoryItem: async (id, updates) => {
+        try {
+          const ref = doc(db, 'inventory', id);
+          await updateDoc(ref, updates);
+          set((state) => ({
+            inventory: state.inventory.map(i => i.id === id ? { ...i, ...updates } : i)
+          }));
+        } catch (e) {
+          console.error("Failed to update inventory item:", e);
+        }
+      },
 
-      deleteInventoryItem: (id) => set((state) => ({
-        inventory: state.inventory.filter(i => i.id !== id)
-      })),
+      deleteInventoryItem: async (id) => {
+        try {
+          const ref = doc(db, 'inventory', id);
+          await deleteDoc(ref);
+          set((state) => ({
+            inventory: state.inventory.filter(i => i.id !== id)
+          }));
+        } catch (e) {
+          console.error("Failed to delete inventory item:", e);
+        }
+      },
 
-      addProduct: (product) => set((state) => ({
-        products: [product, ...state.products]
-      })),
+      addProduct: async (product) => {
+        try {
+          const companyId = localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
+          const docRef = await addDoc(collection(db, 'products_admin'), {
+            ...product,
+            companyId,
+            productStatus: 'active',
+            createdAt: new Date().toISOString()
+          });
+          const normalized = normalizeProduct({ ...product, id: docRef.id });
+          set((state) => ({
+            products: [normalized, ...state.products]
+          }));
+        } catch (e) {
+          console.error("Failed to add product:", e);
+        }
+      },
 
-      updateProductDetails: (id, updates) => set((state) => ({
-        products: state.products.map(p => p.id === id ? { ...p, ...updates } : p)
-      })),
+      updateProductDetails: async (id, updates) => {
+        try {
+          const ref = doc(db, 'products_admin', id);
+          await updateDoc(ref, updates);
+          set((state) => ({
+            products: state.products.map(p => p.id === id ? { ...p, ...updates } : p)
+          }));
+        } catch (e) {
+          console.error("Failed to update product details:", e);
+        }
+      },
 
-      deleteProduct: (id) => set((state) => ({
-        products: state.products.filter(p => p.id !== id)
-      })),
+      deleteProduct: async (id) => {
+        try {
+          const ref = doc(db, 'products_admin', id);
+          await deleteDoc(ref);
+          set((state) => ({
+            products: state.products.filter(p => p.id !== id)
+          }));
+        } catch (e) {
+          console.error("Failed to delete product:", e);
+        }
+      },
 
-      adjustRosePrices: () => set((state) => ({
-        products: state.products.map(p => {
-          const isRose = p.name.toLowerCase().includes('rose') || 
-                         p.category.toLowerCase().includes('rose') || 
-                         p.tags.some(t => t.toLowerCase().includes('rose'));
-          if (isRose) {
-            return { ...p, price: Math.round(p.price * 1.15) };
-          }
-          return p;
-        })
-      })),
+      adjustRosePrices: async () => {
+        const roses = get().products.filter(p => 
+          p.name.toLowerCase().includes('rose') || 
+          (p.category && p.category.toLowerCase().includes('rose')) || 
+          (p.tags && p.tags.some(t => t.toLowerCase().includes('rose')))
+        );
+        for (const rose of roses) {
+          const newPrice = Math.round(rose.price * 1.15);
+          await updateDoc(doc(db, 'products_admin', rose.id), { price: newPrice });
+        }
+        set((state) => ({
+          products: state.products.map(p => {
+            const isRose = p.name.toLowerCase().includes('rose') || 
+                           p.category.toLowerCase().includes('rose') || 
+                           p.tags.some(t => t.toLowerCase().includes('rose'));
+            if (isRose) {
+              return { ...p, price: Math.round(p.price * 1.15) };
+            }
+            return p;
+          })
+        }));
+      },
 
-      addCustomer: (customer) => set((state) => ({
-        customers: [customer, ...state.customers]
-      })),
+      addCustomer: async (customer) => {
+        try {
+          const companyId = localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
+          const docRef = await addDoc(collection(db, 'customers'), {
+            ...customer,
+            companyId,
+            createdAt: new Date().toISOString()
+          });
+          const normalized = normalizeCustomer({ ...customer, id: docRef.id });
+          set((state) => ({
+            customers: [normalized, ...state.customers]
+          }));
+        } catch (e) {
+          console.error("Failed to add customer:", e);
+          throw e;
+        }
+      },
 
-      updateCustomerDetails: (id, updates) => set((state) => ({
-        customers: state.customers.map(c => c.id === id ? { ...c, ...updates } : c)
-      })),
+      updateCustomerDetails: async (id, updates) => {
+        try {
+          const ref = doc(db, 'customers', id);
+          await updateDoc(ref, updates);
+          set((state) => ({
+            customers: state.customers.map(c => c.id === id ? { ...c, ...updates } : c)
+          }));
+        } catch (e) {
+          console.error("Failed to update customer details:", e);
+        }
+      },
 
-      deleteCustomer: (id) => set((state) => ({
-        customers: state.customers.filter(c => c.id !== id)
-      })),
+      deleteCustomer: async (id) => {
+        try {
+          const ref = doc(db, 'customers', id);
+          await deleteDoc(ref);
+          set((state) => ({
+            customers: state.customers.filter(c => c.id !== id)
+          }));
+        } catch (e) {
+          console.error("Failed to delete customer:", e);
+        }
+      },
 
-      addEvent: (event) => set((state) => ({
-        events: [event, ...state.events]
-      })),
+      addEvent: async (event) => {
+        try {
+          const companyId = localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
+          const docRef = await addDoc(collection(db, 'events'), {
+            ...event,
+            companyId,
+            createdAt: new Date().toISOString()
+          });
+          const normalized = normalizeEvent({ ...event, id: docRef.id });
+          set((state) => ({
+            events: [normalized, ...state.events]
+          }));
+        } catch (e) {
+          console.error("Failed to add event:", e);
+        }
+      },
 
-      addSubscription: (subscription) => set((state) => ({
-        subscriptions: [subscription, ...state.subscriptions]
-      })),
+      addSubscription: async (subscription) => {
+        try {
+          const companyId = localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
+          const docRef = await addDoc(collection(db, 'subscriptions'), {
+            ...subscription,
+            companyId,
+            createdAt: new Date().toISOString()
+          });
+          const normalized = normalizeSubscription({ ...subscription, id: docRef.id });
+          set((state) => ({
+            subscriptions: [normalized, ...state.subscriptions]
+          }));
+        } catch (e) {
+          console.error("Failed to add subscription:", e);
+        }
+      },
 
       resetToDemo: () => set({
         orders: (DEMO_ORDERS || []).map(normalizeOrder),
@@ -972,32 +1302,79 @@ export const useAdminStore = create<AdminState>()(
       setActiveModal: (modal, payload: Record<string, any> | null = null) => set({ activeModal: modal, modalPayload: payload }),
       closeModal: () => set({ activeModal: null, modalPayload: null }),
       
-      toggleSubscriptionStatus: (id) => set((state) => ({
-        subscriptions: state.subscriptions.map(s => 
-          s.id === id ? { ...s, status: s.status === 'active' ? 'paused' : 'active' } : s
-        )
-      })),
+      toggleSubscriptionStatus: async (id) => {
+        const sub = get().subscriptions.find(s => s.id === id);
+        if (!sub) return;
+        const newStatus = sub.status === 'active' ? 'paused' : 'active';
+        try {
+          await updateDoc(doc(db, 'subscriptions', id), { status: newStatus });
+          set((state) => ({
+            subscriptions: state.subscriptions.map(s => 
+              s.id === id ? { ...s, status: newStatus } : s
+            )
+          }));
+        } catch (e) {
+          console.error("Failed to toggle subscription status:", e);
+        }
+      },
 
-      updateSubscriptionDetails: (id, updates) => set((state) => ({
-        subscriptions: state.subscriptions.map(s => s.id === id ? { ...s, ...updates } : s)
-      })),
+      updateSubscriptionDetails: async (id, updates) => {
+        try {
+          const ref = doc(db, 'subscriptions', id);
+          await updateDoc(ref, updates);
+          set((state) => ({
+            subscriptions: state.subscriptions.map(s => s.id === id ? { ...s, ...updates } : s)
+          }));
+        } catch (e) {
+          console.error("Failed to update subscription details:", e);
+        }
+      },
 
-      deleteSubscription: (id) => set((state) => ({
-        subscriptions: state.subscriptions.filter(s => s.id !== id)
-      })),
+      deleteSubscription: async (id) => {
+        try {
+          const ref = doc(db, 'subscriptions', id);
+          await deleteDoc(ref);
+          set((state) => ({
+            subscriptions: state.subscriptions.filter(s => s.id !== id)
+          }));
+        } catch (e) {
+          console.error("Failed to delete subscription:", e);
+        }
+      },
 
-      updateEventDetails: (id, updates) => set((state) => ({
-        events: state.events.map(e => e.id === id ? { ...e, ...updates } : e)
-      })),
+      updateEventDetails: async (id, updates) => {
+        try {
+          const ref = doc(db, 'events', id);
+          await updateDoc(ref, updates);
+          set((state) => ({
+            events: state.events.map(e => e.id === id ? { ...e, ...updates } : e)
+          }));
+        } catch (e) {
+          console.error("Failed to update event details:", e);
+        }
+      },
 
-      deleteEvent: (id) => set((state) => ({
-        events: state.events.filter(e => e.id !== id)
-      })),
+      deleteEvent: async (id) => {
+        try {
+          const ref = doc(db, 'events', id);
+          await deleteDoc(ref);
+          set((state) => ({
+            events: state.events.filter(e => e.id !== id)
+          }));
+        } catch (e) {
+          console.error("Failed to delete event:", e);
+        }
+      },
 
       fetchPayments: async () => {
         set({ paymentsLoading: true });
         try {
-          const snap = await getDocs(query(collection(db, 'payments'), orderBy('createdAt', 'desc')));
+          const companyId = localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
+          const snap = await getDocs(query(
+            collection(db, 'payments'), 
+            where('companyId', '==', companyId),
+            orderBy('createdAt', 'desc')
+          ));
           const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as PaymentRecord));
           set({ payments: list });
         } catch (e) {
@@ -1016,7 +1393,12 @@ export const useAdminStore = create<AdminState>()(
       fetchCustomerStatements: async () => {
         set({ statementsLoading: true });
         try {
-          const snap = await getDocs(query(collection(db, 'customerStatements'), orderBy('createdAt', 'desc')));
+          const companyId = localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
+          const snap = await getDocs(query(
+            collection(db, 'customerStatements'), 
+            where('companyId', '==', companyId),
+            orderBy('createdAt', 'desc')
+          ));
           const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
           set({ statements: list });
         } catch (e) {
@@ -1032,7 +1414,12 @@ export const useAdminStore = create<AdminState>()(
       fetchVendors: async () => {
         set({ vendorsLoading: true });
         try {
-          const snap = await getDocs(query(collection(db, 'vendors'), orderBy('createdAt', 'desc')));
+          const companyId = localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
+          const snap = await getDocs(query(
+            collection(db, 'vendors'), 
+            where('companyId', '==', companyId),
+            orderBy('createdAt', 'desc')
+          ));
           set({ vendors: snap.docs.map(d => ({ id: d.id, ...d.data() } as Vendor)) });
         } catch (e) {
           console.error("Failed to fetch vendors:", e);
@@ -1050,7 +1437,12 @@ export const useAdminStore = create<AdminState>()(
       fetchPurchaseOrders: async () => {
         set({ purchaseOrdersLoading: true });
         try {
-          const snap = await getDocs(query(collection(db, 'purchaseOrders'), orderBy('createdAt', 'desc')));
+          const companyId = localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
+          const snap = await getDocs(query(
+            collection(db, 'purchaseOrders'), 
+            where('companyId', '==', companyId),
+            orderBy('createdAt', 'desc')
+          ));
           set({ purchaseOrders: snap.docs.map(d => ({ id: d.id, ...d.data() } as PurchaseOrder)) });
         } catch (e) {
           console.error("Failed to fetch purchase orders:", e);
@@ -1068,7 +1460,12 @@ export const useAdminStore = create<AdminState>()(
       fetchInventoryReceipts: async () => {
         set({ inventoryReceiptsLoading: true });
         try {
-          const snap = await getDocs(query(collection(db, 'inventoryReceipts'), orderBy('createdAt', 'desc')));
+          const companyId = localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
+          const snap = await getDocs(query(
+            collection(db, 'inventoryReceipts'), 
+            where('companyId', '==', companyId),
+            orderBy('createdAt', 'desc')
+          ));
           set({ inventoryReceipts: snap.docs.map(d => ({ id: d.id, ...d.data() } as InventoryReceipt)) });
         } catch (e) {
           console.error("Failed to fetch inventory receipts:", e);
@@ -1083,7 +1480,12 @@ export const useAdminStore = create<AdminState>()(
       fetchVendorBills: async () => {
         set({ vendorBillsLoading: true });
         try {
-          const snap = await getDocs(query(collection(db, 'vendorBills'), orderBy('createdAt', 'desc')));
+          const companyId = localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
+          const snap = await getDocs(query(
+            collection(db, 'vendorBills'), 
+            where('companyId', '==', companyId),
+            orderBy('createdAt', 'desc')
+          ));
           set({ vendorBills: snap.docs.map(d => ({ id: d.id, ...d.data() } as VendorBill)) });
         } catch (e) {
           console.error("Failed to fetch vendor bills:", e);
@@ -1101,7 +1503,12 @@ export const useAdminStore = create<AdminState>()(
       fetchVendorPayments: async () => {
         set({ vendorPaymentsLoading: true });
         try {
-          const snap = await getDocs(query(collection(db, 'vendorPayments'), orderBy('createdAt', 'desc')));
+          const companyId = localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
+          const snap = await getDocs(query(
+            collection(db, 'vendorPayments'), 
+            where('companyId', '==', companyId),
+            orderBy('createdAt', 'desc')
+          ));
           set({ vendorPayments: snap.docs.map(d => ({ id: d.id, ...d.data() } as VendorPayment)) });
         } catch (e) {
           console.error("Failed to fetch vendor payments:", e);
@@ -1124,6 +1531,11 @@ export const useAdminStore = create<AdminState>()(
         delete rest.modalPayload;
         delete rest.ordersLoading;
         delete rest.ordersError;
+        delete rest.inventoryLoading;
+        delete rest.customersLoading;
+        delete rest.productsLoading;
+        delete rest.eventsLoading;
+        delete rest.subscriptionsLoading;
         return rest as AdminState;
       }
     }

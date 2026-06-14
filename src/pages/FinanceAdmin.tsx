@@ -13,6 +13,8 @@ import {
 import { EmptyState } from '../components/ui/EmptyState';
 import { reverseJournalEntry } from '../services/financeService';
 import { CHART_OF_ACCOUNTS } from '../services/chartOfAccounts';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { db } from '../firebase/config';
 import { 
   buildTrialBalance, 
   buildIncomeStatement, 
@@ -23,9 +25,13 @@ import {
 } from '../services/financialReportingService';
 import { exportBalanceSheetPDF, exportIncomeStatementPDF } from '../services/pdfExportService';
 import { exportFinancialsExcel } from '../services/excelExportService';
+import { useCompany } from '../context/CompanyContext';
+import { useI18n } from '../i18n/I18nProvider';
 import styles from './FinanceAdmin.module.css';
 
 export const FinanceAdmin: React.FC = () => {
+  const { selectedCompany, companySettings } = useCompany();
+  const { language } = useI18n();
   const { 
     journalEntries, 
     isLoading, 
@@ -47,7 +53,88 @@ export const FinanceAdmin: React.FC = () => {
   const activeTab = tabParam === 'ledger' ? 'ledger' : 'overview';
 
   // Reporting sub-tabs and filters
-  const [overviewSubTab, setOverviewSubTab] = useState<'pnl' | 'balance_sheet' | 'trial_balance' | 'coa'>('pnl');
+  const [overviewSubTab, setOverviewSubTab] = useState<'pnl' | 'balance_sheet' | 'trial_balance' | 'coa' | 'close'>('pnl');
+
+  // Closed period states
+  const [closedPeriodConfig, setClosedPeriodConfig] = useState<{
+    closedPeriodDate?: string;
+    closedBy?: string;
+    closedAt?: any;
+    unlockReason?: string;
+    unlockedBy?: string;
+    unlockedAt?: any;
+  } | null>(null);
+  const [lockDate, setLockDate] = useState('');
+  const [unlockReasonInput, setUnlockReasonInput] = useState('');
+  const [showUnlockInput, setShowUnlockInput] = useState(false);
+
+  const fetchClosedPeriodConfig = async () => {
+    try {
+      const docRef = doc(db, 'settings', 'finance');
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        setClosedPeriodConfig(snap.data() as any);
+      } else {
+        setClosedPeriodConfig({});
+      }
+    } catch (err) {
+      console.error("Failed to fetch closed period config:", err);
+    }
+  };
+
+  const handleLockPeriod = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!lockDate) return;
+    
+    if (!window.confirm(`Are you sure you want to close and lock the accounting period through ${lockDate}? This will block all financial postings, COGS calculations, and inventory adjustments on or before this date.`)) {
+      return;
+    }
+    
+    try {
+      const docRef = doc(db, 'settings', 'finance');
+      const payload = {
+        closedPeriodDate: lockDate,
+        closedBy: user?.email || 'Admin',
+        closedAt: new Date().toISOString(),
+        unlockReason: null,
+        unlockedBy: null,
+        unlockedAt: null
+      };
+      
+      await setDoc(docRef, payload, { merge: true });
+      addToast(`Accounting period successfully closed through ${lockDate}.`, "success");
+      await fetchClosedPeriodConfig();
+    } catch (err) {
+      console.error(err);
+      addToast("Failed to close accounting period.", "error");
+    }
+  };
+
+  const handleUnlockPeriod = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!unlockReasonInput.trim()) {
+      addToast("An unlock reason is required.", "error");
+      return;
+    }
+
+    try {
+      const docRef = doc(db, 'settings', 'finance');
+      await setDoc(docRef, {
+        closedPeriodDate: '', // Clear lock
+        unlockedBy: user?.email || 'Admin',
+        unlockedAt: new Date().toISOString(),
+        unlockReason: unlockReasonInput
+      }, { merge: true });
+
+      addToast("Accounting period unlocked successfully.", "success");
+      setUnlockReasonInput('');
+      setShowUnlockInput(false);
+      await fetchClosedPeriodConfig();
+    } catch (err) {
+      console.error(err);
+      addToast("Failed to unlock accounting period.", "error");
+    }
+  };
   const [reportingPeriod, setReportingPeriod] = useState<ReportingPeriod>('all_time');
   const [customStartDate, setCustomStartDate] = useState<string>('');
   const [customEndDate, setCustomEndDate] = useState<string>('');
@@ -55,6 +142,8 @@ export const FinanceAdmin: React.FC = () => {
   useEffect(() => {
     fetchJournalEntries();
     fetchChartOfAccounts();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchClosedPeriodConfig();
   }, [fetchJournalEntries, fetchChartOfAccounts]);
 
   const activeCOA = chartOfAccounts.length > 0 ? chartOfAccounts : CHART_OF_ACCOUNTS;
@@ -212,12 +301,22 @@ export const FinanceAdmin: React.FC = () => {
 
   // Export actions
   const handleExportIncomeStatement = () => {
-    exportIncomeStatementPDF(incomeStatement, getPeriodLabel());
+    exportIncomeStatementPDF(incomeStatement, getPeriodLabel(), {
+      companyName: selectedCompany?.displayName,
+      currencyCode: companySettings?.baseCurrencyCode,
+      locale: language,
+      reportFooterText: companySettings?.reportFooterText
+    });
     addToast('Profit & Loss statement exported to PDF.', 'success');
   };
 
   const handleExportBalanceSheet = () => {
-    exportBalanceSheetPDF(balanceSheet, getPeriodLabel());
+    exportBalanceSheetPDF(balanceSheet, getPeriodLabel(), {
+      companyName: selectedCompany?.displayName,
+      currencyCode: companySettings?.baseCurrencyCode,
+      locale: language,
+      reportFooterText: companySettings?.reportFooterText
+    });
     addToast('Balance Sheet exported to PDF.', 'success');
   };
 
@@ -228,7 +327,12 @@ export const FinanceAdmin: React.FC = () => {
       balanceSheet,
       chartOfAccounts: activeCOA,
       journalEntries: filteredLedgerEntries
-    }, `BloomPro_Financial_Workbook_${getPeriodLabel().replace(/[\s/:]/g, '_')}.xlsx`);
+    }, `BloomPro_Financial_Workbook_${getPeriodLabel().replace(/[\s/:]/g, '_')}.xlsx`, {
+      companyName: selectedCompany?.displayName,
+      currencyCode: companySettings?.baseCurrencyCode,
+      locale: language,
+      reportFooterText: companySettings?.reportFooterText
+    });
     addToast('Full general ledger financial spreadsheet workbook exported.', 'success');
   };
 
@@ -372,6 +476,7 @@ export const FinanceAdmin: React.FC = () => {
                 { key: 'balance_sheet', label: 'Balance Sheet', icon: Landmark },
                 { key: 'trial_balance', label: 'Trial Balance', icon: Scale },
                 { key: 'coa', label: 'Chart of Accounts', icon: CoaIcon },
+                { key: 'close', label: 'Period Close Controls', icon: ShieldCheck },
               ].map(sub => {
                 const isActive = overviewSubTab === sub.key;
                 return (
@@ -666,6 +771,131 @@ export const FinanceAdmin: React.FC = () => {
                       ))}
                     </tbody>
                   </table>
+                </div>
+              </div>
+            )}
+
+            {/* Period Close view */}
+            {overviewSubTab === 'close' && (
+              <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+                <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                  <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', color: '#2C302E', margin: '0 0 0.25rem 0' }}>Period Close Controls</h3>
+                  <span style={{ fontSize: '0.8125rem', color: '#8a8f8c', fontWeight: 600 }}>Lock past accounting periods to prevent retroactive modifications</span>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                  {/* Status Indicator */}
+                  <div style={{
+                    padding: '1.25rem',
+                    borderRadius: '12px',
+                    border: '1px solid',
+                    backgroundColor: closedPeriodConfig?.closedPeriodDate ? '#FFFBEB' : '#ECFDF5',
+                    borderColor: closedPeriodConfig?.closedPeriodDate ? '#FDE68A' : '#A7F3D0',
+                    color: closedPeriodConfig?.closedPeriodDate ? '#78350F' : '#065F46',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.5rem'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700, fontSize: '0.9375rem' }}>
+                      {closedPeriodConfig?.closedPeriodDate ? (
+                        <>
+                          <ShieldAlert size={20} />
+                          <span>Accounting Period Closed & Locked</span>
+                        </>
+                      ) : (
+                        <>
+                          <ShieldCheck size={20} />
+                          <span>All Periods Open for Postings</span>
+                        </>
+                      )}
+                    </div>
+                    {closedPeriodConfig?.closedPeriodDate ? (
+                      <p style={{ fontSize: '0.8125rem', margin: 0, opacity: 0.9 }}>
+                        All journal postings, order deliveries (COGS calculations), refunds, and manual inventory adjustments with dates on or before <strong>{closedPeriodConfig.closedPeriodDate}</strong> are locked.
+                      </p>
+                    ) : (
+                      <p style={{ fontSize: '0.8125rem', margin: 0, opacity: 0.9 }}>
+                        No closing threshold is active. Backdating is permitted.
+                      </p>
+                    )}
+
+                    {closedPeriodConfig?.closedPeriodDate && (
+                      <div style={{ fontSize: '0.75rem', marginTop: '0.5rem', borderTop: '1px solid rgba(120, 53, 15, 0.1)', paddingTop: '0.5rem', opacity: 0.8 }}>
+                        Closed by: {closedPeriodConfig.closedBy} | Closed on: {closedPeriodConfig.closedAt ? new Date(closedPeriodConfig.closedAt).toLocaleString() : 'N/A'}
+                      </div>
+                    )}
+
+                    {closedPeriodConfig?.unlockReason && (
+                      <div style={{ fontSize: '0.75rem', marginTop: '0.5rem', borderTop: '1px solid rgba(6, 95, 70, 0.1)', paddingTop: '0.5rem', opacity: 0.8, color: '#065F46' }}>
+                        Last Unlocked by: {closedPeriodConfig.unlockedBy} | Reason: "{closedPeriodConfig.unlockReason}"
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Closing Form */}
+                  <div style={{ border: '1px solid #E8EAE6', borderRadius: '12px', padding: '1.5rem', backgroundColor: '#FFFFFF' }}>
+                    <h4 style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#2C302E', margin: '0 0 1rem 0' }}>Close & Lock Accounting Period</h4>
+                    <form onSubmit={handleLockPeriod} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#8a8f8c', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
+                          Lock Accounting Date Through
+                        </label>
+                        <input
+                          type="date"
+                          required
+                          value={lockDate}
+                          onChange={(e) => setLockDate(e.target.value)}
+                          style={{ width: '100%', padding: '0.5rem', border: '1px solid #E8EAE6', borderRadius: '8px', fontSize: '0.875rem' }}
+                        />
+                        <span style={{ fontSize: '0.7rem', color: '#6b7280', marginTop: '0.25rem', display: 'block' }}>
+                          Typically set to the final day of a closed fiscal month (e.g. 2026-05-31).
+                        </span>
+                      </div>
+                      <Button type="submit" style={{ background: '#4A6B50', color: '#FFFFFF', border: 'none', width: '100%' }}>
+                        Lock Accounting Period
+                      </Button>
+                    </form>
+                  </div>
+
+                  {/* Unlock Path */}
+                  {closedPeriodConfig?.closedPeriodDate && (
+                    <div style={{ border: '1px dashed #E5E7EB', borderRadius: '12px', padding: '1.5rem', backgroundColor: '#FAFAFA' }}>
+                      <h4 style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#2C302E', margin: '0 0 0.5rem 0' }}>Unlock Accounting Period</h4>
+                      <p style={{ fontSize: '0.75rem', color: '#6b7280', margin: '0 0 1rem 0' }}>
+                        Need to post adjusting entries or corrections to a closed period? Temporarily unlock it.
+                      </p>
+
+                      {!showUnlockInput ? (
+                        <Button variant="outline" onClick={() => setShowUnlockInput(true)} style={{ width: '100%', border: '1px solid #EF4444', color: '#EF4444', background: '#FFFFFF' }}>
+                          Unlock Accounting Period
+                        </Button>
+                      ) : (
+                        <form onSubmit={handleUnlockPeriod} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#8a8f8c', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
+                              Reason for Unlock
+                            </label>
+                            <input
+                              type="text"
+                              required
+                              placeholder="e.g. Adjusting depreciation entries for May 2026"
+                              value={unlockReasonInput}
+                              onChange={(e) => setUnlockReasonInput(e.target.value)}
+                              style={{ width: '100%', padding: '0.5rem', border: '1px solid #E8EAE6', borderRadius: '8px', fontSize: '0.875rem' }}
+                            />
+                          </div>
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <Button type="button" variant="outline" onClick={() => setShowUnlockInput(false)} style={{ width: '50%' }}>
+                              Cancel
+                            </Button>
+                            <Button type="submit" style={{ width: '50%', background: '#EF4444', color: '#FFFFFF', border: 'none' }}>
+                              Confirm Unlock
+                            </Button>
+                          </div>
+                        </form>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             )}

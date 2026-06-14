@@ -3,6 +3,7 @@ import { useAdminStore } from '../store/adminStore';
 import { useFinanceStore } from '../store/financeStore';
 import { useToastStore } from '../store/toastStore';
 import { useAuthStore } from '../store/authStore';
+import { useCompany } from '../context/CompanyContext';
 import { runAutomatedQAChecks, saveQARunEvidence, getQARunHistory, type QAResult, type QARunEvidence } from '../services/qaService';
 import { seedJournalEntriesFromDemoOrders } from '../services/financeService';
 import { getRecentAuditLogs, type AuditRecord } from '../services/auditService';
@@ -17,6 +18,7 @@ import {
 } from 'lucide-react';
 
 export const QA: React.FC = () => {
+  const { selectedCompanyId } = useCompany();
   const { resetToDemo, orders, fetchOrders } = useAdminStore();
   const { fetchJournalEntries, journalEntries } = useFinanceStore();
   const { role, user } = useAuthStore();
@@ -44,7 +46,7 @@ export const QA: React.FC = () => {
       const results = await runAutomatedQAChecks();
       setQaResults(results);
       
-      const logs = await getRecentAuditLogs(15);
+      const logs = await getRecentAuditLogs(selectedCompanyId || 'DEFAULT_COMPANY', 15);
       setAuditLogs(logs);
       
       const historyRuns = await getQARunHistory(10);

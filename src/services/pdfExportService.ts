@@ -11,17 +11,259 @@ declare module 'jspdf' {
   }
 }
 
-const BRAND = 'BloomPro Studio';
 const SAGE = [108, 130, 113];
 
-function addHeader(doc: jsPDF, title: string, dateRange?: string) {
+export interface ExportOptions {
+  companyName?: string;
+  currencyCode?: string;
+  locale?: string;
+  reportFooterText?: string;
+}
+
+// ═══════════════════════════════════════════════════
+// Dynamic Dictionary Translation
+// ═══════════════════════════════════════════════════
+const LABELS: Record<string, Record<string, string>> = {
+  'en-US': {
+    generated: 'Generated',
+    period: 'Period',
+    page: 'Page',
+    of: 'of',
+    orderId: 'Order ID',
+    customer: 'Customer',
+    status: 'Status',
+    total: 'Total',
+    date: 'Date',
+    sku: 'SKU',
+    item: 'Item',
+    category: 'Category',
+    onHand: 'On Hand',
+    available: 'Available',
+    unitCost: 'Unit Cost',
+    supplier: 'Supplier',
+    name: 'Name',
+    email: 'Email',
+    phone: 'Phone',
+    type: 'Type',
+    tier: 'Tier',
+    orders: 'Orders',
+    lifetimeValue: 'Lifetime Value',
+    openBalance: 'Open Balance',
+    featured: 'Featured',
+    seasonal: 'Seasonal',
+    rating: 'Rating',
+    frequency: 'Frequency',
+    nextDelivery: 'Next Delivery',
+    monthlyValue: 'Monthly Value',
+    budget: 'Budget',
+    recentTransactions: 'Recent Transactions Log',
+    criticalInventory: 'Critical Inventory & Valuation',
+    generalLedger: 'General Ledger Accounts Summary',
+    accountName: 'Account Name',
+    balance: 'Balance',
+    totals: 'TOTALS',
+    balanced: 'BALANCED',
+    outOfBalance: 'OUT OF BALANCE',
+    debit: 'Debit',
+    credit: 'Credit',
+    code: 'Code',
+    assets: 'ASSETS',
+    liabilities: 'LIABILITIES',
+    equity: 'OWNER EQUITY',
+    totalLiabilitiesAndEquity: 'TOTAL LIABILITIES & EQUITY'
+  },
+  'es-US': {
+    generated: 'Generado',
+    period: 'Periodo',
+    page: 'Página',
+    of: 'de',
+    orderId: 'ID Pedido',
+    customer: 'Cliente',
+    status: 'Estado',
+    total: 'Total',
+    date: 'Fecha',
+    sku: 'SKU',
+    item: 'Artículo',
+    category: 'Categoría',
+    onHand: 'Disponible',
+    available: 'Disponible',
+    unitCost: 'Costo Unitario',
+    supplier: 'Proveedor',
+    name: 'Nombre',
+    email: 'Correo',
+    phone: 'Teléfono',
+    type: 'Tipo',
+    tier: 'Nivel',
+    orders: 'Pedidos',
+    lifetimeValue: 'LTV',
+    openBalance: 'Saldo Abierto',
+    featured: 'Destacado',
+    seasonal: 'Estacional',
+    rating: 'Calificación',
+    frequency: 'Frecuencia',
+    nextDelivery: 'Siguiente Entrega',
+    monthlyValue: 'Valor Mensual',
+    budget: 'Presupuesto',
+    recentTransactions: 'Registro de Transacciones Recientes',
+    criticalInventory: 'Inventario Crítico y Valoración',
+    generalLedger: 'Resumen de Cuentas del Mayor General',
+    accountName: 'Nombre de Cuenta',
+    balance: 'Saldo',
+    totals: 'TOTALES',
+    balanced: 'CUADRADO',
+    outOfBalance: 'DESCUADRADO',
+    debit: 'Débito',
+    credit: 'Crédito',
+    code: 'Código',
+    assets: 'ACTIVOS',
+    liabilities: 'PASIVOS',
+    equity: 'PATRIMONIO NETO',
+    totalLiabilitiesAndEquity: 'TOTAL PASIVO Y PATRIMONIO'
+  },
+  'fr-FR': {
+    generated: 'Généré le',
+    period: 'Période',
+    page: 'Page',
+    of: 'sur',
+    orderId: 'ID Commande',
+    customer: 'Client',
+    status: 'Statut',
+    total: 'Total',
+    date: 'Date',
+    sku: 'SKU',
+    item: 'Article',
+    category: 'Catégorie',
+    onHand: 'En Stock',
+    available: 'Disponible',
+    unitCost: 'Coût Unitaire',
+    supplier: 'Fournisseur',
+    name: 'Nom',
+    email: 'E-mail',
+    phone: 'Téléphone',
+    type: 'Type',
+    tier: 'Niveau',
+    orders: 'Commandes',
+    lifetimeValue: 'Valeur à Vie',
+    openBalance: 'Solde Ouvert',
+    featured: 'Vedette',
+    seasonal: 'Saisonnier',
+    rating: 'Note',
+    frequency: 'Fréquence',
+    nextDelivery: 'Prochaine Livraison',
+    monthlyValue: 'Valeur Mensuelle',
+    budget: 'Budget',
+    recentTransactions: 'Journal des Transactions Récentes',
+    criticalInventory: 'Inventaire Critique & Valorisation',
+    generalLedger: 'Résumé des Comptes du Grand Livre',
+    accountName: 'Nom du Compte',
+    balance: 'Solde',
+    totals: 'TOTAUX',
+    balanced: 'ÉQUILIBRÉ',
+    outOfBalance: 'NON ÉQUILIBRÉ',
+    debit: 'Débit',
+    credit: 'Crédit',
+    code: 'Code',
+    assets: 'ACTIFS',
+    liabilities: 'PASSIFS',
+    equity: 'CAPITAUX PROPRES',
+    totalLiabilitiesAndEquity: 'TOTAL PASSIFS ET CAPITAUX PROPRES'
+  },
+  'nl-NL': {
+    generated: 'Gegenereerd',
+    period: 'Periode',
+    page: 'Pagina',
+    of: 'van',
+    orderId: 'Bestel-ID',
+    customer: 'Klant',
+    status: 'Status',
+    total: 'Totaal',
+    date: 'Datum',
+    sku: 'SKU',
+    item: 'Artikel',
+    category: 'Categorie',
+    onHand: 'Op Voorraad',
+    available: 'Beschikbaar',
+    unitCost: 'Kostprijs',
+    supplier: 'Leverancier',
+    name: 'Naam',
+    email: 'E-mail',
+    phone: 'Telefoon',
+    type: 'Type',
+    tier: 'Niveau',
+    orders: 'Bestellingen',
+    lifetimeValue: 'LTV Waarde',
+    openBalance: 'Openstaand Saldo',
+    featured: 'Aanbevolen',
+    seasonal: 'Seizoensgebonden',
+    rating: 'Beoordeling',
+    frequency: 'Frequentie',
+    nextDelivery: 'Volgende Levering',
+    monthlyValue: 'Maandelijkse Waarde',
+    budget: 'Budget',
+    recentTransactions: 'Recente Transacties',
+    criticalInventory: 'Kritieke Voorraad & Waardering',
+    generalLedger: 'Samenvatting Grootboekrekeningen',
+    accountName: 'Rekeningnaam',
+    balance: 'Saldo',
+    totals: 'TOTALEN',
+    balanced: 'IN BALANS',
+    outOfBalance: 'UIT BALANS',
+    debit: 'Debet',
+    credit: 'Credit',
+    code: 'Code',
+    assets: 'ACTIVA',
+    liabilities: 'PASSIVA',
+    equity: 'EIGEN VERMOGEN',
+    totalLiabilitiesAndEquity: 'TOTAAL PASSIVA & EIGEN VERMOGEN'
+  }
+};
+
+// ═══════════════════════════════════════════════════
+// Localized formatting helpers
+// ═══════════════════════════════════════════════════
+function getFormattedCurrency(amount: number, currencyCode = 'USD', locale = 'en-US') {
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency: currencyCode,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(amount || 0);
+}
+
+function getFormattedDate(value: any, locale = 'en-US') {
+  if (!value) return 'N/A';
+  const d = value instanceof Date ? value : new Date(value);
+  return new Intl.DateTimeFormat(locale, {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(d);
+}
+
+function getFormattedDateTime(value: any, locale = 'en-US') {
+  const d = value instanceof Date ? value : new Date(value);
+  return new Intl.DateTimeFormat(locale, {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  }).format(d);
+}
+
+function addHeader(doc: jsPDF, title: string, dateRange?: string, options?: ExportOptions) {
+  const brandName = options?.companyName || 'BloomPro Studio';
+  const locale = options?.locale || 'en-US';
+  const langLabels = LABELS[locale] || LABELS['en-US'];
+
   // Brand bar
   doc.setFillColor(SAGE[0], SAGE[1], SAGE[2]);
   doc.rect(0, 0, 210, 18, 'F');
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(14);
   doc.setTextColor(255, 255, 255);
-  doc.text(BRAND, 14, 12);
+  doc.text(brandName, 14, 12);
 
   // Title
   doc.setTextColor(44, 48, 46);
@@ -31,10 +273,10 @@ function addHeader(doc: jsPDF, title: string, dateRange?: string) {
   // Metadata line
   doc.setFontSize(9);
   doc.setTextColor(107, 114, 128);
-  const generated = `Generated: ${new Date().toLocaleString()}`;
+  const generated = `${langLabels.generated}: ${getFormattedDateTime(new Date(), locale)}`;
   doc.text(generated, 14, 39);
   if (dateRange) {
-    doc.text(`Period: ${dateRange}`, 14, 44);
+    doc.text(`${langLabels.period}: ${dateRange}`, 14, 44);
   }
 
   // Divider
@@ -43,7 +285,11 @@ function addHeader(doc: jsPDF, title: string, dateRange?: string) {
   doc.line(14, dateRange ? 48 : 43, 196, dateRange ? 48 : 43);
 }
 
-function addFooter(doc: jsPDF) {
+function addFooter(doc: jsPDF, options?: ExportOptions) {
+  const brandName = options?.companyName || 'BloomPro Studio';
+  const footerText = options?.reportFooterText || 'Unaudited — For Management Use Only';
+  const locale = options?.locale || 'en-US';
+  const langLabels = LABELS[locale] || LABELS['en-US'];
   const pageCount = doc.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
@@ -51,13 +297,13 @@ function addFooter(doc: jsPDF) {
     doc.setDrawColor(232, 234, 230);
     doc.setLineWidth(0.3);
     doc.line(14, 280, 196, 280);
-    // Left: Brand + Unaudited note
+    // Left: Brand + Custom Footer Text
     doc.setFontSize(7);
     doc.setTextColor(163, 170, 160);
-    doc.text(`${BRAND}  •  Unaudited — For Management Use Only`, 14, 284);
-    doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 288);
+    doc.text(`${brandName}  •  ${footerText}`, 14, 284);
+    doc.text(`${langLabels.generated}: ${getFormattedDateTime(new Date(), locale)}`, 14, 288);
     // Right: Page numbers
-    doc.text(`Page ${i} of ${pageCount}`, 196, 286, { align: 'right' });
+    doc.text(`${langLabels.page} ${i} ${langLabels.of} ${pageCount}`, 196, 286, { align: 'right' });
   }
 }
 
@@ -74,7 +320,7 @@ function addSummaryCards(doc: jsPDF, cards: { label: string; value: string }[], 
     doc.roundedRect(x, startY, cardWidth, cardHeight, 2, 2, 'F');
     // Value
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(11);
+    doc.setFontSize(10);
     doc.setTextColor(44, 48, 46);
     doc.text(card.value, x + 4, startY + 8);
     // Label
@@ -87,18 +333,26 @@ function addSummaryCards(doc: jsPDF, cards: { label: string; value: string }[], 
   return startY + cardHeight + 8;
 }
 
+// ═══════════════════════════════════════════════════
+// Export Functions
+// ═══════════════════════════════════════════════════
+
 export function exportDashboardPDF(data: {
   revenue: number;
   ordersToday: number;
   deliveries: number;
   lowStock: number;
   orders: Order[];
-}) {
+}, options?: ExportOptions) {
   const doc = new jsPDF();
-  addHeader(doc, 'Dashboard Summary');
+  const locale = options?.locale || 'en-US';
+  const currency = options?.currencyCode || 'USD';
+  const langLabels = LABELS[locale] || LABELS['en-US'];
+
+  addHeader(doc, 'Dashboard Summary', undefined, options);
 
   const tableY = addSummaryCards(doc, [
-    { label: 'Revenue Today', value: `$${data.revenue.toLocaleString()}` },
+    { label: 'Revenue Today', value: getFormattedCurrency(data.revenue, currency, locale) },
     { label: 'Orders Today', value: data.ordersToday.toString() },
     { label: 'Active Deliveries', value: data.deliveries.toString() },
     { label: 'Low Stock Alerts', value: data.lowStock.toString() },
@@ -106,13 +360,13 @@ export function exportDashboardPDF(data: {
 
   doc.autoTable({
     startY: tableY,
-    head: [['Order ID', 'Customer', 'Status', 'Total', 'Date']],
+    head: [[langLabels.orderId, langLabels.customer, langLabels.status, langLabels.total, langLabels.date]],
     body: data.orders.slice(0, 20).map(o => [
       o.id.substring(0, 10),
       o.customerName,
-      o.status.replace('_', ' '),
-      `$${o.total.toFixed(2)}`,
-      new Date(o.createdAt).toLocaleDateString()
+      o.status.replace('_', ' ').toUpperCase(),
+      getFormattedCurrency(o.total, currency, locale),
+      getFormattedDate(o.createdAt, locale)
     ]),
     headStyles: { fillColor: SAGE, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
     bodyStyles: { fontSize: 8 },
@@ -120,7 +374,7 @@ export function exportDashboardPDF(data: {
     margin: { left: 14, right: 14 },
   });
 
-  addFooter(doc);
+  addFooter(doc, options);
   doc.save(`BloomPro_Dashboard_${new Date().toISOString().split('T')[0]}.pdf`);
 }
 
@@ -136,32 +390,35 @@ export function exportExecutivePDF(data: {
   orders: Order[];
   inventory: InventoryItem[];
   products: Product[];
-}) {
+}, options?: ExportOptions) {
   const doc = new jsPDF();
+  const locale = options?.locale || 'en-US';
+  const currency = options?.currencyCode || 'USD';
+  const langLabels = LABELS[locale] || LABELS['en-US'];
   const dateStr = new Date().toISOString().split('T')[0];
 
-  addHeader(doc, 'Executive Business Report', `Cumulative Data to ${new Date().toLocaleDateString()}`);
+  addHeader(doc, 'Executive Business Report', `Cumulative Data to ${getFormattedDate(new Date(), locale)}`, options);
 
   // 1. KPI Cards
   const cardsY = addSummaryCards(doc, [
-    { label: 'Total Revenue', value: `$${data.revenue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` },
-    { label: 'Total Orders', value: data.ordersCount.toString() },
-    { label: 'Avg Value (AOV)', value: `$${data.aov.toFixed(2)}` },
-    { label: 'Cash Balance', value: `$${data.cashBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` },
+    { label: langLabels.revenue, value: getFormattedCurrency(data.revenue, currency, locale) },
+    { label: langLabels.ordersCount, value: data.ordersCount.toString() },
+    { label: langLabels.aov, value: getFormattedCurrency(data.aov, currency, locale) },
+    { label: langLabels.cashBalance, value: getFormattedCurrency(data.cashBalance, currency, locale) },
   ], 52);
 
   // 2. Chart of Accounts General Ledger
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
   doc.setTextColor(44, 48, 46);
-  doc.text('General Ledger Accounts Summary', 14, cardsY);
+  doc.text(langLabels.generalLedger, 14, cardsY);
 
   doc.autoTable({
     startY: cardsY + 4,
-    head: [['Account Name', 'Balance', 'Type']],
+    head: [[langLabels.accountName, langLabels.balance, langLabels.type]],
     body: data.ledger.map(acc => [
       acc.account,
-      `$${acc.balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`,
+      getFormattedCurrency(acc.balance, currency, locale),
       acc.type
     ]),
     headStyles: { fillColor: SAGE, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
@@ -182,16 +439,16 @@ export function exportExecutivePDF(data: {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
   doc.setTextColor(44, 48, 46);
-  doc.text('Recent Transactions Log', 14, nextY);
+  doc.text(langLabels.recentTransactions, 14, nextY);
 
   doc.autoTable({
     startY: nextY + 4,
-    head: [['Order ID', 'Customer', 'Date', 'Total', 'Status']],
+    head: [[langLabels.orderId, langLabels.customer, langLabels.date, langLabels.total, langLabels.status]],
     body: data.orders.slice(0, 10).map(o => [
       o.id.substring(0, 10),
       o.customerName,
-      new Date(o.createdAt).toLocaleDateString(),
-      `$${o.total.toFixed(2)}`,
+      getFormattedDate(o.createdAt, locale),
+      getFormattedCurrency(o.total, currency, locale),
       o.status.toUpperCase().replace('_', ' ')
     ]),
     headStyles: { fillColor: SAGE, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
@@ -210,18 +467,18 @@ export function exportExecutivePDF(data: {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
   doc.setTextColor(44, 48, 46);
-  doc.text('Critical Inventory & Valuation', 14, nextY2);
+  doc.text(langLabels.criticalInventory, 14, nextY2);
 
   doc.autoTable({
     startY: nextY2 + 4,
-    head: [['SKU', 'Item Name', 'Category', 'Stock Level', 'Unit Cost', 'Valuation']],
+    head: [[langLabels.sku, langLabels.item, langLabels.category, langLabels.onHand, langLabels.unitCost, langLabels.valuation]],
     body: data.inventory.map(i => [
       i.sku,
       i.name,
       i.category,
       `${i.quantity} units`,
-      `$${i.unitCost.toFixed(2)}`,
-      `$${(i.quantity * i.unitCost).toFixed(2)}`
+      getFormattedCurrency(i.unitCost, currency, locale),
+      getFormattedCurrency(i.quantity * i.unitCost, currency, locale)
     ]),
     headStyles: { fillColor: SAGE, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
     bodyStyles: { fontSize: 8 },
@@ -229,30 +486,35 @@ export function exportExecutivePDF(data: {
     margin: { left: 14, right: 14 },
   });
 
-  addFooter(doc);
+  addFooter(doc, options);
   doc.save(`BloomPro_Executive_Report_${dateStr}.pdf`);
 }
 
-export function exportOrdersPDF(orders: Order[], filename?: string) {
+export function exportOrdersPDF(orders: Order[], filename?: string, options?: ExportOptions) {
   const doc = new jsPDF();
-  addHeader(doc, 'Orders Report');
+  const locale = options?.locale || 'en-US';
+  const currency = options?.currencyCode || 'USD';
+  const langLabels = LABELS[locale] || LABELS['en-US'];
+
+  addHeader(doc, 'Orders Report', undefined, options);
 
   const total = orders.reduce((s, o) => s + o.total, 0);
   const tableY = addSummaryCards(doc, [
     { label: 'Total Orders', value: orders.length.toString() },
-    { label: 'Gross Revenue', value: `$${total.toLocaleString()}` },
+    { label: 'Gross Revenue', value: getFormattedCurrency(total, currency, locale) },
     { label: 'Delivered', value: orders.filter(o => o.status === 'delivered').length.toString() },
-    { label: 'Avg Value', value: `$${orders.length > 0 ? (total / orders.length).toFixed(0) : '0'}` },
+    { label: 'Avg Value', value: getFormattedCurrency(orders.length > 0 ? (total / orders.length) : 0, currency, locale) },
   ], 48);
 
   doc.autoTable({
     startY: tableY,
-    head: [['Order ID', 'Customer', 'Status', 'Total', 'Payment', 'Due Date']],
+    head: [[langLabels.orderId, langLabels.customer, langLabels.status, langLabels.total, 'Payment Status', 'Due Date']],
     body: orders.map(o => [
       o.id.substring(0, 10), o.customerName,
-      o.status.replace('_', ' '), `$${o.total.toFixed(2)}`,
+      o.status.replace('_', ' ').toUpperCase(), 
+      getFormattedCurrency(o.total, currency, locale),
       (o.paymentStatus || 'unpaid').toUpperCase(),
-      o.dueDate ? new Date(o.dueDate).toLocaleDateString() : new Date(o.deliveryDate).toLocaleDateString()
+      getFormattedDate(o.dueDate || o.deliveryDate, locale)
     ]),
     headStyles: { fillColor: SAGE, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
     bodyStyles: { fontSize: 8 },
@@ -260,21 +522,25 @@ export function exportOrdersPDF(orders: Order[], filename?: string) {
     margin: { left: 14, right: 14 },
   });
 
-  addFooter(doc);
+  addFooter(doc, options);
   doc.save(filename || `BloomPro_Orders_${new Date().toISOString().split('T')[0]}.pdf`);
 }
 
-export function exportInventoryPDF(inventory: InventoryItem[], filename?: string) {
+export function exportInventoryPDF(inventory: InventoryItem[], filename?: string, options?: ExportOptions) {
   const doc = new jsPDF();
-  addHeader(doc, 'Inventory Report');
+  const locale = options?.locale || 'en-US';
+  const currency = options?.currencyCode || 'USD';
+  const langLabels = LABELS[locale] || LABELS['en-US'];
+
+  addHeader(doc, 'Inventory Report', undefined, options);
 
   doc.autoTable({
     startY: 48,
-    head: [['SKU', 'Item', 'Category', 'On Hand', 'Available', 'Unit Cost', 'Supplier', 'Status']],
+    head: [[langLabels.sku, langLabels.item, langLabels.category, langLabels.onHand, langLabels.available, langLabels.unitCost, langLabels.supplier, 'Status']],
     body: inventory.map(i => [
       i.sku, i.name, i.category, i.quantity.toString(), 
       (i.quantityAvailable !== undefined ? i.quantityAvailable : i.quantity).toString(),
-      `$${i.unitCost.toFixed(2)}`, i.supplier,
+      getFormattedCurrency(i.unitCost, currency, locale), i.supplier,
       i.quantity <= i.reorderPoint ? (i.quantity === 0 ? 'OUT' : 'LOW') : 'OK'
     ]),
     headStyles: { fillColor: SAGE, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
@@ -283,23 +549,28 @@ export function exportInventoryPDF(inventory: InventoryItem[], filename?: string
     margin: { left: 14, right: 14 },
   });
 
-  addFooter(doc);
+  addFooter(doc, options);
   doc.save(filename || `BloomPro_Inventory_${new Date().toISOString().split('T')[0]}.pdf`);
 }
 
-export function exportCustomersPDF(customers: Customer[]) {
+export function exportCustomersPDF(customers: Customer[], options?: ExportOptions) {
   const doc = new jsPDF();
-  addHeader(doc, 'Customers Report');
+  const locale = options?.locale || 'en-US';
+  const currency = options?.currencyCode || 'USD';
+  const langLabels = LABELS[locale] || LABELS['en-US'];
+
+  addHeader(doc, 'Customers Report', undefined, options);
 
   doc.autoTable({
     startY: 48,
-    head: [['Name', 'Email', 'Phone', 'Type', 'Tier', 'Orders', 'Lifetime Value', 'Open Balance']],
+    head: [[langLabels.name, langLabels.email, langLabels.phone, langLabels.type, langLabels.tier, langLabels.orders, langLabels.lifetimeValue, langLabels.openBalance]],
     body: customers.map(c => [
       c.name, c.email, c.phone, 
       (c.customerType || 'retail').toUpperCase(),
       (c.loyaltyTier || 'bronze').toUpperCase(),
-      c.totalOrders.toString(), `$${c.lifetimeValue.toFixed(2)}`,
-      `$${(c.openBalance || 0).toFixed(2)}`
+      c.totalOrders.toString(), 
+      getFormattedCurrency(c.lifetimeValue, currency, locale),
+      getFormattedCurrency(c.openBalance || 0, currency, locale)
     ]),
     headStyles: { fillColor: SAGE, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
     bodyStyles: { fontSize: 8 },
@@ -307,7 +578,7 @@ export function exportCustomersPDF(customers: Customer[]) {
     margin: { left: 14, right: 14 },
   });
 
-  addFooter(doc);
+  addFooter(doc, options);
   doc.save(`BloomPro_Customers_${new Date().toISOString().split('T')[0]}.pdf`);
 }
 
@@ -320,9 +591,10 @@ export interface QAResultForExport {
   actual?: string | number;
 }
 
-export function exportQAEvidencePDF(results: QAResultForExport[], evidenceId?: string) {
+export function exportQAEvidencePDF(results: QAResultForExport[], evidenceId?: string, options?: ExportOptions) {
   const doc = new jsPDF();
-  addHeader(doc, 'QA Verification Evidence Report', `Run ID: ${evidenceId || 'Ad-Hoc'}`);
+
+  addHeader(doc, 'QA Verification Evidence Report', `Run ID: ${evidenceId || 'Ad-Hoc'}`, options);
 
   const passed = results.filter(r => r.passed).length;
   const failed = results.filter(r => !r.passed).length;
@@ -350,13 +622,17 @@ export function exportQAEvidencePDF(results: QAResultForExport[], evidenceId?: s
     margin: { left: 14, right: 14 },
   });
 
-  addFooter(doc);
+  addFooter(doc, options);
   doc.save(`BloomPro_QA_Evidence_${new Date().toISOString().split('T')[0]}.pdf`);
 }
 
-export function exportProductsPDF(products: Product[], filename?: string) {
+export function exportProductsPDF(products: Product[], filename?: string, options?: ExportOptions) {
   const doc = new jsPDF();
-  addHeader(doc, 'Products Catalog Report');
+  const locale = options?.locale || 'en-US';
+  const currency = options?.currencyCode || 'USD';
+  const langLabels = LABELS[locale] || LABELS['en-US'];
+
+  addHeader(doc, 'Products Catalog Report', undefined, options);
 
   const totalProducts = products.length;
   const inStock = products.filter(p => p.inStock).length;
@@ -367,14 +643,15 @@ export function exportProductsPDF(products: Product[], filename?: string) {
     { label: 'Total Catalog', value: totalProducts.toString() },
     { label: 'In Stock', value: inStock.toString() },
     { label: 'Out of Stock', value: outOfStock.toString() },
-    { label: 'Avg Price', value: `$${avgPrice.toFixed(2)}` },
+    { label: 'Avg Price', value: getFormattedCurrency(avgPrice, currency, locale) },
   ], 48);
 
   doc.autoTable({
     startY: tableY,
-    head: [['SKU', 'Product Name', 'Category', 'Price', 'Stock Status', 'Product Status']],
+    head: [[langLabels.sku, 'Product Name', langLabels.category, 'Price', 'Stock Status', 'Product Status']],
     body: products.map(p => [
-      p.sku || 'N/A', p.name, p.category, `$${(p.basePrice || p.price || 0).toFixed(2)}`,
+      p.sku || 'N/A', p.name, p.category, 
+      getFormattedCurrency(p.basePrice || p.price || 0, currency, locale),
       p.inStock ? 'In Stock' : 'Out of Stock',
       (p.productStatus || 'active').toUpperCase()
     ]),
@@ -384,13 +661,17 @@ export function exportProductsPDF(products: Product[], filename?: string) {
     margin: { left: 14, right: 14 },
   });
 
-  addFooter(doc);
+  addFooter(doc, options);
   doc.save(filename || `BloomPro_Products_${new Date().toISOString().split('T')[0]}.pdf`);
 }
 
-export function exportSubscriptionsPDF(subscriptions: SubscriptionItem[], filename?: string) {
+export function exportSubscriptionsPDF(subscriptions: SubscriptionItem[], filename?: string, options?: ExportOptions) {
   const doc = new jsPDF();
-  addHeader(doc, 'Subscriptions Report');
+  const locale = options?.locale || 'en-US';
+  const currency = options?.currencyCode || 'USD';
+  const langLabels = LABELS[locale] || LABELS['en-US'];
+
+  addHeader(doc, 'Subscriptions Report', undefined, options);
 
   const total = subscriptions.length;
   const active = subscriptions.filter(s => s.status === 'active').length;
@@ -401,16 +682,16 @@ export function exportSubscriptionsPDF(subscriptions: SubscriptionItem[], filena
     { label: 'Total Accounts', value: total.toString() },
     { label: 'Active', value: active.toString() },
     { label: 'Paused', value: paused.toString() },
-    { label: 'MRR Value', value: `$${mrr.toLocaleString(undefined, {minimumFractionDigits: 2})}` },
+    { label: 'MRR Value', value: getFormattedCurrency(mrr, currency, locale) },
   ], 48);
 
   doc.autoTable({
     startY: tableY,
-    head: [['Customer', 'Product', 'Frequency', 'Next Delivery', 'Monthly Value', 'Status']],
+    head: [[langLabels.customer, 'Product', langLabels.frequency, langLabels.nextDelivery, langLabels.monthlyValue, langLabels.status]],
     body: subscriptions.map(s => [
       s.customerName, s.product, s.frequency.toUpperCase(),
-      new Date(s.nextDelivery).toLocaleDateString(),
-      `$${s.value.toFixed(2)}`,
+      getFormattedDate(s.nextDelivery, locale),
+      getFormattedCurrency(s.value, currency, locale),
       s.status.toUpperCase()
     ]),
     headStyles: { fillColor: SAGE, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
@@ -419,13 +700,17 @@ export function exportSubscriptionsPDF(subscriptions: SubscriptionItem[], filena
     margin: { left: 14, right: 14 },
   });
 
-  addFooter(doc);
+  addFooter(doc, options);
   doc.save(filename || `BloomPro_Subscriptions_${new Date().toISOString().split('T')[0]}.pdf`);
 }
 
-export function exportEventsPDF(events: EventItem[], filename?: string) {
+export function exportEventsPDF(events: EventItem[], filename?: string, options?: ExportOptions) {
   const doc = new jsPDF();
-  addHeader(doc, 'Events & Weddings Report');
+  const locale = options?.locale || 'en-US';
+  const currency = options?.currencyCode || 'USD';
+  const langLabels = LABELS[locale] || LABELS['en-US'];
+
+  addHeader(doc, 'Events & Weddings Report', undefined, options);
 
   const total = events.length;
   const budgetSum = events.reduce((sum, e) => sum + (e.budget || 0), 0);
@@ -434,17 +719,17 @@ export function exportEventsPDF(events: EventItem[], filename?: string) {
 
   const tableY = addSummaryCards(doc, [
     { label: 'Total Events', value: total.toString() },
-    { label: 'Gross Budget', value: `$${budgetSum.toLocaleString()}` },
+    { label: 'Gross Budget', value: getFormattedCurrency(budgetSum, currency, locale) },
     { label: 'Planning', value: planning.toString() },
     { label: 'Confirmed', value: confirmed.toString() },
   ], 48);
 
   doc.autoTable({
     startY: tableY,
-    head: [['Event Name', 'Type', 'Date', 'Client', 'Budget', 'Status']],
+    head: [['Event Name', 'Type', langLabels.date, langLabels.customer, langLabels.budget, langLabels.status]],
     body: events.map(e => [
-      e.name, e.type, new Date(e.date).toLocaleDateString(), e.client,
-      `$${e.budget.toFixed(2)}`,
+      e.name, e.type, getFormattedDate(e.date, locale), e.client,
+      getFormattedCurrency(e.budget, currency, locale),
       e.status.toUpperCase()
     ]),
     headStyles: { fillColor: SAGE, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
@@ -453,15 +738,19 @@ export function exportEventsPDF(events: EventItem[], filename?: string) {
     margin: { left: 14, right: 14 },
   });
 
-  addFooter(doc);
+  addFooter(doc, options);
   doc.save(filename || `BloomPro_Events_${new Date().toISOString().split('T')[0]}.pdf`);
 }
 
-export function exportBalanceSheetPDF(result: any, periodName: string) {
+export function exportBalanceSheetPDF(result: any, periodName: string, options?: ExportOptions) {
   const doc = new jsPDF();
-  addHeader(doc, 'Balance Sheet', `As of ${periodName}`);
+  const locale = options?.locale || 'en-US';
+  const currency = options?.currencyCode || 'USD';
+  const langLabels = LABELS[locale] || LABELS['en-US'];
 
-  const fmt = (n: number) => n < 0 ? `(${Math.abs(n).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})})` : `$${n.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+  addHeader(doc, 'Balance Sheet', `${langLabels.period}: ${periodName}`, options);
+
+  const fmt = (n: number) => getFormattedCurrency(n, currency, locale);
   const totalAssets = result.totalAssets;
   const totalLiabilities = result.totalLiabilities;
   const totalEquity = result.totalEquity;
@@ -477,20 +766,20 @@ export function exportBalanceSheetPDF(result: any, periodName: string) {
   // Prepared by line
   doc.setFontSize(8);
   doc.setTextColor(107, 114, 128);
-  doc.text('Prepared by: BloomPro Studio Finance  •  Unaudited — For Management Use Only', 14, tableY - 2);
+  doc.text(`Prepared by: ${options?.companyName || 'BloomPro Studio'} Finance  •  Unaudited — For Management Use Only`, 14, tableY - 2);
 
   // Assets section
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10);
   doc.setTextColor(74, 107, 80);
-  doc.text('ASSETS', 14, tableY + 4);
+  doc.text(langLabels.assets, 14, tableY + 4);
 
   const assetsRows = result.assets.map((a: any) => ['    ' + a.name, fmt(a.balance)]);
   assetsRows.push([{ content: 'Total Assets', styles: { fontStyle: 'bold', fillColor: [245, 241, 231] } }, { content: fmt(totalAssets), styles: { fontStyle: 'bold', fillColor: [245, 241, 231] } }]);
 
   doc.autoTable({
     startY: tableY + 8,
-    head: [['Asset Account', 'Balance']],
+    head: [['Asset Account', langLabels.balance]],
     body: assetsRows,
     headStyles: { fillColor: SAGE, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
     bodyStyles: { fontSize: 8.5 },
@@ -504,14 +793,14 @@ export function exportBalanceSheetPDF(result: any, periodName: string) {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10);
   doc.setTextColor(74, 107, 80);
-  doc.text('LIABILITIES', 110, tableY + 4);
+  doc.text(langLabels.liabilities, 110, tableY + 4);
 
   const liabRows = result.liabilities.map((l: any) => ['    ' + l.name, fmt(l.balance)]);
   liabRows.push([{ content: 'Total Liabilities', styles: { fontStyle: 'bold' } }, { content: fmt(totalLiabilities), styles: { fontStyle: 'bold' } }]);
 
   doc.autoTable({
     startY: nextY,
-    head: [['Liability Account', 'Balance']],
+    head: [['Liability Account', langLabels.balance]],
     body: liabRows,
     headStyles: { fillColor: SAGE, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
     bodyStyles: { fontSize: 8.5 },
@@ -526,14 +815,14 @@ export function exportBalanceSheetPDF(result: any, periodName: string) {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10);
   doc.setTextColor(74, 107, 80);
-  doc.text('OWNER EQUITY', 110, nextY);
+  doc.text(langLabels.equity, 110, nextY);
 
   const equityRows = result.equity.map((e: any) => ['    ' + e.name, fmt(e.balance)]);
   equityRows.push([{ content: 'Total Equity', styles: { fontStyle: 'bold' } }, { content: fmt(totalEquity), styles: { fontStyle: 'bold' } }]);
 
   doc.autoTable({
     startY: nextY + 4,
-    head: [['Equity Account', 'Balance']],
+    head: [['Equity Account', langLabels.balance]],
     body: equityRows,
     headStyles: { fillColor: SAGE, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
     bodyStyles: { fontSize: 8.5 },
@@ -550,7 +839,7 @@ export function exportBalanceSheetPDF(result: any, periodName: string) {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9);
   doc.setTextColor(44, 48, 46);
-  doc.text('TOTAL LIABILITIES & EQUITY', 18, nextY + 8);
+  doc.text(langLabels.totalLiabilitiesAndEquity, 18, nextY + 8);
   doc.text(fmt(totalLiabilitiesAndEquity), 192, nextY + 8, { align: 'right' });
 
   nextY += 18;
@@ -570,15 +859,19 @@ export function exportBalanceSheetPDF(result: any, periodName: string) {
     doc.text('✗  Balance Sheet Out of Balance — Review Trial Balance', 18, nextY + 7);
   }
 
-  addFooter(doc);
+  addFooter(doc, options);
   doc.save(`BloomPro_Balance_Sheet_${new Date().toISOString().split('T')[0]}.pdf`);
 }
 
-export function exportIncomeStatementPDF(result: any, periodName: string) {
+export function exportIncomeStatementPDF(result: any, periodName: string, options?: ExportOptions) {
   const doc = new jsPDF();
-  addHeader(doc, 'Income Statement (Profit & Loss)', `Period: ${periodName}`);
+  const locale = options?.locale || 'en-US';
+  const currency = options?.currencyCode || 'USD';
+  const langLabels = LABELS[locale] || LABELS['en-US'];
 
-  const fmt = (n: number) => n < 0 ? `(${Math.abs(n).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})})` : `$${n.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+  addHeader(doc, 'Income Statement (Profit & Loss)', `${langLabels.period}: ${periodName}`, options);
+
+  const fmt = (n: number) => getFormattedCurrency(n, currency, locale);
   const totalRevenue = result.totalRevenue;
   const totalExpense = result.totalExpense;
   const netIncome = result.netIncome;
@@ -593,7 +886,7 @@ export function exportIncomeStatementPDF(result: any, periodName: string) {
   // Prepared by line
   doc.setFontSize(8);
   doc.setTextColor(107, 114, 128);
-  doc.text('Prepared by: BloomPro Studio Finance  •  Unaudited — For Management Use Only', 14, tableY - 2);
+  doc.text(`Prepared by: ${options?.companyName || 'BloomPro Studio'} Finance  •  Unaudited — For Management Use Only`, 14, tableY - 2);
 
   // Revenue Section
   doc.setFont('helvetica', 'bold');
@@ -606,7 +899,7 @@ export function exportIncomeStatementPDF(result: any, periodName: string) {
 
   doc.autoTable({
     startY: tableY + 8,
-    head: [['Account', 'Balance', 'Type']],
+    head: [['Account', langLabels.balance, 'Type']],
     body: revRows,
     headStyles: { fillColor: SAGE, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
     bodyStyles: { fontSize: 8.5 },
@@ -628,7 +921,7 @@ export function exportIncomeStatementPDF(result: any, periodName: string) {
 
   doc.autoTable({
     startY: nextY + 4,
-    head: [['Account', 'Balance', 'Type']],
+    head: [['Account', langLabels.balance, 'Type']],
     body: expRows,
     headStyles: { fillColor: SAGE, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
     bodyStyles: { fontSize: 8.5 },
@@ -660,26 +953,30 @@ export function exportIncomeStatementPDF(result: any, periodName: string) {
   doc.setTextColor(107, 114, 128);
   doc.text(`Net margin for the period is ${result.netMarginPercent.toFixed(1)}%`, 18, nextY + 13);
 
-  addFooter(doc);
+  addFooter(doc, options);
   doc.save(`BloomPro_Income_Statement_${new Date().toISOString().split('T')[0]}.pdf`);
 }
 
-export function exportTrialBalancePDF(result: any, periodName: string) {
+export function exportTrialBalancePDF(result: any, periodName: string, options?: ExportOptions) {
   const doc = new jsPDF();
-  addHeader(doc, 'General Ledger Trial Balance', `Period: ${periodName}`);
+  const locale = options?.locale || 'en-US';
+  const currency = options?.currencyCode || 'USD';
+  const langLabels = LABELS[locale] || LABELS['en-US'];
 
-  const fmt = (n: number) => n > 0 ? `$${n.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '—';
+  addHeader(doc, 'General Ledger Trial Balance', `${langLabels.period}: ${periodName}`, options);
+
+  const fmt = (n: number) => n > 0 ? getFormattedCurrency(n, currency, locale) : '—';
 
   const tableY = addSummaryCards(doc, [
-    { label: 'Total Debits', value: `$${result.totalDebits.toLocaleString(undefined, {minimumFractionDigits: 2})}` },
-    { label: 'Total Credits', value: `$${result.totalCredits.toLocaleString(undefined, {minimumFractionDigits: 2})}` },
-    { label: 'Difference', value: `$${result.difference.toFixed(2)}` },
-    { label: 'Status', value: result.isBalanced ? '✓ Balanced' : '✗ Unbalanced' },
+    { label: 'Total Debits', value: getFormattedCurrency(result.totalDebits, currency, locale) },
+    { label: 'Total Credits', value: getFormattedCurrency(result.totalCredits, currency, locale) },
+    { label: 'Difference', value: getFormattedCurrency(result.difference, currency, locale) },
+    { label: 'Status', value: result.isBalanced ? `✓ ${langLabels.balanced}` : `✗ ${langLabels.outOfBalance}` },
   ], 52);
 
   doc.setFontSize(8);
   doc.setTextColor(107, 114, 128);
-  doc.text('Prepared by: BloomPro Studio Finance  •  Unaudited — For Management Use Only', 14, tableY - 2);
+  doc.text(`Prepared by: ${options?.companyName || 'BloomPro Studio'} Finance  •  Unaudited — For Management Use Only`, 14, tableY - 2);
 
   const rows = result.lines.map((l: any) => [
     l.code,
@@ -691,15 +988,15 @@ export function exportTrialBalancePDF(result: any, periodName: string) {
 
   rows.push([
     { content: '', styles: {} },
-    { content: 'TOTALS', styles: { fontStyle: 'bold', fillColor: [245, 241, 231] } },
+    { content: langLabels.totals, styles: { fontStyle: 'bold', fillColor: [245, 241, 231] } },
     { content: '', styles: { fillColor: [245, 241, 231] } },
-    { content: `$${result.totalDebits.toFixed(2)}`, styles: { fontStyle: 'bold', fillColor: [245, 241, 231] } },
-    { content: `$${result.totalCredits.toFixed(2)}`, styles: { fontStyle: 'bold', fillColor: [245, 241, 231] } },
+    { content: getFormattedCurrency(result.totalDebits, currency, locale), styles: { fontStyle: 'bold', fillColor: [245, 241, 231] } },
+    { content: getFormattedCurrency(result.totalCredits, currency, locale), styles: { fontStyle: 'bold', fillColor: [245, 241, 231] } },
   ]);
 
   doc.autoTable({
     startY: tableY + 2,
-    head: [['Code', 'Account Name', 'Type', 'Debit ($)', 'Credit ($)']],
+    head: [[langLabels.code, langLabels.accountName, 'Type', `${langLabels.debit}`, `${langLabels.credit}`]],
     body: rows,
     headStyles: { fillColor: SAGE, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
     bodyStyles: { fontSize: 8.5 },
@@ -722,9 +1019,9 @@ export function exportTrialBalancePDF(result: any, periodName: string) {
     doc.roundedRect(14, nextY, 182, 10, 2, 2, 'F');
     doc.setFontSize(8);
     doc.setTextColor(153, 27, 27);
-    doc.text(`✗  Out of Balance by $${result.difference.toFixed(2)} — Review journal entries`, 18, nextY + 7);
+    doc.text(`✗  Out of Balance by ${getFormattedCurrency(result.difference, currency, locale)} — Review journal entries`, 18, nextY + 7);
   }
 
-  addFooter(doc);
+  addFooter(doc, options);
   doc.save(`BloomPro_Trial_Balance_${new Date().toISOString().split('T')[0]}.pdf`);
 }

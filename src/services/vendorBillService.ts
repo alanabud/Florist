@@ -57,11 +57,12 @@ export function evaluate3WayMatch(
  * Creates a new draft or posted Vendor Bill.
  */
 export async function createVendorBill(
-  billData: Omit<VendorBill, 'id' | 'balanceDue' | 'status' | 'glPostingStatus' | 'createdAt' | 'updatedAt' | 'matchStatus' | 'subtotal' | 'totalAmount' | 'createdBy'>,
+  billData: Omit<VendorBill, 'id' | 'balanceDue' | 'status' | 'glPostingStatus' | 'createdAt' | 'updatedAt' | 'matchStatus' | 'subtotal' | 'totalAmount' | 'createdBy'> & { companyId?: string },
   actor: string = 'Admin'
 ): Promise<VendorBill> {
   const sequenceId = await getNextSequenceNumber('vendorBills');
   const now = new Date().toISOString();
+  const companyId = billData.companyId || localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
 
   // Calculate totals
   const subtotal = billData.lines.reduce((sum, line) => sum + line.lineTotal, 0);
@@ -79,8 +80,9 @@ export async function createVendorBill(
     matchStatus = 'matched';
   }
 
-  const newBill: VendorBill = {
+  const newBill: VendorBill & { companyId: string } = {
     ...billData,
+    companyId,
     id: sequenceId,
     subtotal: Math.round(subtotal * 100) / 100,
     totalAmount,
@@ -97,6 +99,7 @@ export async function createVendorBill(
   await setDoc(docRef, newBill);
 
   await writeAuditLog({
+    companyId,
     actor,
     action: 'CREATE_VENDOR_BILL',
     entityType: 'vendor_bill',
@@ -128,6 +131,7 @@ export async function postVendorBill(id: string, actor: string = 'Admin'): Promi
   }
 
   const now = new Date().toISOString();
+  const companyId = bill.companyId || 'DEFAULT_COMPANY';
   
   // 1. Double-Entry Posting to General Ledger
   const glLines: JournalLine[] = [];
@@ -242,7 +246,7 @@ export async function postVendorBill(id: string, actor: string = 'Admin'): Promi
   // Post Journal
   const journalEntry: JournalEntry = {
     orderId: bill.poId || 'MANUAL_AP_BILL',
-    companyId: 'DEFAULT_COMPANY',
+    companyId,
     createdBy: actor,
     description: `Vendor Bill ${bill.id} - ${bill.vendorName}`,
     lines: glLines,
@@ -295,6 +299,7 @@ export async function postVendorBill(id: string, actor: string = 'Admin'): Promi
   await recalculateVendorBalances(bill.vendorId);
 
   await writeAuditLog({
+    companyId,
     actor,
     action: 'POST_VENDOR_BILL',
     entityType: 'vendor_bill',
@@ -324,6 +329,7 @@ export async function voidVendorBill(id: string, actor: string = 'Admin'): Promi
   }
 
   const now = new Date().toISOString();
+  const companyId = bill.companyId || 'DEFAULT_COMPANY';
 
   // 1. Reverse GL entry
   let revJeId = '';
@@ -376,6 +382,7 @@ export async function voidVendorBill(id: string, actor: string = 'Admin'): Promi
   await recalculateVendorBalances(bill.vendorId);
 
   await writeAuditLog({
+    companyId,
     actor,
     action: 'VOID_VENDOR_BILL',
     entityType: 'vendor_bill',

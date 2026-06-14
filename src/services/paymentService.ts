@@ -12,11 +12,15 @@ import type { PaymentRecord, PaymentAllocation, Order, Customer } from '../store
  */
 export async function autoAllocatePaymentOldestFirst(
   customerId: string,
-  amount: number
+  amount: number,
+  companyId?: string
 ): Promise<PaymentAllocation[]> {
+  const activeCompanyId = companyId || localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
+  
   // 1. Fetch all orders for this customer
   const q = query(
     collection(db, 'orders'),
+    where('companyId', '==', activeCompanyId),
     where('customerId', '==', customerId)
   );
   const snap = await getDocs(q);
@@ -69,6 +73,7 @@ export async function createPaymentDraft(
   paymentData: Omit<PaymentRecord, 'id' | 'paymentNumber' | 'status' | 'glPostingStatus' | 'createdAt' | 'updatedAt' | 'unappliedAmount'> & { id?: string }
 ): Promise<string> {
   const paymentRef = collection(db, 'payments');
+  const activeCompanyId = paymentData.companyId || localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
   
   // Generate a random payment number
   const rand = Math.floor(100000 + Math.random() * 900000);
@@ -80,6 +85,7 @@ export async function createPaymentDraft(
 
   const docData = {
     ...paymentData,
+    companyId: activeCompanyId,
     paymentNumber,
     status: 'draft',
     glPostingStatus: 'unposted',
@@ -99,18 +105,6 @@ export async function postPaymentToLedger(
   paymentId: string,
   actor: string = 'Admin'
 ): Promise<string> {
-  // Load COA first
-  let coa: any[] = [];
-  try {
-    const snap = await getDocs(collection(db, 'chartOfAccounts'));
-    coa = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  } catch (e) {
-    console.warn("Could not load COA for payment posting enrichment:", e);
-  }
-  if (!coa || coa.length === 0) {
-    coa = CHART_OF_ACCOUNTS;
-  }
-
   return await runTransaction(db, async (transaction) => {
     // 1. Fetch payment
     const paymentRef = doc(db, 'payments', paymentId);
@@ -119,6 +113,19 @@ export async function postPaymentToLedger(
       throw new Error(`Payment ${paymentId} not found`);
     }
     const payment = paymentSnap.data() as PaymentRecord;
+    const companyId = payment.companyId || 'DEFAULT_COMPANY';
+
+    // Load COA scoped by company
+    let coa: any[] = [];
+    try {
+      const snap = await getDocs(query(collection(db, 'chartOfAccounts'), where('companyId', '==', companyId)));
+      coa = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (e) {
+      console.warn("Could not load COA for payment posting enrichment:", e);
+    }
+    if (!coa || coa.length === 0) {
+      coa = CHART_OF_ACCOUNTS;
+    }
 
     // Idempotency check
     if (payment.glPostingStatus === 'posted') {
@@ -228,7 +235,7 @@ export async function postPaymentToLedger(
     
     const journalEntry = {
       orderId: paymentId,
-      companyId: 'DEFAULT_COMPANY',
+      companyId,
       createdBy: actor,
       description: `Payment Receipt #${shortId} for Customer ${customer.name}`,
       lines,
@@ -255,6 +262,7 @@ export async function postPaymentToLedger(
     // 9. Write audit log
     const auditRef = doc(collection(db, 'auditLogs'));
     transaction.set(auditRef, {
+      companyId,
       actor,
       action: 'LOG_JOURNAL_ENTRY',
       entityType: 'finance',
@@ -276,18 +284,6 @@ export async function voidPostedPayment(
   paymentId: string,
   actor: string = 'Admin'
 ): Promise<string> {
-  // Load COA first
-  let coa: any[] = [];
-  try {
-    const snap = await getDocs(collection(db, 'chartOfAccounts'));
-    coa = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  } catch (e) {
-    console.warn("Could not load COA for payment voiding enrichment:", e);
-  }
-  if (!coa || coa.length === 0) {
-    coa = CHART_OF_ACCOUNTS;
-  }
-
   return await runTransaction(db, async (transaction) => {
     const paymentRef = doc(db, 'payments', paymentId);
     const paymentSnap = await transaction.get(paymentRef);
@@ -295,6 +291,19 @@ export async function voidPostedPayment(
       throw new Error(`Payment ${paymentId} not found`);
     }
     const payment = paymentSnap.data() as PaymentRecord;
+    const companyId = payment.companyId || 'DEFAULT_COMPANY';
+
+    // Load COA scoped by company
+    let coa: any[] = [];
+    try {
+      const snap = await getDocs(query(collection(db, 'chartOfAccounts'), where('companyId', '==', companyId)));
+      coa = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (e) {
+      console.warn("Could not load COA for payment voiding enrichment:", e);
+    }
+    if (!coa || coa.length === 0) {
+      coa = CHART_OF_ACCOUNTS;
+    }
 
     // Idempotency check
     if (payment.glPostingStatus === 'reversed') {
@@ -390,7 +399,7 @@ export async function voidPostedPayment(
 
     const reversingEntry = {
       orderId: paymentId,
-      companyId: 'DEFAULT_COMPANY',
+      companyId,
       createdBy: actor,
       description: `Void/Reversal of Payment Receipt #${shortId}`,
       lines: reversedLines,
@@ -427,6 +436,7 @@ export async function voidPostedPayment(
     // 5. Write audit log
     const auditRef = doc(collection(db, 'auditLogs'));
     transaction.set(auditRef, {
+      companyId,
       actor,
       action: 'LOG_JOURNAL_ENTRY',
       entityType: 'finance',
@@ -449,18 +459,6 @@ export async function refundPayment(
   refundAmount: number,
   actor: string = 'Admin'
 ): Promise<string> {
-  // Load COA first
-  let coa: any[] = [];
-  try {
-    const snap = await getDocs(collection(db, 'chartOfAccounts'));
-    coa = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  } catch (e) {
-    console.warn("Could not load COA for payment refund enrichment:", e);
-  }
-  if (!coa || coa.length === 0) {
-    coa = CHART_OF_ACCOUNTS;
-  }
-
   return await runTransaction(db, async (transaction) => {
     const paymentRef = doc(db, 'payments', paymentId);
     const paymentSnap = await transaction.get(paymentRef);
@@ -468,6 +466,19 @@ export async function refundPayment(
       throw new Error(`Payment ${paymentId} not found`);
     }
     const payment = paymentSnap.data() as PaymentRecord;
+    const companyId = payment.companyId || 'DEFAULT_COMPANY';
+
+    // Load COA scoped by company
+    let coa: any[] = [];
+    try {
+      const snap = await getDocs(query(collection(db, 'chartOfAccounts'), where('companyId', '==', companyId)));
+      coa = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (e) {
+      console.warn("Could not load COA for payment refund enrichment:", e);
+    }
+    if (!coa || coa.length === 0) {
+      coa = CHART_OF_ACCOUNTS;
+    }
 
     if (payment.glPostingStatus !== 'posted') {
       throw new Error('Only posted payments can be refunded');
@@ -557,7 +568,7 @@ export async function refundPayment(
 
     const refundEntry = {
       orderId: paymentId,
-      companyId: 'DEFAULT_COMPANY',
+      companyId,
       createdBy: actor,
       description: `Refund of Unapplied Credit from Payment #${shortId}`,
       lines,
@@ -575,6 +586,7 @@ export async function refundPayment(
     // 4. Write audit log
     const auditRef = doc(collection(db, 'auditLogs'));
     transaction.set(auditRef, {
+      companyId,
       actor,
       action: 'LOG_JOURNAL_ENTRY',
       entityType: 'finance',

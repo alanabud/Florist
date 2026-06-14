@@ -5,6 +5,9 @@ import { useAuthStore } from '../../store/authStore';
 import { logout } from '../../services/authService';
 import { useToastStore } from '../../store/toastStore';
 import { useAdminStore } from '../../store/adminStore';
+import { CompanySwitcher } from '../company/CompanySwitcher';
+import { LanguageSwitcher } from '../common/LanguageSwitcher';
+import { useI18n } from '../../i18n/I18nProvider';
 import styles from './Topbar.module.css';
 
 export const Topbar: React.FC = () => {
@@ -14,6 +17,7 @@ export const Topbar: React.FC = () => {
   const { user, role } = useAuthStore();
   const { inventory, orders, customers, products } = useAdminStore();
   const addToast = useToastStore((state) => state.addToast);
+  const { t } = useI18n();
 
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -106,15 +110,15 @@ export const Topbar: React.FC = () => {
   const notifications = [
     ...lowStock.map(item => ({
       id: `stock-${item.sku}`,
-      title: 'Low Stock Alert',
-      desc: `${item.name} is running low (${item.quantity} stems remaining).`,
+      title: t('dashboard.lowStockAlertTitle'),
+      desc: t('dashboard.lowStockAlertDesc', { name: item.name, quantity: item.quantity }),
       type: 'warning',
       action: () => navigate('/admin/inventory?filter=low')
     })),
     ...pendingOrders.map(order => ({
       id: `order-${order.id}`,
-      title: 'New Order Draft',
-      desc: `High priority draft for ${order.customerName} needs verification.`,
+      title: t('dashboard.newOrderDraftTitle'),
+      desc: t('dashboard.newOrderDraftDesc', { customer: order.customerName }),
       type: 'info',
       action: () => navigate('/admin/orders?filter=today')
     }))
@@ -160,7 +164,7 @@ export const Topbar: React.FC = () => {
     setIsProfileOpen(false);
     try {
       await logout();
-      addToast('Logged out successfully.', 'info');
+      addToast(t('common.loggedOut'), 'info');
       navigate('/admin/login');
     } catch (err: unknown) {
       const errMsg = (err as { message?: string })?.message || 'Logout failed.';
@@ -175,7 +179,7 @@ export const Topbar: React.FC = () => {
         <input 
           key={location.pathname}
           type="text" 
-          placeholder="Search orders, clients, general ledger..." 
+          placeholder={t('common.search') + "..."} 
           className={styles.searchInput}
           defaultValue={searchParams.get('search') || ''}
           onChange={handleSearchChange}
@@ -184,6 +188,9 @@ export const Topbar: React.FC = () => {
       </div>
 
       <div className={styles.actions}>
+        <CompanySwitcher />
+        <LanguageSwitcher />
+
         {/* Notifications Popover */}
         <div className={styles.popoverContainer} ref={notifRef}>
           <button 
@@ -200,14 +207,14 @@ export const Topbar: React.FC = () => {
           {isNotifOpen && (
             <div className={styles.popoverMenu}>
               <div className={styles.popoverHeader}>
-                <span className={styles.popoverTitle}>Notifications</span>
-                <span className={styles.popoverCount}>{notifications.length} Unresolved</span>
+                <span className={styles.popoverTitle}>{t('common.notifications')}</span>
+                <span className={styles.popoverCount}>{notifications.length} {t('common.warning')}</span>
               </div>
               <div className={styles.popoverList}>
                 {notifications.length === 0 ? (
                   <div className={styles.emptyState}>
                     <ShieldCheck size={20} className={styles.emptyIcon} />
-                    <p>Studio status normal. All lines reporting clear.</p>
+                    <p>{t('dashboard.noUrgentIssues')}</p>
                   </div>
                 ) : (
                   notifications.map(item => (
@@ -272,14 +279,14 @@ export const Topbar: React.FC = () => {
                   onClick={() => handleProfileLink('/admin/orders')}
                 >
                   <ListCollapse size={14} />
-                  <span>Orders Master Log</span>
+                  <span>{t('navigation.orders')}</span>
                 </button>
                 <button 
                   className={styles.profileItem}
                   onClick={() => handleProfileLink('/admin/reports')}
                 >
                   <Settings size={14} />
-                  <span>Executive Reports</span>
+                  <span>{t('navigation.reports')}</span>
                 </button>
                 
                 <div className={styles.menuDivider}></div>
@@ -289,7 +296,7 @@ export const Topbar: React.FC = () => {
                   onClick={handleLogout}
                 >
                   <LogOut size={14} />
-                  <span>Sign Out</span>
+                  <span>{t('common.signOut')}</span>
                 </button>
               </div>
             </div>

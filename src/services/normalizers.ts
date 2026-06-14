@@ -29,6 +29,7 @@ export function normalizeOrder(order: any): Order {
 
   return {
     id: order.id || `ord-${Date.now()}`,
+    companyId: order.companyId || 'DEFAULT_COMPANY',
     customerId: order.customerId || 'c1',
     customerName: order.customerName || 'Walk-in Client',
     status: order.status || 'draft',
@@ -197,6 +198,7 @@ export function normalizeCustomer(customer: any): Customer {
   if (!customer) return {} as Customer;
   return {
     id: customer.id || `cust-${Date.now()}`,
+    companyId: customer.companyId || 'DEFAULT_COMPANY',
     name: customer.name || 'Walk-in Client',
     email: customer.email || '',
     phone: customer.phone || '',
@@ -252,6 +254,7 @@ export function normalizeInventoryItem(item: any): InventoryItem {
   if (!item) return {} as InventoryItem;
   return {
     id: item.id || `inv-${Date.now()}`,
+    companyId: item.companyId || 'DEFAULT_COMPANY',
     name: item.name || 'Unnamed Stem',
     sku: item.sku || 'SKU-TEMP',
     category: item.category || 'Flowers',
@@ -301,6 +304,7 @@ export function normalizeSubscription(sub: any): SubscriptionItem {
   if (!sub) return {} as SubscriptionItem;
   return {
     id: sub.id || `sub-${Date.now()}`,
+    companyId: sub.companyId || 'DEFAULT_COMPANY',
     customerName: sub.customerName || 'Walk-in Client',
     product: sub.product || 'Seasonal Designer Mix',
     frequency: sub.frequency || 'Weekly',
@@ -359,6 +363,7 @@ export function normalizeEvent(event: any): EventItem {
   if (!event) return {} as EventItem;
   return {
     id: event.id || `evt-${Date.now()}`,
+    companyId: event.companyId || 'DEFAULT_COMPANY',
     name: event.name || 'New Consultation',
     type: event.type || 'Wedding',
     date: event.date || new Date().toISOString(),

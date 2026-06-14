@@ -3,7 +3,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
     
     // ──────────────────────────────────────────────
-    // ROLE HELPER FUNCTIONS
+    // MULTI-COMPANY ROLE HELPER FUNCTIONS
     // ──────────────────────────────────────────────
 
     // Check if user is authenticated
@@ -11,35 +11,65 @@ service cloud.firestore {
       return request.auth != null;
     }
     
-    // Resolve the current user's role.
-    // Checks custom claims first, falls back to the database users document.
-    function role() {
-      return request.auth.token.role != null 
-        ? request.auth.token.role 
-        : get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    // Path to the membership document in a given company
+    function memberPath(companyId) {
+      return /databases/$(database)/documents/companies/$(companyId)/members/$(request.auth.uid);
     }
     
-    // Role hierarchy: owner > admin > manager > staff
-    function isOwner() {
-      return isSignedIn() && role() == 'owner';
+    // Check if user is active member of a company
+    function isActiveCompanyMember(companyId) {
+      return isSignedIn()
+        && exists(memberPath(companyId))
+        && get(memberPath(companyId)).data.status == "active";
     }
     
-    function isAdmin() {
-      return isSignedIn() && (role() == 'owner' || role() == 'admin');
+    // Resolve user's role in a company
+    function getCompanyMember(companyId) {
+      return get(memberPath(companyId)).data;
     }
     
-    function isManager() {
-      return isSignedIn() && (role() == 'owner' || role() == 'admin' || role() == 'manager');
+    // Specific role checkers
+    function isCompanyOwner(companyId) {
+      return isActiveCompanyMember(companyId)
+        && getCompanyMember(companyId).role == "owner";
     }
-    
-    function isStaff() {
-      return isSignedIn() && (role() == 'owner' || role() == 'admin' || role() == 'manager' || role() == 'staff');
+
+    function isCompanyAdmin(companyId) {
+      return isActiveCompanyMember(companyId)
+        && getCompanyMember(companyId).role in ["owner", "admin"];
+    }
+
+    function isCompanyManager(companyId) {
+      return isActiveCompanyMember(companyId)
+        && getCompanyMember(companyId).role in ["owner", "admin", "manager"];
+    }
+
+    function isCompanyStaff(companyId) {
+      return isActiveCompanyMember(companyId)
+        && getCompanyMember(companyId).role in ["owner", "admin", "manager", "designer", "sales", "accountant"];
+    }
+
+    // Standard business document rules matching companyId
+    function canReadCompanyDoc() {
+      return isActiveCompanyMember(resource.data.companyId);
+    }
+
+    function canCreateCompanyDoc() {
+      return request.resource.data.companyId is string
+        && isActiveCompanyMember(request.resource.data.companyId);
+    }
+
+    function canUpdateCompanyDoc() {
+      return isActiveCompanyMember(resource.data.companyId)
+        && request.resource.data.companyId == resource.data.companyId;
+    }
+
+    function canDeleteCompanyDoc() {
+      return isCompanyAdmin(resource.data.companyId);
     }
 
     // ──────────────────────────────────────────────
-    // GUEST CHECKOUT SAFETY
-    // Guest checkout can create only public order fields.
-    // Guests must never write operational, finance, audit, or assignment fields.
+    // GUEST CHECKOUT SAFETY (Locked to DEFAULT_COMPANY)
     // ──────────────────────────────────────────────
     function guestSafeOrderFields() {
       return request.resource.data.keys().hasOnly([
@@ -48,7 +78,8 @@ service cloud.firestore {
         'deliveryType', 'deliveryDate', 'senderName', 'senderEmail',
         'cardMessage', 'items', 'subtotal', 'taxes', 'deliveryFee', 'total', 
         'status', 'createdAt', 'id', 'orderNumber', 'orderNumberNormalized', 
-        'senderEmailNormalized', 'customerId', 'paymentStatus', 'glPostingStatus'
+        'senderEmailNormalized', 'customerId', 'paymentStatus', 'glPostingStatus',
+        'companyId'
       ])
       && !request.resource.data.keys().hasAny([
         'internalNotes',
@@ -61,6 +92,7 @@ service cloud.firestore {
 
     function isValidGuestOrderCreate() {
       return request.auth == null
+        && request.resource.data.companyId == "DEFAULT_COMPANY"
         && request.resource.data.status == 'confirmed'
         && request.resource.data.paymentStatus == 'paid'
         && request.resource.data.glPostingStatus == 'unposted'
@@ -73,7 +105,7 @@ service cloud.firestore {
         'orderNumber', 'orderNumberNormalized', 'senderEmailNormalized',
         'status', 'deliveryDate', 'recipientFirstName',
         'city', 'state', 'itemsSummary', 'timeline', 'updatedAt',
-        'deliveryWindow', 'trackingMessage'
+        'deliveryWindow', 'trackingMessage', 'companyId'
       ];
     }
 
@@ -88,193 +120,208 @@ service cloud.firestore {
     }
 
     // ──────────────────────────────────────────────
-    // USERS
-    // Users can read their own profile; managers+ can read any.
-    // Users can update their own profile except role.
-    // Only owners can delete user documents.
+    // USERS (Bootstrap remains global)
     // ──────────────────────────────────────────────
     match /users/{userId} {
-      allow read: if isSignedIn() && (request.auth.uid == userId || isManager());
-      
-      // Allow user creation (on first login)
-      allow create: if isSignedIn() && request.auth.uid == userId;
-      
-      // Users can update own profile but NOT change role.
-      // Owners can update any profile.
-      allow update: if isSignedIn() && (
-        (request.auth.uid == userId && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role'])) ||
-        isOwner()
-      );
-      
-      allow delete: if isOwner();
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn() && request.auth.uid == userId;
+      allow delete: if isSignedIn() && exists(/databases/$(database)/documents/companies/DEFAULT_COMPANY/members/$(request.auth.uid)) && get(/databases/$(database)/documents/companies/DEFAULT_COMPANY/members/$(request.auth.uid)).data.role == "owner";
     }
 
     // ──────────────────────────────────────────────
-    // ORDERS
-    // - Staff+ can read all orders.
-    // - Staff+ can create orders (internal sales flow).
-    // - Guests (unauthenticated) can create checkout orders with safe fields only.
-    // - Guests cannot update, delete, or read orders.
-    // - Staff+ can update orders.
-    // - Admin+ can delete orders.
+    // COMPANIES (Core settings and members nested)
     // ──────────────────────────────────────────────
+    match /companies/{companyId} {
+      allow read: if isActiveCompanyMember(companyId);
+      allow create: if isSignedIn(); // Bootstrapping companies is allowed for signed-in users
+      allow update: if isCompanyAdmin(companyId);
+      allow delete: if isCompanyOwner(companyId);
+
+      match /settings/{settingId} {
+        allow read: if isActiveCompanyMember(companyId);
+        allow write: if isCompanyManager(companyId);
+      }
+
+      match /members/{memberUserId} {
+        allow read: if isActiveCompanyMember(companyId);
+        allow create: if isCompanyAdmin(companyId);
+        allow update: if isCompanyAdmin(companyId) || (
+          isSignedIn() && 
+          request.auth.uid == memberUserId && 
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['languagePreference', 'defaultBranchId'])
+        );
+        allow delete: if isCompanyOwner(companyId);
+      }
+    }
+
+    // ──────────────────────────────────────────────
+    // BUSINESS COLLECTIONS (Company scoped)
+    // ──────────────────────────────────────────────
+
+    // ORDERS
     match /orders/{orderId} {
-      allow create: if isStaff() || isValidGuestOrderCreate();
-      allow get, list: if isStaff();
-      allow update: if isStaff();
-      allow delete: if isAdmin();
+      allow read: if canReadCompanyDoc();
+      allow create: if canCreateCompanyDoc() || isValidGuestOrderCreate();
+      allow update: if canUpdateCompanyDoc() && isCompanyStaff(resource.data.companyId);
+      allow delete: if canDeleteCompanyDoc();
     }
     
-    // ──────────────────────────────────────────────
-    // JOURNAL ENTRIES (General Ledger)
-    // IMMUTABILITY POLICY:
-    // - Managers+ can read journal entries.
-    // - Staff+ or guest order flows can create entries.
-    // - Journal entries CANNOT be deleted (ever).
-    // - The ONLY allowed update is a controlled reversal marker:
-    //     status: "posted" → "reversed"
-    //   with optional metadata: reversedBy, reversedAt, reversalEntryId.
-    // - No arbitrary edits to amounts, accounts, debits, credits,
-    //   source, memo, or description fields after posting.
-    // ──────────────────────────────────────────────
-    match /journalEntries/{document=**} {
-      allow read: if isManager();
-      
-      // Guests can post order-linked journals; staff+ can post any journal.
-      allow create: if isStaff() || (
-        request.auth == null && request.resource.data.sourceType in ['order', 'demo_order']
+    // JOURNAL ENTRIES
+    match /journalEntries/{entryId} {
+      allow read: if isActiveCompanyMember(resource.data.companyId) && isCompanyManager(resource.data.companyId);
+      allow create: if canCreateCompanyDoc() && (
+        isCompanyStaff(request.resource.data.companyId) || (
+          request.auth == null && request.resource.data.companyId == "DEFAULT_COMPANY" && request.resource.data.sourceType in ['order', 'demo_order']
+        )
       );
-      
-      // Immutable! Only allow transition from posted → reversed
-      // updating only the reversal metadata fields.
-      allow update: if isAdmin()
+      allow update: if canUpdateCompanyDoc() && isCompanyAdmin(resource.data.companyId)
         && resource.data.status == 'posted'
         && request.resource.data.status == 'reversed'
         && request.resource.data.diff(resource.data).changedKeys()
           .hasOnly(['status', 'reversedBy', 'reversedAt', 'reversalEntryId']);
-          
-      // Journal entries can never be deleted.
       allow delete: if false;
     }
 
-    // ──────────────────────────────────────────────
     // AUDIT LOGS
-    // APPEND-ONLY POLICY:
-    // - Managers+ can read audit logs.
-    // - Staff+ can create audit logs.
-    // - Guests can create audit logs only for ORDER_STATUS_CHANGE actions.
-    // - No client can update or delete audit logs.
-    // ──────────────────────────────────────────────
     match /auditLogs/{logId} {
-      allow read: if isManager();
-      allow create: if isStaff() || (
-        request.auth == null && request.resource.data.action == 'ORDER_STATUS_CHANGE'
+      allow read: if isActiveCompanyMember(resource.data.companyId) && isCompanyManager(resource.data.companyId);
+      allow create: if canCreateCompanyDoc() && (
+        isCompanyStaff(request.resource.data.companyId) || (
+          request.auth == null && request.resource.data.companyId == "DEFAULT_COMPANY" && request.resource.data.action == 'ORDER_STATUS_CHANGE'
+        )
       );
-      // Append-only: no updates, no deletes.
       allow update, delete: if false;
     }
 
-    // ──────────────────────────────────────────────
     // QA RUNS
-    // - Managers+ can read QA run history.
-    // - Admin+ can create QA evidence records.
-    // - QA records are immutable once created.
-    // ──────────────────────────────────────────────
     match /qaRuns/{runId} {
-      allow read: if isManager();
-      allow create: if isAdmin();
+      allow read: if isActiveCompanyMember(resource.data.companyId) && isCompanyManager(resource.data.companyId);
+      allow create: if canCreateCompanyDoc() && isCompanyAdmin(request.resource.data.companyId);
       allow update, delete: if false;
     }
 
-    // ──────────────────────────────────────────────
-    // PRODUCTS (Admin)
-    // - Staff+ can read and create/update products.
-    // - Admin+ can delete products.
-    // ──────────────────────────────────────────────
-    match /products_admin/{document=**} {
-      allow read: if isStaff();
-      allow create, update: if isStaff();
-      allow delete: if isAdmin();
+    // PRODUCTS (Scoped to products_admin)
+    match /products_admin/{productId} {
+      allow read: if canReadCompanyDoc() || (
+        resource.data.companyId == "DEFAULT_COMPANY" && resource.data.productStatus == "active"
+      );
+      allow create: if canCreateCompanyDoc() && isCompanyStaff(request.resource.data.companyId);
+      allow update: if canUpdateCompanyDoc() && isCompanyStaff(resource.data.companyId);
+      allow delete: if canDeleteCompanyDoc();
     }
 
-    // ──────────────────────────────────────────────
     // CUSTOMERS
-    // - Staff+ can read and create/update customer records.
-    // - Admin+ can delete customer records.
-    // ──────────────────────────────────────────────
-    match /customers/{document=**} {
-      allow read: if isStaff();
-      allow create, update: if isStaff();
-      allow delete: if isAdmin();
+    match /customers/{customerId} {
+      allow read: if canReadCompanyDoc();
+      allow create: if canCreateCompanyDoc() && isCompanyStaff(request.resource.data.companyId);
+      allow update: if canUpdateCompanyDoc() && isCompanyStaff(resource.data.companyId);
+      allow delete: if canDeleteCompanyDoc();
     }
 
-    // ──────────────────────────────────────────────
     // DELIVERIES
-    // - Staff+ can read and create/update delivery records.
-    // - Admin+ can delete delivery records.
-    // ──────────────────────────────────────────────
-    match /deliveries/{document=**} {
-      allow read: if isStaff();
-      allow create, update: if isStaff();
-      allow delete: if isAdmin();
+    match /deliveries/{deliveryId} {
+      allow read: if canReadCompanyDoc();
+      allow create: if canCreateCompanyDoc() && isCompanyStaff(request.resource.data.companyId);
+      allow update: if canUpdateCompanyDoc() && isCompanyStaff(resource.data.companyId);
+      allow delete: if canDeleteCompanyDoc();
     }
 
-    // ──────────────────────────────────────────────
     // INVENTORY
-    // - Staff+ can read inventory items.
-    // - Manager+ can create and update inventory.
-    // - Owner only can delete inventory items.
-    // ──────────────────────────────────────────────
     match /inventory/{itemId} {
-      allow read: if isStaff();
-      allow create, update: if isManager();
-      allow delete: if isOwner();
+      allow read: if canReadCompanyDoc();
+      allow create: if canCreateCompanyDoc() && isCompanyManager(request.resource.data.companyId);
+      allow update: if canUpdateCompanyDoc() && isCompanyManager(resource.data.companyId);
+      allow delete: if canDeleteCompanyDoc() && isCompanyOwner(resource.data.companyId);
     }
 
-    // ──────────────────────────────────────────────
-    // METADATA
-    // - Owner claim bootstrapping.
-    // ──────────────────────────────────────────────
-    match /_metadata/roles {
-      allow read: if isSignedIn();
-      allow create: if isSignedIn() && request.resource.data.ownerClaimed == true;
-      allow update: if isSignedIn() && resource.data.ownerClaimed == false && request.resource.data.ownerClaimed == true;
+    // PAYMENTS, STATEMENTS, NOTES
+    match /payments/{paymentId} {
+      allow read: if canReadCompanyDoc();
+      allow create: if canCreateCompanyDoc() && isCompanyStaff(request.resource.data.companyId);
+      allow update: if canUpdateCompanyDoc() && isCompanyStaff(resource.data.companyId);
+      allow delete: if canDeleteCompanyDoc();
+    }
+    match /customerStatements/{statementId} {
+      allow read: if canReadCompanyDoc();
+      allow create: if canCreateCompanyDoc() && isCompanyStaff(request.resource.data.companyId);
+      allow update: if canUpdateCompanyDoc() && isCompanyStaff(resource.data.companyId);
+      allow delete: if canDeleteCompanyDoc();
+    }
+    match /collectionNotes/{noteId} {
+      allow read: if canReadCompanyDoc();
+      allow create: if canCreateCompanyDoc() && isCompanyStaff(request.resource.data.companyId);
+      allow update: if canUpdateCompanyDoc() && isCompanyStaff(resource.data.companyId);
+      allow delete: if canDeleteCompanyDoc();
     }
 
-    // ──────────────────────────────────────────────
+    // PURCHASING & PAYABLES (Sprint 1C & 1D collections)
+    match /vendors/{vendorId} {
+      allow read: if canReadCompanyDoc();
+      allow create: if canCreateCompanyDoc() && isCompanyStaff(request.resource.data.companyId);
+      allow update: if canUpdateCompanyDoc() && isCompanyStaff(resource.data.companyId);
+      allow delete: if canDeleteCompanyDoc();
+    }
+    match /purchaseOrders/{poId} {
+      allow read: if canReadCompanyDoc();
+      allow create: if canCreateCompanyDoc() && isCompanyStaff(request.resource.data.companyId);
+      allow update: if canUpdateCompanyDoc() && isCompanyStaff(resource.data.companyId);
+      allow delete: if canDeleteCompanyDoc();
+    }
+    match /inventoryReceipts/{receiptId} {
+      allow read: if canReadCompanyDoc();
+      allow create: if canCreateCompanyDoc() && isCompanyStaff(request.resource.data.companyId);
+      allow update, delete: if false;
+    }
+    match /vendorBills/{billId} {
+      allow read: if canReadCompanyDoc();
+      allow create: if canCreateCompanyDoc() && isCompanyStaff(request.resource.data.companyId);
+      allow update: if canUpdateCompanyDoc() && isCompanyStaff(resource.data.companyId);
+      allow delete: if false;
+    }
+    match /vendorPayments/{paymentId} {
+      allow read: if canReadCompanyDoc();
+      allow create: if canCreateCompanyDoc() && isCompanyStaff(request.resource.data.companyId);
+      allow update: if canUpdateCompanyDoc() && isCompanyStaff(resource.data.companyId);
+      allow delete: if false;
+    }
+    match /inventoryTransactions/{txId} {
+      allow read: if canReadCompanyDoc();
+      allow create: if canCreateCompanyDoc() && isCompanyStaff(request.resource.data.companyId);
+      allow update, delete: if false;
+    }
+    match /sequences/{seqId} {
+      allow read: if canReadCompanyDoc();
+      allow create: if canCreateCompanyDoc() && isCompanyStaff(request.resource.data.companyId);
+      allow update: if canUpdateCompanyDoc() && isCompanyStaff(resource.data.companyId);
+      allow delete: if false;
+    }
+    match /branches/{branchId} {
+      allow read: if canReadCompanyDoc();
+      allow create: if canCreateCompanyDoc() && isCompanyStaff(request.resource.data.companyId);
+      allow update: if canUpdateCompanyDoc() && isCompanyStaff(resource.data.companyId);
+      allow delete: if canDeleteCompanyDoc();
+    }
+
     // PUBLIC ORDER TRACKING
-    // - Anyone (including unauthenticated guests) can read a specific tracking document.
-    // - Listing all tracking records is prohibited.
-    // - Anyone can create a valid public tracking document.
-    // - Only staff+ can update or delete.
-    // ──────────────────────────────────────────────
     match /publicOrderTracking/{trackingId} {
       allow get: if true;
       allow list: if false;
-      allow create: if isStaff() || isValidPublicTrackingCreate(trackingId);
-      allow update, delete: if isStaff();
+      allow create: if (request.auth != null && isCompanyStaff(request.resource.data.companyId)) || (
+        request.auth == null && request.resource.data.companyId == "DEFAULT_COMPANY" && isValidPublicTrackingCreate(trackingId)
+      );
+      allow update, delete: if isCompanyStaff(resource.data.companyId);
     }
 
-    // ──────────────────────────────────────────────
     // SYSTEM SEEDS
-    // - Staff+ can read and write system seeds.
-    // ──────────────────────────────────────────────
     match /systemSeeds/{seedId} {
-      allow read, write: if isStaff();
+      allow read, write: if isSignedIn();
     }
 
-    // ──────────────────────────────────────────────
     // CHART OF ACCOUNTS
-    // - Staff+ can read, create, and update chart of accounts.
-    // - Admin+ can delete chart of accounts.
-    // - System Account Protections:
-    //     - System accounts (isSystem == true) cannot be deleted.
-    //     - System accounts cannot have structural, reporting, or posting-control fields updated.
-    // ──────────────────────────────────────────────
     match /chartOfAccounts/{accountId} {
-      allow read: if isStaff();
-      allow create: if isStaff();
-      allow update: if isStaff() && (
+      allow read: if canReadCompanyDoc();
+      allow create: if canCreateCompanyDoc() && isCompanyStaff(request.resource.data.companyId);
+      allow update: if canUpdateCompanyDoc() && isCompanyStaff(resource.data.companyId) && (
         !('isSystem' in resource.data) || 
         resource.data.isSystem != true || 
         !request.resource.data.diff(resource.data).affectedKeys().hasAny([
@@ -283,64 +330,22 @@ service cloud.firestore {
           'isPostingAccount', 'allowManualPosting', 'allowSystemPosting', 'isCashAccount', 'isControlAccount'
         ])
       );
-      allow delete: if isAdmin() && (
+      allow delete: if canDeleteCompanyDoc() && (
         !('isSystem' in resource.data) || 
         resource.data.isSystem != true
       );
     }
 
     // ──────────────────────────────────────────────
-    // PAYMENTS, CUSTOMER STATEMENTS, COLLECTION NOTES
-    // Restricted to authenticated staff roles only. Guests are denied.
+    // SETTINGS (Legacy flat settings, fallback)
     // ──────────────────────────────────────────────
-    match /payments/{paymentId} {
-      allow read, write: if isStaff();
-    }
-    match /customerStatements/{statementId} {
-      allow read, write: if isStaff();
-    }
-    match /collectionNotes/{noteId} {
-      allow read, write: if isStaff();
-    }
-
-    // ──────────────────────────────────────────────
-    // SPRINT 1C PURCHASING & PAYABLES COLLECTIONS
-    // ──────────────────────────────────────────────
-    match /vendors/{vendorId} {
-      allow read, write: if isStaff();
-    }
-    match /purchaseOrders/{poId} {
-      allow read, write: if isStaff();
-    }
-    match /inventoryReceipts/{receiptId} {
-      allow read: if isStaff();
-      allow create: if isStaff();
-      allow update, delete: if false;
-    }
-    match /vendorBills/{billId} {
-      allow read: if isStaff();
-      allow create: if isStaff();
-      allow update: if isStaff();
-      allow delete: if false;
-    }
-    match /vendorPayments/{paymentId} {
-      allow read: if isStaff();
-      allow create: if isStaff();
-      allow update: if isStaff();
-      allow delete: if false;
-    }
-    match /inventoryTransactions/{txId} {
-      allow read: if isStaff();
-      allow create: if isStaff();
-      allow update, delete: if false;
-    }
-    match /sequences/{seqId} {
-      allow read, write: if isStaff();
+    match /settings/{settingId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
     }
 
     // ──────────────────────────────────────────────
     // DEFAULT DENY
-    // All paths not matched above are denied.
     // ──────────────────────────────────────────────
     match /{document=**} {
       allow read, write: if false;

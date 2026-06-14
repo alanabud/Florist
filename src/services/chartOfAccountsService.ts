@@ -1,6 +1,6 @@
 import {
-  collection, addDoc, getDocs, doc, updateDoc, query,
-  serverTimestamp, orderBy
+  collection, addDoc, getDocs, doc, updateDoc, query, where,
+  serverTimestamp
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { CHART_OF_ACCOUNTS, getExpectedNormalBalance, type AccountDefinition } from './chartOfAccounts';
@@ -9,28 +9,30 @@ import { writeAuditLog } from './auditService';
 const COA_COLLECTION = 'chartOfAccounts';
 
 /**
- * Fetch all chart of accounts from Firestore.
+ * Fetch all chart of accounts from Firestore for the given company.
  * If the collection is empty, auto-seed the default accounts.
  */
-export async function fetchChartOfAccounts(): Promise<AccountDefinition[]> {
-  const q = query(collection(db, COA_COLLECTION), orderBy('displayOrder', 'asc'));
+export async function fetchChartOfAccounts(companyId?: string): Promise<AccountDefinition[]> {
+  const activeCompanyId = companyId || localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
+  const q = query(collection(db, COA_COLLECTION), where('companyId', '==', activeCompanyId));
   const snapshot = await getDocs(q);
 
   if (snapshot.empty) {
-    // Auto-seed defaults
+    // Auto-seed defaults for this companyId
     const seeded: AccountDefinition[] = [];
     for (const acct of CHART_OF_ACCOUNTS) {
       const docRef = await addDoc(collection(db, COA_COLLECTION), {
         ...acct,
+        companyId: activeCompanyId,
         createdBy: 'system-seed',
         createdAt: serverTimestamp(),
         lastModifiedBy: 'system-seed',
         lastModifiedAt: serverTimestamp(),
         journalUsageCount: 0,
       });
-      seeded.push({ ...acct, id: docRef.id });
+      seeded.push({ ...acct, id: docRef.id, companyId: activeCompanyId });
     }
-    return seeded;
+    return seeded.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
   }
 
   const dbAccounts = snapshot.docs.map(d => ({
@@ -87,13 +89,14 @@ export async function fetchChartOfAccounts(): Promise<AccountDefinition[]> {
         try {
           const docRef = await addDoc(collection(db, COA_COLLECTION), {
             ...defaultAcct,
+            companyId: activeCompanyId,
             createdBy: 'system-sync',
             createdAt: serverTimestamp(),
             lastModifiedBy: 'system-sync',
             lastModifiedAt: serverTimestamp(),
             journalUsageCount: 0,
           });
-          dbAccounts.push({ ...defaultAcct, id: docRef.id });
+          dbAccounts.push({ ...defaultAcct, id: docRef.id, companyId: activeCompanyId });
         } catch (e) {
           console.warn(`Failed to auto-create missing system account ${defaultAcct.code} in COA:`, e);
         }
@@ -101,7 +104,7 @@ export async function fetchChartOfAccounts(): Promise<AccountDefinition[]> {
     }
   }
 
-  return dbAccounts;
+  return dbAccounts.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
 }
 
 /**
@@ -186,6 +189,8 @@ export async function addGLAccount(
   existingAccounts: AccountDefinition[],
   actor: string = 'Admin'
 ): Promise<AccountDefinition> {
+  const activeCompanyId = account.companyId || localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
+  
   // Validate
   const errors = validateGLAccount(account, existingAccounts);
   if (Object.keys(errors).length > 0) {
@@ -194,6 +199,7 @@ export async function addGLAccount(
 
   const docData = {
     ...account,
+    companyId: activeCompanyId,
     active: account.active !== false,
     isSystem: false,
     createdBy: actor,
@@ -206,6 +212,7 @@ export async function addGLAccount(
   const docRef = await addDoc(collection(db, COA_COLLECTION), docData);
 
   await writeAuditLog({
+    companyId: activeCompanyId,
     actor,
     action: 'CREATE_GL_ACCOUNT',
     entityType: 'gl_account',
@@ -214,7 +221,7 @@ export async function addGLAccount(
     after: { code: account.code, name: account.name, type: account.type },
   });
 
-  return { ...account, id: docRef.id, isSystem: false } as AccountDefinition;
+  return { ...account, id: docRef.id, companyId: activeCompanyId, isSystem: false } as AccountDefinition;
 }
 
 /**
@@ -276,7 +283,10 @@ export async function updateGLAccount(
     lastModifiedAt: serverTimestamp(),
   });
 
+  const activeCompanyId = existing.companyId || localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
+
   await writeAuditLog({
+    companyId: activeCompanyId,
     actor,
     action: 'UPDATE_GL_ACCOUNT',
     entityType: 'gl_account',
@@ -306,7 +316,10 @@ export async function deactivateGLAccount(
     lastModifiedAt: serverTimestamp(),
   });
 
+  const activeCompanyId = existing.companyId || localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
+
   await writeAuditLog({
+    companyId: activeCompanyId,
     actor,
     action: 'DEACTIVATE_GL_ACCOUNT',
     entityType: 'gl_account',
@@ -324,6 +337,12 @@ export async function reactivateGLAccount(
   actor: string = 'Admin'
 ): Promise<void> {
   const docRef = doc(db, COA_COLLECTION, id);
+  const snap = await getDocs(query(collection(db, COA_COLLECTION), where('__name__', '==', id)));
+  let existingCompanyId = 'DEFAULT_COMPANY';
+  if (!snap.empty) {
+    existingCompanyId = snap.docs[0].data().companyId || 'DEFAULT_COMPANY';
+  }
+
   await updateDoc(docRef, {
     active: true,
     lastModifiedBy: actor,
@@ -331,6 +350,7 @@ export async function reactivateGLAccount(
   });
 
   await writeAuditLog({
+    companyId: existingCompanyId,
     actor,
     action: 'REACTIVATE_GL_ACCOUNT',
     entityType: 'gl_account',
@@ -341,14 +361,12 @@ export async function reactivateGLAccount(
 }
 
 /**
- * Count how many journal entries reference a given account name.
+ * Count how many journal entries reference a given account name in the given company.
  */
-export async function getAccountJournalUsageCount(accountName: string): Promise<number> {
-  // Since journal entry lines are embedded arrays, we can't do a direct Firestore
-  // array-contains query on nested fields. Instead we fetch all and count client-side.
-  // For production scale this would use a Cloud Function or denormalized counter.
+export async function getAccountJournalUsageCount(accountName: string, companyId?: string): Promise<number> {
   try {
-    const snapshot = await getDocs(collection(db, 'journalEntries'));
+    const activeCompanyId = companyId || localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
+    const snapshot = await getDocs(query(collection(db, 'journalEntries'), where('companyId', '==', activeCompanyId)));
     let count = 0;
     snapshot.docs.forEach(d => {
       const data = d.data();

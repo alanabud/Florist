@@ -7,12 +7,16 @@ import { Download, Plus, Repeat, CheckCircle, Clock, DollarSign } from 'lucide-r
 import { exportSubscriptionsPDF } from '../services/pdfExportService';
 import { exportSubscriptionsExcel } from '../services/excelExportService';
 import { EmptyState } from '../components/ui/EmptyState';
+import { useCompany } from '../context/CompanyContext';
+import { useI18n } from '../i18n/I18nProvider';
 import styles from '../components/layout/AdminList.module.css';
 
 export const Subscriptions: React.FC = () => {
+  const { selectedCompany, companySettings } = useCompany();
   const { subscriptions, setActiveModal, toggleSubscriptionStatus } = useAdminStore();
   const [searchParams, setSearchParams] = useSearchParams();
   const addToast = useToastStore((state) => state.addToast);
+  const { language } = useI18n();
 
   // Filter local states
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>('all');
@@ -87,14 +91,24 @@ export const Subscriptions: React.FC = () => {
   const handleExport = () => {
     const dateStr = new Date().toISOString().split('T')[0];
     const filename = `bloompro-subscriptions-${selectedStatusFilter}-${dateStr}.pdf`;
-    exportSubscriptionsPDF(filteredSubs, filename);
+    exportSubscriptionsPDF(filteredSubs, filename, {
+      companyName: selectedCompany?.displayName,
+      currencyCode: companySettings?.baseCurrencyCode,
+      locale: language,
+      reportFooterText: companySettings?.reportFooterText
+    });
     addToast(`Exported ${filteredSubs.length} subscriptions to PDF.`, 'success');
   };
 
   const handleExportExcel = () => {
     const dateStr = new Date().toISOString().split('T')[0];
     const filename = `bloompro-subscriptions-${selectedStatusFilter}-${dateStr}.xlsx`;
-    exportSubscriptionsExcel(filteredSubs, filename);
+    exportSubscriptionsExcel(filteredSubs, filename, {
+      companyName: selectedCompany?.displayName,
+      currencyCode: companySettings?.baseCurrencyCode,
+      locale: language,
+      reportFooterText: companySettings?.reportFooterText
+    });
     addToast(`Exported ${filteredSubs.length} subscriptions as Excel.`, 'success');
   };
 

@@ -7,6 +7,8 @@ import { useAuthStore } from '../store/authStore';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Flower2, ArrowLeft } from 'lucide-react';
+import { useI18n } from '../i18n/I18nProvider';
+import { LanguageSwitcher } from '../components/common/LanguageSwitcher';
 import styles from './Login.module.css';
 
 // SVG Icons for buttons
@@ -39,6 +41,7 @@ export const Login: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuthStore();
+  const { t } = useI18n();
 
   // Redirect if already logged in
   useEffect(() => {
@@ -87,16 +90,20 @@ export const Login: React.FC = () => {
   return (
     <div className={styles.container}>
       <button className={styles.backBtn} onClick={() => navigate('/')}>
-        <ArrowLeft size={16} /> Back to Store
+        <ArrowLeft size={16} /> {t('login.backToStore')}
       </button>
+
+      <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem' }}>
+        <LanguageSwitcher />
+      </div>
 
       <div className={styles.card}>
         <div className={styles.header}>
           <div className={styles.logoWrapper}>
             <Flower2 className={styles.logoIcon} />
           </div>
-          <h1 className={styles.title}>BloomPro Studio</h1>
-          <p className={styles.subtitle}>Sign in to manage your floral business</p>
+          <h1 className={styles.title}>{t('login.title')}</h1>
+          <p className={styles.subtitle}>{t('login.subtitle')}</p>
         </div>
         
         {error && <div className={styles.errorAlert}>{error}</div>}
@@ -112,7 +119,7 @@ export const Login: React.FC = () => {
             disabled={isLoadingEmail || isLoadingMicrosoft}
           >
             {!isLoadingGoogle && <GoogleIcon />}
-            Continue with Google
+            {t('login.continueWithGoogle')}
           </Button>
 
           <Button 
@@ -125,17 +132,17 @@ export const Login: React.FC = () => {
             disabled={isLoadingEmail || isLoadingGoogle}
           >
             {!isLoadingMicrosoft && <MicrosoftIcon />}
-            Continue with Microsoft
+            {t('login.continueWithMicrosoft')}
           </Button>
         </div>
 
         <div className={styles.divider}>
-          <span>or sign in with email</span>
+          <span>{t('login.orEmail')}</span>
         </div>
         
         <form onSubmit={handleEmailLogin} className={styles.form}>
           <Input 
-            label="Email Address" 
+            label={t('login.emailLabel')} 
             type="email" 
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -144,7 +151,7 @@ export const Login: React.FC = () => {
             disabled={isLoadingEmail || isLoadingGoogle || isLoadingMicrosoft}
           />
           <Input 
-            label="Password" 
+            label={t('login.passwordLabel')} 
             type="password" 
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -155,7 +162,7 @@ export const Login: React.FC = () => {
           
           <div className={styles.forgotPassword}>
             <button type="button" onClick={() => alert("Password reset link sent (simulated)")}>
-              Forgot your password?
+              {t('login.forgotPassword')}
             </button>
           </div>
 
@@ -166,7 +173,7 @@ export const Login: React.FC = () => {
             className={styles.submitBtn}
             disabled={isLoadingGoogle || isLoadingMicrosoft}
           >
-            Sign In
+            {t('login.signIn')}
           </Button>
         </form>
 
