@@ -26,6 +26,7 @@ import { Reports } from './pages/Reports';
 import { QA } from './pages/QA';
 import { AccountsReceivable } from './pages/AccountsReceivable';
 import { PurchasingConsole } from './pages/PurchasingConsole';
+import { ReconciliationCenter } from './pages/ReconciliationCenter';
 import { TrackDelivery } from './pages/TrackDelivery';
 import { ToastContainer } from './components/ui/Toast';
 import { useI18n } from './i18n/I18nProvider';
@@ -78,6 +79,7 @@ function App() {
             <Route path="finance" element={<FinanceAdmin />} />
             <Route path="receivables" element={<AccountsReceivable />} />
             <Route path="purchasing" element={<PurchasingConsole />} />
+            <Route path="reconciliation" element={<ReconciliationCenter />} />
             <Route path="reports" element={<Reports />} />
             <Route path="qa" element={<QA />} />
             <Route path="settings" element={<Settings />} />

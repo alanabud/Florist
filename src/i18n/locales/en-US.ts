@@ -43,6 +43,7 @@ export const enUS = {
     finance: "Finance",
     receivables: "Receivables",
     purchasing: "Purchasing",
+    reconciliation: "AI Reconciliation",
     reports: "Reports",
     settings: "Settings",
     qa: "QA Tools",
@@ -995,6 +996,178 @@ export const enUS = {
     },
     accounting: {
       costMemo: "Recognize third-party courier delivery cost for Order #{orderNumber}"
+    }
+  },
+  reconciliation: {
+    desc: "Auditing General Ledger accounts, sub-ledger variance analysis, W-9 checks, and month-end close readiness.",
+    noActiveRun: "No active audit run selected. Trigger or select an audit from the panel logs.",
+    ai: {
+      title: "AI Auditor Review",
+      critical: "CRITICAL AUDIT RISK",
+      high: "HIGH AUDIT RISK",
+      moderate: "MODERATE RISK",
+      low: "LOW RISK",
+      riskScore: "Risk Score",
+      noSummary: "No summary available. Execute a run to generate insights."
+    },
+    runs: {
+      title: "Audit Run Logs",
+      new: "Trigger New Audit",
+      empty: "No audits found. Click above to trigger your first financial reconciliation.",
+      type: "Type:",
+      period: "Period:",
+      to: "to",
+      checks: "Checks:",
+      pdf: "Export PDF Report",
+      excel: "Export Excel Package",
+      approve: "Approve & Lock Audit",
+      status: {
+        superseded: "SUPERSEDED",
+        failed: "FAILED",
+        draft: "DRAFT"
+      }
+    },
+    tabs: {
+      overview: "Overview & Risk",
+      mismatches: "Audit Mismatches ({count})",
+      checklist: "Close Readiness",
+      tax: "W-9 & 1099 Readiness"
+    },
+    summary: {
+      glDebits: "GL Total Debits",
+      arSubledger: "AR Subledger",
+      apSubledger: "AP Subledger",
+      inventory: "Inventory Stock"
+    },
+    modal: {
+      title: "Configure Audit Parameters",
+      runType: "Run Type",
+      start: "Start Date",
+      end: "End Date",
+      cancel: "Cancel",
+      startScan: "Start Scan"
+    },
+    runTypes: {
+      month_end: "Month-End Close",
+      weekly: "Weekly Run",
+      daily: "Daily Run",
+      tax_readiness: "Tax Readiness scan",
+      historical_baseline: "Historical Baseline"
+    },
+    toast: {
+      fetchFailed: "Failed to fetch audits.",
+      triggering: "Triggering reconciliation checks...",
+      completed: "Reconciliation check completed successfully.",
+      failed: "Auditing run failed.",
+      approved: "Audit locked and approved.",
+      approveFailed: "Approval failed.",
+      updateFailed: "Failed to update status.",
+      postSuccess: "Offset journal posted to GL successfully.",
+      postFailed: "Failed to post offset entry."
+    },
+    checklist: {
+      title: "Month-End Close Checklist",
+      gl: "Trial Balance balances to zero",
+      ar: "AR Subledger matches GL Accounts Receivable",
+      ap: "AP Subledger matches GL Accounts Payable",
+      inventory: "Inventory Valuation matches GL Inventory Asset",
+      cogs: "COGS posted for all delivered orders",
+      cash: "Cash & bank receipts match payment subledger",
+      blocking: "No blocking or unbalanced journal entries",
+      desc: {
+        gl: "Verify total debits equal total credits across all accounts.",
+        ar: "Verify customer open balances match GL Account 1200.",
+        ap: "Verify vendor unpaid balances match GL Account 2000.",
+        inventory: "Verify cost of items on hand matches GL Account 1300.",
+        cogs: "Check that cost transactions were logged upon sale fulfillment.",
+        cash: "Check that customer payments are correctly logged under GL Account 1010.",
+        blocking: "Ensure no exceptions are marked as blocker severity."
+      }
+    },
+    adjustment: {
+      draft: "Suggested Balanced Offset",
+      account: "Account",
+      debit: "Debit",
+      credit: "Credit",
+      totalOffset: "Total Offset",
+      notAuthorized: "Only accountants, owners, or admins can approve and post adjustments.",
+      posting: "Posting Ledger entry...",
+      post: "Post Correction Journal"
+    },
+    exceptions: {
+      title: "Discrepancy Log",
+      clean: "No discrepancies found matching the filter criteria.",
+      module: "Module",
+      severity: "Severity",
+      titleCol: "Title",
+      variance: "Variance",
+      status: "Status",
+      audit: "Discrepancy",
+      likelyCause: "Likely Root Cause",
+      aiExplanation: "AI Auditor Explanation"
+    },
+    filter: {
+      allSeverities: "All Severities",
+      blocking: "Blocking",
+      critical: "Critical",
+      warning: "Warning",
+      info: "Info",
+      allModules: "All Modules",
+      gl: "GL",
+      ar: "AR",
+      ap: "AP",
+      inventory: "Inventory",
+      cogs: "COGS",
+      payments: "Payments",
+      salesTax: "Sales Tax",
+      taxReady: "Tax Readiness"
+    },
+    severity: {
+      blocking: "BLOCKING",
+      critical: "CRITICAL",
+      warning: "WARNING",
+      info: "INFO"
+    },
+    status: {
+      resolved: "Resolved",
+      ignored: "Ignored",
+      adjusted: "Adjusted",
+      open: "Open"
+    },
+    drawer: {
+      expected: "Expected Amount:",
+      actual: "Actual Amount:",
+      variance: "Variance Amount:",
+      sourceDoc: "Source Doc: ",
+      reviewAi: "Review the AI-drafted offset entry. No ledger postings are made until approved.",
+      ignore: "Ignore Exception",
+      resolve: "Mark Resolved",
+      provideReason: "Provide Reason for Action:",
+      reasonPlaceholder: "e.g. Verified transaction, offset applied manually in bank portal",
+      cancel: "Cancel",
+      submitting: "Submitting...",
+      confirm: "Confirm"
+    },
+    tax: {
+      warningTitle: "Accountant & Tax Practitioner Warning",
+      warningDesc: "Tax reporting thresholds are configurable and should be reviewed with your certified public accountant (CPA) before preparing or submitting tax files.",
+      title: "W-9 Compliance & Form 1099 Candidates ({year})",
+      desc: "List of vendors paid above the Form 1099-NEC reporting threshold ($2,000 for 2026, $600 for 2025).",
+      loading: "Loading candidates...",
+      noCandidates: "No vendors exceeded the reporting thresholds for this tax period.",
+      vendorName: "Vendor Name",
+      taxId: "Federal Tax ID",
+      totalPaid: "Total Paid",
+      status: "W-9 Status",
+      registered: "Registered",
+      missing: "Missing W-9",
+      salesTaxRecon: "Sales Tax Reconciliation",
+      collected: "Collected from Sales:",
+      posted: "Posted to Sales Tax Payable:",
+      variance: "Variance:",
+      runRecon: "Run a Tax Readiness Audit to inspect year-end sales tax variance.",
+      yearParams: "Tax Year Parameters",
+      yearBtn: "Tax Year {year}"
     }
   }
 };

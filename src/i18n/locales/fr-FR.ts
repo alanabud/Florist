@@ -43,6 +43,7 @@ export const frFR = {
     "finance": "Finance",
     "receivables": "Créances Clients",
     "purchasing": "Achats",
+    "reconciliation": "Réconciliation IA",
     "reports": "Rapports",
     "settings": "Paramètres",
     "qa": "Outils de Contrôle",
@@ -996,5 +997,177 @@ export const frFR = {
   "occasions": {
     "subtitle": "Trouvez l'arrangement parfait pour chaque moment spécial.",
     "shopOccasion": "Acheter {name}"
+  },
+  "reconciliation": {
+    "desc": "Audit des comptes du grand livre, analyse des écarts des sous-livres, vérifications des formulaires W-9 et préparation de la clôture mensuelle.",
+    "noActiveRun": "Aucun audit actif sélectionné. Lancez ou sélectionnez un audit depuis le panneau des journaux.",
+    "ai": {
+      "title": "Revue de l'Auditeur IA",
+      "critical": "RISQUE D'AUDIT CRITIQUE",
+      "high": "RISQUE D'AUDIT ÉLEVÉ",
+      "moderate": "RISQUE MODÉRÉ",
+      "low": "RISQUE FAIBLE",
+      "riskScore": "Score de Risque",
+      "noSummary": "Aucun résumé disponible. Lancez un audit pour générer des analyses."
+    },
+    "runs": {
+      "title": "Journaux d'Audit",
+      "new": "Lancer un Nouvel Audit",
+      "empty": "Aucun audit trouvé. Cliquez ci-dessus pour lancer votre premier rapprochement financier.",
+      "type": "Type:",
+      "period": "Période:",
+      "to": "à",
+      "checks": "Contrôles:",
+      "pdf": "Exporter le Rapport PDF",
+      "excel": "Exporter le Package Excel",
+      "approve": "Approuver & Verrouiller l'Audit",
+      "status": {
+        "superseded": "REMPLACÉ",
+        "failed": "ÉCHOUÉ",
+        "draft": "BROUILLON"
+      }
+    },
+    "tabs": {
+      "overview": "Aperçu et Risque",
+      "mismatches": "Écarts d'Audit ({count})",
+      "checklist": "Clôture Mensuelle",
+      "tax": "Préparation Fiscale W-9/1099"
+    },
+    "summary": {
+      "glDebits": "Débits Totales GL",
+      "arSubledger": "Sous-livre Client",
+      "apSubledger": "Sous-livre Fournisseur",
+      "inventory": "Valeur du Stock"
+    },
+    "modal": {
+      "title": "Configurer les Paramètres d'Audit",
+      "runType": "Type d'Audit",
+      "start": "Date de Début",
+      "end": "Date de Fin",
+      "cancel": "Annuler",
+      "startScan": "Démarrer l'Audit"
+    },
+    "runTypes": {
+      "month_end": "Clôture Mensuelle",
+      "weekly": "Audit Hebdomadaire",
+      "daily": "Audit Quotidien",
+      "tax_readiness": "Préparation Fiscale",
+      "historical_baseline": "Historique de Référence"
+    },
+    "toast": {
+      "fetchFailed": "Échec de la récupération des audits.",
+      "triggering": "Lancement des contrôles de rapprochement...",
+      "completed": "Contrôle de rapprochement terminé avec succès.",
+      "failed": "Échec de l'audit financier.",
+      "approved": "Audit verrouillé et approuvé.",
+      "approveFailed": "Échec de l'approbation.",
+      "updateFailed": "Échec de la mise à jour du statut.",
+      "postSuccess": "Écriture de régularisation enregistrée avec succès dans le GL.",
+      "postFailed": "Échec de l'enregistrement de l'écriture de régularisation."
+    },
+    "checklist": {
+      "title": "Liste de Contrôle de Clôture Mensuelle",
+      "gl": "Balance de vérification équilibrée à zéro",
+      "ar": "Le sous-livre client correspond aux comptes clients du GL",
+      "ap": "Le sous-livre fournisseur correspond aux comptes fournisseurs du GL",
+      "inventory": "La valeur du stock correspond à l'actif de stock du GL",
+      "cogs": "COGS enregistré pour toutes les commandes livrées",
+      "cash": "Les recettes de trésorerie correspondent au sous-livre des paiements",
+      "blocking": "Aucune écriture de journal bloquante ou déséquilibrée",
+      "desc": {
+        "gl": "Vérifier que le total des débits est égal au total des crédits pour tous les comptes.",
+        "ar": "Vérifier que les soldes clients ouverts correspondent au compte GL 1200.",
+        "ap": "Vérifier que les soldes fournisseurs impayés correspondent au compte GL 2000.",
+        "inventory": "Vérifier que le coût des articles en stock correspond au compte GL 1300.",
+        "cogs": "Vérifier que les transactions de coûts ont été enregistrées lors de la livraison.",
+        "cash": "Vérifier que les paiements clients sont correctement enregistrés sous le compte GL 1010.",
+        "blocking": "S'assurer qu'aucune anomalie n'est marquée avec une gravité bloquante."
+      }
+    },
+    "adjustment": {
+      "draft": "Ajustement de Régularisation Suggéré",
+      "account": "Compte",
+      "debit": "Débit",
+      "credit": "Crédit",
+      "totalOffset": "Écart Total",
+      "notAuthorized": "Seuls les comptables, propriétaires ou administrateurs peuvent approuver et enregistrer les ajustements.",
+      "posting": "Enregistrement de l'écriture au grand livre...",
+      "post": "Enregistrer le Journal de Correction"
+    },
+    "exceptions": {
+      "title": "Journal des Écarts",
+      "clean": "Aucun écart trouvé correspondant aux critères de filtrage.",
+      "module": "Module",
+      "severity": "Gravité",
+      "titleCol": "Titre",
+      "variance": "Écart",
+      "status": "Statut",
+      "audit": "Anomalie",
+      "likelyCause": "Cause Probable",
+      "aiExplanation": "Explication de l'Auditeur IA"
+    },
+    "filter": {
+      "allSeverities": "Toutes les Gravités",
+      "blocking": "Bloquant",
+      "critical": "Critique",
+      "warning": "Avertissement",
+      "info": "Information",
+      "allModules": "Tous les Modules",
+      "gl": "GL",
+      "ar": "AR",
+      "ap": "AP",
+      "inventory": "Inventaire",
+      "cogs": "COGS",
+      "payments": "Paiements",
+      "salesTax": "TVA",
+      "taxReady": "Préparation Fiscale"
+    },
+    "severity": {
+      "blocking": "BLOQUANT",
+      "critical": "CRITIQUE",
+      "warning": "AVERTISSEMENT",
+      "info": "INFO"
+    },
+    "status": {
+      "resolved": "Résolu",
+      "ignored": "Ignoré",
+      "adjusted": "Ajusté",
+      "open": "Ouvert"
+    },
+    "drawer": {
+      "expected": "Montant Attendu:",
+      "actual": "Montant Réel:",
+      "variance": "Montant de l'Écart:",
+      "sourceDoc": "Doc Source: ",
+      "reviewAi": "Veuillez examiner l'écriture suggérée par l'IA. Aucun enregistrement n'est fait avant approbation.",
+      "ignore": "Ignorer l'Écart",
+      "resolve": "Marquer comme Résolu",
+      "provideReason": "Motif de l'action :",
+      "reasonPlaceholder": "ex. Transaction vérifiée, ajustement appliqué manuellement sur le portail bancaire",
+      "cancel": "Annuler",
+      "submitting": "Soumission...",
+      "confirm": "Confirmer"
+    },
+    "tax": {
+      "warningTitle": "Avertissement pour les Comptables et Fiscalistes",
+      "warningDesc": "Les seuils de déclaration fiscale sont configurables et doivent être vérifiés avec votre expert-comptable avant de préparer ou soumettre des déclarations.",
+      "title": "Conformité W-9 & Candidats 1099 ({year})",
+      "desc": "Liste des fournisseurs payés au-delà du seuil de déclaration du formulaire 1099-NEC (2 000 $ pour 2026, 600 $ pour 2025).",
+      "loading": "Chargement des candidats...",
+      "noCandidates": "Aucun fournisseur n'a dépassé les seuils de déclaration pour cette période fiscale.",
+      "vendorName": "Nom du Fournisseur",
+      "taxId": "ID Fiscal Fédéral",
+      "totalPaid": "Total Payé",
+      "status": "Statut W-9",
+      "registered": "Enregistré",
+      "missing": "W-9 Manquant",
+      "salesTaxRecon": "Rapprochement de la TVA",
+      "collected": "Collectée sur les Ventes:",
+      "posted": "Enregistrée en TVA à Payer:",
+      "variance": "Écart:",
+      "runRecon": "Lancez un audit de préparation fiscale pour inspecter l'écart de TVA de fin d'année.",
+      "yearParams": "Paramètres de l'Année Fiscale",
+      "yearBtn": "Année Fiscale {year}"
+    }
   }
 };

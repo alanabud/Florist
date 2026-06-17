@@ -14,7 +14,8 @@ import {
   Landmark,
   BarChart3,
   ShieldCheck,
-  FileText
+  FileText,
+  Scale
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useI18n } from '../../i18n/I18nProvider';
@@ -49,6 +50,7 @@ const navGroups = [
       { id: 'finance', labelKey: 'navigation.finance', to: '/admin/finance', icon: Landmark },
       { id: 'receivables', labelKey: 'navigation.receivables', to: '/admin/receivables', icon: FileText },
       { id: 'purchasing', labelKey: 'navigation.purchasing', to: '/admin/purchasing', icon: Truck },
+      { id: 'reconciliation', labelKey: 'navigation.reconciliation', to: '/admin/reconciliation', icon: Scale },
       { id: 'reports', labelKey: 'navigation.reports', to: '/admin/reports', icon: BarChart3 },
       { id: 'qa', labelKey: 'navigation.qa', to: '/admin/qa', icon: ShieldCheck },
       { id: 'settings', labelKey: 'navigation.settings', to: '/admin/settings', icon: Settings },
@@ -67,6 +69,7 @@ export const Sidebar: React.FC = () => {
           item.id === 'finance' || 
           item.id === 'receivables' || 
           item.id === 'purchasing' || 
+          item.id === 'reconciliation' ||
           item.id === 'qa'
         ) {
           return false;

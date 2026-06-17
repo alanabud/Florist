@@ -43,6 +43,7 @@ export const nlNL = {
     "finance": "Financiën",
     "receivables": "Debiteuren",
     "purchasing": "Inkoop",
+    "reconciliation": "AI-reconciliatie",
     "reports": "Rapporten",
     "settings": "Instellingen",
     "qa": "Kwaliteitsbeheer",
@@ -996,5 +997,177 @@ export const nlNL = {
   "occasions": {
     "subtitle": "Vind het perfecte arrangement voor elk bijzonder moment.",
     "shopOccasion": "Shop {name}"
+  },
+  "reconciliation": {
+    "desc": "Controleren van grootboekrekeningen, subboek-afwijkingsanalyse, W-9-controles en afsluitingsparaatheid van de maand.",
+    "noActiveRun": "Geen actieve auditrun geselecteerd. Start of selecteer een audit uit de paneellogboeken.",
+    "ai": {
+      "title": "AI-auditorbeoordeling",
+      "critical": "KRITIEK AUDITRISICO",
+      "high": "HOOG AUDITRISICO",
+      "moderate": "MATIG RISICO",
+      "low": "LAAG RISICO",
+      "riskScore": "Risicoscore",
+      "noSummary": "Geen samenvatting beschikbaar. Voer een scan uit om inzichten te genereren."
+    },
+    "runs": {
+      "title": "Audit Logboeken",
+      "new": "Start Nieuwe Audit",
+      "empty": "Geen audits gevonden. Klik hierboven om uw eerste financiële reconciliatie te starten.",
+      "type": "Type:",
+      "period": "Periode:",
+      "to": "tot",
+      "checks": "Controles:",
+      "pdf": "Exporteer PDF Rapport",
+      "excel": "Exporteer Excel Pakket",
+      "approve": "Audit Goedkeuren & Vergrendelen",
+      "status": {
+        "superseded": "VERVANGEN",
+        "failed": "MISLUKT",
+        "draft": "CONCEPT"
+      }
+    },
+    "tabs": {
+      "overview": "Overzicht & Risico",
+      "mismatches": "Auditafwijkingen ({count})",
+      "checklist": "Maandafsluiting",
+      "tax": "Belastingparaatheid W-9/1099"
+    },
+    "summary": {
+      "glDebits": "GL Totale Debet",
+      "arSubledger": "Debiteurensubboek",
+      "apSubledger": "Crediteurensubboek",
+      "inventory": "Voorraadwaarde"
+    },
+    "modal": {
+      "title": "Auditparameters Configureren",
+      "runType": "Run Type",
+      "start": "Startdatum",
+      "end": "Einddatum",
+      "cancel": "Annuleren",
+      "startScan": "Start de Scan"
+    },
+    "runTypes": {
+      "month_end": "Maandafsluiting",
+      "weekly": "Wekelijkse Run",
+      "daily": "Dagelijkse Run",
+      "tax_readiness": "Belastingcontrole",
+      "historical_baseline": "Historische Nulmeting"
+    },
+    "toast": {
+      "fetchFailed": "Ophalen van audits mislukt.",
+      "triggering": "Reconciliatiecontroles starten...",
+      "completed": "Reconciliatiecontrole succesvol afgerond.",
+      "failed": "Auditrun mislukt.",
+      "approved": "Audit vergrendeld en goedgekeurd.",
+      "approveFailed": "Goedkeuring mislukt.",
+      "updateFailed": "Bijwerken van status mislukt.",
+      "postSuccess": "Correctieboeking succesvol in het grootboek geplaatst.",
+      "postFailed": "Plaatsen van correctieboeking mislukt."
+    },
+    "checklist": {
+      "title": "Checklist Maandafsluiting",
+      "gl": "Proefbalans is in evenwicht op nul",
+      "ar": "Debiteurensubboek komt overeen met GL Debiteurenrekening",
+      "ap": "Crediteurensubboek komt overeen met GL Crediteurenrekening",
+      "inventory": "Voorraadwaarding komt overeen met GL Voorraadactiva",
+      "cogs": "COGS geboekt voor alle geleverde bestellingen",
+      "cash": "Kas- & bankontvangsten komen overeen met betalingssubboek",
+      "blocking": "Geen blokkerende of niet-gebalanceerde journaalposten",
+      "desc": {
+        "gl": "Controleer of de totale debet gelijk is aan de totale credit over alle rekeningen.",
+        "ar": "Controleer of openstaande klantensaldi overeenkomen met GL-rekening 1200.",
+        "ap": "Controleer of openstaande leverancierssaldi overeenkomen met GL-rekening 2000.",
+        "inventory": "Controleer of de kosten van de voorraad overeenkomen met GL-rekening 1300.",
+        "cogs": "Controleer of de kostentransacties zijn geregistreerd bij de levering.",
+        "cash": "Controleer of klantbetalingen correct zijn geboekt onder GL-rekening 1010.",
+        "blocking": "Zorg ervoor dat er geen afwijkingen zijn met ernst 'blokkerend'."
+      }
+    },
+    "adjustment": {
+      "draft": "Voorgestelde Tegenboeking",
+      "account": "Rekening",
+      "debit": "Debet",
+      "credit": "Credit",
+      "totalOffset": "Totale Tegenboeking",
+      "notAuthorized": "Alleen accountants, eigenaren of beheerders kunnen correcties goedkeuren en boeken.",
+      "posting": "Correctieboeking in het grootboek plaatsen...",
+      "post": "Boek Correctiejournaal"
+    },
+    "exceptions": {
+      "title": "Afwijkingslogboek",
+      "clean": "Geen afwijkingen gevonden die voldoen aan de filtercriteria.",
+      "module": "Module",
+      "severity": "Ernst",
+      "titleCol": "Titel",
+      "variance": "Afwijking",
+      "status": "Status",
+      "audit": "Afwijking",
+      "likelyCause": "Vermoedelijke Oorzaak",
+      "aiExplanation": "Verklaring AI-auditor"
+    },
+    "filter": {
+      "allSeverities": "Alle Ernstniveaus",
+      "blocking": "Blokkerend",
+      "critical": "Kritiek",
+      "warning": "Waarschuwing",
+      "info": "Informatie",
+      "allModules": "Alle Modules",
+      "gl": "Grootboek (GL)",
+      "ar": "Debiteuren (AR)",
+      "ap": "Crediteuren (AP)",
+      "inventory": "Voorraad",
+      "cogs": "COGS",
+      "payments": "Betalingen",
+      "salesTax": "Btw",
+      "taxReady": "Belastingcontrole"
+    },
+    "severity": {
+      "blocking": "BLOKKEREND",
+      "critical": "KRITIEK",
+      "warning": "WAARSCHUWING",
+      "info": "INFO"
+    },
+    "status": {
+      "resolved": "Opgelost",
+      "ignored": "Genegeerd",
+      "adjusted": "Gecorrigeerd",
+      "open": "Open"
+    },
+    "drawer": {
+      "expected": "Verwacht Bedrag:",
+      "actual": "Werkelijk Bedrag:",
+      "variance": "Afwijkingsbedrag:",
+      "sourceDoc": "Brondoc: ",
+      "reviewAi": "Beoordeel de door AI opgestelde journaalpost. Er wordt pas geboekt na goedkeuring.",
+      "ignore": "Negeer Afwijking",
+      "resolve": "Markeer als Opgelost",
+      "provideReason": "Geef reden op voor actie:",
+      "reasonPlaceholder": "bijv. Transactie gecontroleerd, tegenboeking handmatig toegepast in bankportaal",
+      "cancel": "Annuleren",
+      "submitting": "Versturen...",
+      "confirm": "Bevestigen"
+    },
+    "tax": {
+      "warningTitle": "Waarschuwing voor Accountant & Belastingadviseur",
+      "warningDesc": "Belastingdrempels zijn configureerbaar en moeten met uw accountant (CPA) worden beoordeeld voordat u belastingbestanden indient.",
+      "title": "W-9-naleving & 1099-kandidaten ({year})",
+      "desc": "Lijst met leveranciers die zijn betaald boven de rapportagedrempel voor Form 1099-NEC ($2.000 voor 2026, $600 voor 2025).",
+      "loading": "Kandidaten laden...",
+      "noCandidates": "Geen leveranciers overschreden de rapportagedrempels voor dit belastingtijdvak.",
+      "vendorName": "Naam Leverancier",
+      "taxId": "Fiscaal ID",
+      "totalPaid": "Totaal Betaald",
+      "status": "W-9 Status",
+      "registered": "Geregistreerd",
+      "missing": "W-9 Ontbreekt",
+      "salesTaxRecon": "Btw-reconciliatie",
+      "collected": "Geind via Verkoop:",
+      "posted": "Geboekt in Btw te Betalen:",
+      "variance": "Afwijking:",
+      "runRecon": "Voer een belastingcontrole uit om btw-afwijkingen aan het einde van het jaar te inspecteren.",
+      "yearParams": "Parameters Belastingjaar",
+      "yearBtn": "Belastingjaar {year}"
+    }
   }
 };

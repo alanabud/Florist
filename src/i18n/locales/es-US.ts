@@ -43,6 +43,7 @@ export const esUS = {
     "finance": "Finanzas",
     "receivables": "Cuentas por Cobrar",
     "purchasing": "Compras",
+    "reconciliation": "Reconciliación IA",
     "reports": "Informes",
     "settings": "Configuración",
     "qa": "Herramientas de Control",
@@ -996,5 +997,177 @@ export const esUS = {
   "occasions": {
     "subtitle": "Encuentre el arreglo perfecto para cada momento especial.",
     "shopOccasion": "Comprar {name}"
+  },
+  "reconciliation": {
+    "desc": "Auditoría de cuentas del Libro Mayor, análisis de variaciones de sub-libros, verificaciones de W-9 y preparación para el cierre de mes.",
+    "noActiveRun": "Ninguna ejecución de auditoría activa seleccionada. Inicie o seleccione una auditoría de los registros del panel.",
+    "ai": {
+      "title": "Revisión del Auditor de IA",
+      "critical": "RIESGO CRÍTICO DE AUDITORÍA",
+      "high": "RIESGO ALTO DE AUDITORÍA",
+      "moderate": "RIESGO MODERADO",
+      "low": "RIESGO BAJO",
+      "riskScore": "Puntuación de Riesgo",
+      "noSummary": "No hay resumen disponible. Ejecute un escaneo para generar información."
+    },
+    "runs": {
+      "title": "Registros de Auditoría",
+      "new": "Iniciar Nueva Auditoría",
+      "empty": "No se encontraron auditorías. Haga clic arriba para iniciar su primera reconciliación financiera.",
+      "type": "Tipo:",
+      "period": "Período:",
+      "to": "a",
+      "checks": "Verificaciones:",
+      "pdf": "Exportar Reporte PDF",
+      "excel": "Exportar Paquete Excel",
+      "approve": "Aprobar y Bloquear Auditoría",
+      "status": {
+        "superseded": "REEMPLAZADO",
+        "failed": "FALLIDO",
+        "draft": "BORRADOR"
+      }
+    },
+    "tabs": {
+      "overview": "Resumen y Riesgo",
+      "mismatches": "Variaciones de Auditoría ({count})",
+      "checklist": "Cierre de Mes",
+      "tax": "Preparación de Impuestos W-9/1099"
+    },
+    "summary": {
+      "glDebits": "Débitos Totales GL",
+      "arSubledger": "Auxiliar de AR",
+      "apSubledger": "Auxiliar de AP",
+      "inventory": "Valor de Inventario"
+    },
+    "modal": {
+      "title": "Configurar Parámetros de Auditoría",
+      "runType": "Tipo de Ejecución",
+      "start": "Fecha de Inicio",
+      "end": "Fecha de Finalización",
+      "cancel": "Cancelar",
+      "startScan": "Iniciar Escaneo"
+    },
+    "runTypes": {
+      "month_end": "Cierre de Mes",
+      "weekly": "Ejecución Semanal",
+      "daily": "Ejecución Diaria",
+      "tax_readiness": "Escaneo de Impuestos",
+      "historical_baseline": "Línea Base Histórica"
+    },
+    "toast": {
+      "fetchFailed": "Error al obtener las auditorías.",
+      "triggering": "Iniciando verificaciones de reconciliación...",
+      "completed": "Verificación de reconciliación completada con éxito.",
+      "failed": "Fallo en la ejecución de la auditoría.",
+      "approved": "Auditoría bloqueada y aprobada.",
+      "approveFailed": "Fallo en la aprobación.",
+      "updateFailed": "Error al actualizar el estado.",
+      "postSuccess": "Entrada de ajuste registrada con éxito en el GL.",
+      "postFailed": "Error al registrar la entrada de ajuste."
+    },
+    "checklist": {
+      "title": "Lista de Verificación de Cierre de Mes",
+      "gl": "Balanza de Comprobación en cero",
+      "ar": "Auxiliar de AR coincide con Cuentas por Cobrar GL",
+      "ap": "Auxiliar de AP coincide con Cuentas por Pagar GL",
+      "inventory": "Valoración de Inventario coincide con Activo de Inventario GL",
+      "cogs": "COGS registrado para todos los pedidos entregados",
+      "cash": "Recibos de efectivo coinciden con el auxiliar de pagos",
+      "blocking": "Sin asientos de diario bloqueantes o desbalanceados",
+      "desc": {
+        "gl": "Verificar que el total de débitos sea igual al total de créditos en todas las cuentas.",
+        "ar": "Verificar que los saldos abiertos de clientes coincidan con la cuenta GL 1200.",
+        "ap": "Verificar que los saldos pendientes de proveedores coincidan con la cuenta GL 2000.",
+        "inventory": "Verificar que el costo de los artículos disponibles coincida con la cuenta GL 1300.",
+        "cogs": "Verificar que las transacciones de costos se registraron al completar la venta.",
+        "cash": "Verificar que los pagos de clientes se registren correctamente en la cuenta GL 1010.",
+        "blocking": "Asegurar que ninguna discrepancia esté marcada con severidad bloqueante."
+      }
+    },
+    "adjustment": {
+      "draft": "Ajuste Compensatorio Sugerido",
+      "account": "Cuenta",
+      "debit": "Débito",
+      "credit": "Crédito",
+      "totalOffset": "Ajuste Total",
+      "notAuthorized": "Solo los contadores, propietarios o administradores pueden aprobar y registrar ajustes.",
+      "posting": "Registrando entrada en el Libro Mayor...",
+      "post": "Registrar Diario de Corrección"
+    },
+    "exceptions": {
+      "title": "Registro de Discrepancias",
+      "clean": "No se encontraron discrepancias que coincidan con los criterios del filtro.",
+      "module": "Módulo",
+      "severity": "Severidad",
+      "titleCol": "Título",
+      "variance": "Variación",
+      "status": "Estado",
+      "audit": "Discrepancia",
+      "likelyCause": "Causa Raíz Probable",
+      "aiExplanation": "Explicación del Auditor de IA"
+    },
+    "filter": {
+      "allSeverities": "Todas las Severidades",
+      "blocking": "Bloqueante",
+      "critical": "Crítico",
+      "warning": "Advertencia",
+      "info": "Información",
+      "allModules": "Todos los Módulos",
+      "gl": "GL",
+      "ar": "AR",
+      "ap": "AP",
+      "inventory": "Inventario",
+      "cogs": "COGS",
+      "payments": "Pagos",
+      "salesTax": "Impuestos sobre Ventas",
+      "taxReady": "Preparación de Impuestos"
+    },
+    "severity": {
+      "blocking": "BLOQUEANTE",
+      "critical": "CRÍTICO",
+      "warning": "ADVERTENCIA",
+      "info": "INFO"
+    },
+    "status": {
+      "resolved": "Resuelto",
+      "ignored": "Ignorado",
+      "adjusted": "Ajustado",
+      "open": "Abierto"
+    },
+    "drawer": {
+      "expected": "Cantidad Esperada:",
+      "actual": "Cantidad Real:",
+      "variance": "Cantidad de Variación:",
+      "sourceDoc": "Doc Origen: ",
+      "reviewAi": "Revise el ajuste compensatorio sugerido por la IA. No se realizarán registros hasta que se apruebe.",
+      "ignore": "Ignorar Discrepancia",
+      "resolve": "Marcar como Resuelto",
+      "provideReason": "Proporcione el motivo de la acción:",
+      "reasonPlaceholder": "ej. Transacción verificada, ajuste aplicado manualmente en el portal bancario",
+      "cancel": "Cancelar",
+      "submitting": "Enviando...",
+      "confirm": "Confirmar"
+    },
+    "tax": {
+      "warningTitle": "Advertencia para Contadores y Profesionales de Impuestos",
+      "warningDesc": "Los umbrales de declaración de impuestos son configurables y deben revisarse con su contador público certificado (CPA) antes de preparar o presentar archivos fiscales.",
+      "title": "Cumplimiento de W-9 y Candidatos a 1099 ({year})",
+      "desc": "Lista de proveedores pagados por encima del umbral de declaración Form 1099-NEC ($2,000 para 2026, $600 para 2025).",
+      "loading": "Cargando candidatos...",
+      "noCandidates": "Ningún proveedor superó los umbrales de declaración para este período fiscal.",
+      "vendorName": "Nombre del Proveedor",
+      "taxId": "ID de Impuesto Federal",
+      "totalPaid": "Total Pagado",
+      "status": "Estado de W-9",
+      "registered": "Registrado",
+      "missing": "Falta W-9",
+      "salesTaxRecon": "Reconciliación de Impuestos sobre Ventas",
+      "collected": "Recaudado de Ventas:",
+      "posted": "Registrado en Impuesto por Pagar:",
+      "variance": "Variación:",
+      "runRecon": "Ejecute una auditoría de preparación fiscal para verificar la variación de impuestos de fin de año.",
+      "yearParams": "Parámetros del Año Fiscal",
+      "yearBtn": "Año Fiscal {year}"
+    }
   }
 };

@@ -380,6 +380,39 @@ service cloud.firestore {
     }
 
     // ──────────────────────────────────────────────
+    // RECONCILIATION & TAX READINESS RULES
+    // ──────────────────────────────────────────────
+    
+    match /reconciliationRuns/{runId} {
+      allow read: if canReadCompanyDoc();
+      allow create: if canCreateCompanyDoc() && (getCompanyMember(request.resource.data.companyId).role in ["owner", "admin", "accountant", "manager"]);
+      allow update: if canUpdateCompanyDoc() && (getCompanyMember(request.resource.data.companyId).role in ["owner", "admin", "accountant", "manager"]);
+      allow delete: if canDeleteCompanyDoc();
+    }
+
+    match /reconciliationExceptions/{exceptionId} {
+      allow read: if canReadCompanyDoc();
+      allow create: if canCreateCompanyDoc() && isCompanyStaff(request.resource.data.companyId);
+      allow update: if canUpdateCompanyDoc() && isCompanyStaff(request.resource.data.companyId);
+      allow delete: if false;
+    }
+
+    match /reconciliationAdjustments/{adjustmentId} {
+      allow read: if canReadCompanyDoc();
+      allow create: if canCreateCompanyDoc() && (getCompanyMember(request.resource.data.companyId).role in ["owner", "admin", "accountant"]);
+      allow update: if canUpdateCompanyDoc() && (getCompanyMember(request.resource.data.companyId).role in ["owner", "admin", "accountant"]) && (
+        resource.data.status in ['draft', 'pending_approval']
+      );
+      allow delete: if canDeleteCompanyDoc() && resource.data.status == 'draft';
+    }
+
+    match /taxReadinessReviews/{reviewId} {
+      allow read: if canReadCompanyDoc();
+      allow create, update: if canCreateCompanyDoc() && (getCompanyMember(request.resource.data.companyId).role in ["owner", "admin", "accountant"]);
+      allow delete: if canDeleteCompanyDoc();
+    }
+
+    // ──────────────────────────────────────────────
     // DEFAULT DENY
     // ──────────────────────────────────────────────
     match /{document=**} {
