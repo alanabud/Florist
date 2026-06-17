@@ -6,6 +6,7 @@ import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { CheckCircle2, ShoppingBag, Calendar, MapPin, ArrowRight } from 'lucide-react';
 import styles from './OrderConfirmation.module.css';
+import { useI18n } from '../i18n/I18nProvider';
 
 interface ConfirmationData {
   orderNumber: string;
@@ -17,6 +18,7 @@ interface ConfirmationData {
 }
 
 export const OrderConfirmation: React.FC = () => {
+  const { t } = useI18n();
   const { trackingLookupId } = useParams<{ trackingLookupId: string }>();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
@@ -55,7 +57,7 @@ export const OrderConfirmation: React.FC = () => {
     return (
       <div className={styles.loadingContainer}>
         <div className={styles.spinner}>❁</div>
-        <p>Loading confirmation details...</p>
+        <p>{t('orderconfirmation.loadingConfirmationDetails')}</p>
       </div>
     );
   }
@@ -64,8 +66,8 @@ export const OrderConfirmation: React.FC = () => {
     return (
       <div className={styles.errorContainer}>
         <div className={styles.errorIcon}>✕</div>
-        <h2>Confirmation Not Found</h2>
-        <p>We couldn't retrieve confirmation details for this identifier. If you just placed an order, please check your email or verify in the tracking console.</p>
+        <h2>{t('orderconfirmation.confirmationNotFound')}</h2>
+        <p>{t('orderconfirmation.weCouldntRetrieveConfirmationDetailsForThisIdentifierIfYouJustPlace')}d an order, please check your email or verify in the tracking console.</p>
         <div className={styles.errorActions}>
           <Button onClick={() => navigate('/')} style={{ background: 'linear-gradient(135deg, #4A6B50, #6C8271)', border: 'none' }}>
             Return to Storefront
@@ -84,24 +86,24 @@ export const OrderConfirmation: React.FC = () => {
         <Card className={styles.successCard}>
           <div className={styles.successHeader}>
             <CheckCircle2 size={64} className={styles.checkIcon} />
-            <span className={styles.thanks}>Thank You!</span>
-            <h1 className={styles.pageTitle}>Your Order is Confirmed</h1>
+            <span className={styles.thanks}>{t('orderconfirmation.thankYou')}</span>
+            <h1 className={styles.pageTitle}>{t('orderconfirmation.yourOrderIsConfirmed')}</h1>
             <p className={styles.subtitle}>
               We have received your request. Our floral designers will begin handcrafting your arrangements soon.
             </p>
           </div>
 
           <div className={styles.orderNumberBox}>
-            <span className={styles.label}>Your Tracking Number</span>
+            <span className={styles.label}>{t('orderconfirmation.yourTrackingNumber')}</span>
             <span className={styles.orderNum}>{order.orderNumber}</span>
-            <p className={styles.savePrompt}>Save this number to track your delivery status later.</p>
+            <p className={styles.savePrompt}>{t('orderconfirmation.saveThisNumberToTrackYourDeliveryStatusLater')}</p>
           </div>
 
           <div className={styles.detailsGrid}>
             <div className={styles.detailBlock}>
               <MapPin size={20} className={styles.detailIcon} />
               <div>
-                <h3>Delivery Residence</h3>
+                <h3>{t('orderconfirmation.deliveryResidence')}</h3>
                 <p>{order.recipientFirstName}'s home</p>
                 <p>{order.city}, {order.state}</p>
               </div>
@@ -110,14 +112,14 @@ export const OrderConfirmation: React.FC = () => {
             <div className={styles.detailBlock}>
               <Calendar size={20} className={styles.detailIcon} />
               <div>
-                <h3>Delivery Scheduled</h3>
+                <h3>{t('orderconfirmation.deliveryScheduled')}</h3>
                 <p>{new Date(order.deliveryDate).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
               </div>
             </div>
           </div>
 
           <div className={styles.itemsSummary}>
-            <h3>Arrangements Details</h3>
+            <h3>{t('orderconfirmation.arrangementsDetails')}</h3>
             <div className={styles.itemsBlock}>
               <ShoppingBag size={18} className={styles.itemsIcon} />
               <span className={styles.itemsText}>{order.itemsSummary}</span>

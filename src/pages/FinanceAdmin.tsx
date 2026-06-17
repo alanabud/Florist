@@ -31,7 +31,7 @@ import styles from './FinanceAdmin.module.css';
 
 export const FinanceAdmin: React.FC = () => {
   const { selectedCompany, companySettings } = useCompany();
-  const { language } = useI18n();
+  const { t, language } = useI18n();
   const { 
     journalEntries, 
     isLoading, 
@@ -341,7 +341,7 @@ export const FinanceAdmin: React.FC = () => {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '80vh', textAlign: 'center', padding: '2rem' }}>
         <Landmark size={64} style={{ color: '#EF4444', marginBottom: '1.5rem' }} />
-        <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.75rem', fontWeight: 600, color: 'var(--color-text-main)', margin: '0 0 0.5rem 0' }}>Access Denied</h2>
+        <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.75rem', fontWeight: 600, color: 'var(--color-text-main)', margin: '0 0 0.5rem 0' }}>{t('financeadmin.accessDenied')}</h2>
         <p style={{ color: '#726E64', fontSize: '0.95rem', maxWidth: '400px', lineHeight: 1.6 }}>
           You do not have authorization to view the Financial Ledger. Please contact your administrator.
         </p>
@@ -383,8 +383,8 @@ export const FinanceAdmin: React.FC = () => {
             onMouseEnter={(e) => { e.currentTarget.style.display = 'block'; }}
             onMouseLeave={(e) => { e.currentTarget.style.display = 'none'; }}
             >
-              <button onClick={handleExportIncomeStatement} style={{ width: '100%', textAlign: 'left', padding: '12px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8125rem', color: '#2C302E' }} onMouseEnter={e => e.currentTarget.style.backgroundColor = '#FAF9F5'} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>Export P&L PDF</button>
-              <button onClick={handleExportBalanceSheet} style={{ width: '100%', textAlign: 'left', padding: '12px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8125rem', color: '#2C302E' }} onMouseEnter={e => e.currentTarget.style.backgroundColor = '#FAF9F5'} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>Export Balance Sheet PDF</button>
+              <button onClick={handleExportIncomeStatement} style={{ width: '100%', textAlign: 'left', padding: '12px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8125rem', color: '#2C302E' }} onMouseEnter={e => e.currentTarget.style.backgroundColor = '#FAF9F5'} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>{t('financeadmin.exportPlPdf')}</button>
+              <button onClick={handleExportBalanceSheet} style={{ width: '100%', textAlign: 'left', padding: '12px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8125rem', color: '#2C302E' }} onMouseEnter={e => e.currentTarget.style.backgroundColor = '#FAF9F5'} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>{t('financeadmin.exportBalanceSheetPdf')}</button>
               <button onClick={handleExportFullWorkbook} style={{ width: '100%', textAlign: 'left', padding: '12px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8125rem', color: '#2C302E' }} onMouseEnter={e => e.currentTarget.style.backgroundColor = '#FAF9F5'} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>Export Full Financial Workbook (Excel)</button>
             </div>
             <style dangerouslySetInnerHTML={{__html: `
@@ -454,10 +454,10 @@ export const FinanceAdmin: React.FC = () => {
                 style={{ padding: '0.5rem 0.75rem', border: '1px solid #E8EAE6', borderRadius: '8px', background: '#FFFFFF', fontSize: '0.8125rem', color: '#2C302E', outline: 'none' }}
               >
                 <option value="all_time">All Time (Cumulative)</option>
-                <option value="this_month">This Month</option>
-                <option value="this_quarter">This Quarter</option>
-                <option value="this_year">This Year</option>
-                <option value="custom">Custom Date Range</option>
+                <option value="this_month">{t('financeadmin.thisMonth')}</option>
+                <option value="this_quarter">{t('financeadmin.thisQuarter')}</option>
+                <option value="this_year">{t('financeadmin.thisYear')}</option>
+                <option value="custom">{t('financeadmin.customDateRange')}</option>
               </select>
 
               {reportingPeriod === 'custom' && (
@@ -521,7 +521,7 @@ export const FinanceAdmin: React.FC = () => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                   {/* Revenues Section */}
                   <div>
-                    <h4 style={{ fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c', borderBottom: '2px solid #4A6B50', paddingBottom: '0.25rem', margin: '0 0 0.75rem 0', fontWeight: 700, letterSpacing: '0.05em' }}>Operating Revenues</h4>
+                    <h4 style={{ fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c', borderBottom: '2px solid #4A6B50', paddingBottom: '0.25rem', margin: '0 0 0.75rem 0', fontWeight: 700, letterSpacing: '0.05em' }}>{t('financeadmin.operatingRevenues')}</h4>
                     {incomeStatement.revenues.map(r => (
                       <div key={r.name} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 1rem', fontSize: '0.875rem', color: '#2C302E' }}>
                         <span>{r.name}</span>
@@ -529,14 +529,14 @@ export const FinanceAdmin: React.FC = () => {
                       </div>
                     ))}
                     <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem 1rem', fontSize: '0.875rem', fontWeight: 700, borderTop: '1px solid #E8EAE6', background: '#FAF9F5' }}>
-                      <span>Total Revenue</span>
+                      <span>{t('finance.revenue')}</span>
                       <span>${incomeStatement.totalRevenue.toFixed(2)}</span>
                     </div>
                   </div>
 
                   {/* Expenses Section */}
                   <div>
-                    <h4 style={{ fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c', borderBottom: '2px solid #4A6B50', paddingBottom: '0.25rem', margin: '0 0 0.75rem 0', fontWeight: 700, letterSpacing: '0.05em' }}>Cost & Operating Expenses</h4>
+                    <h4 style={{ fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c', borderBottom: '2px solid #4A6B50', paddingBottom: '0.25rem', margin: '0 0 0.75rem 0', fontWeight: 700, letterSpacing: '0.05em' }}>{t('financeadmin.costOperatingExpenses')}</h4>
                     {incomeStatement.expenses.map(e => (
                       <div key={e.name} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 1rem', fontSize: '0.875rem', color: '#2C302E' }}>
                         <span>{e.name}</span>
@@ -544,7 +544,7 @@ export const FinanceAdmin: React.FC = () => {
                       </div>
                     ))}
                     <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem 1rem', fontSize: '0.875rem', fontWeight: 700, borderTop: '1px solid #E8EAE6', background: '#FAF9F5' }}>
-                      <span>Total Expenses</span>
+                      <span>{t('financeadmin.totalExpenses')}</span>
                       <span>${incomeStatement.totalExpense.toFixed(2)}</span>
                     </div>
                   </div>
@@ -567,8 +567,8 @@ export const FinanceAdmin: React.FC = () => {
             {overviewSubTab === 'balance_sheet' && (
               <div style={{ maxWidth: '800px', margin: '0 auto' }}>
                 <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                  <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', color: '#2C302E', margin: '0 0 0.25rem 0' }}>Balance Sheet</h3>
-                  <span style={{ fontSize: '0.8125rem', color: '#8a8f8c', fontWeight: 600 }}>Cumulative balance sheet as of end period</span>
+                  <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', color: '#2C302E', margin: '0 0 0.25rem 0' }}>{t('reports.balanceSheet')}</h3>
+                  <span style={{ fontSize: '0.8125rem', color: '#8a8f8c', fontWeight: 600 }}>{t('financeadmin.cumulativeBalanceSheetAsOfEndPeriod')}</span>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2.5rem' }}>
@@ -585,7 +585,7 @@ export const FinanceAdmin: React.FC = () => {
                       ))}
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem 0.75rem', fontSize: '0.875rem', fontWeight: 700, borderTop: '2px solid #2C302E', borderBottom: '4px double #2C302E', background: '#FAF9F5', marginTop: 'auto' }}>
-                      <span>Total Assets</span>
+                      <span>{t('financeadmin.totalAssets')}</span>
                       <span>${balanceSheet.totalAssets.toFixed(2)}</span>
                     </div>
                   </div>
@@ -603,14 +603,14 @@ export const FinanceAdmin: React.FC = () => {
                         </div>
                       ))}
                       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0.75rem', fontSize: '0.8125rem', fontWeight: 700, borderTop: '1px solid #E8EAE6', color: '#8a8f8c' }}>
-                        <span>Total Liabilities</span>
+                        <span>{t('financeadmin.totalLiabilities')}</span>
                         <span>${balanceSheet.totalLiabilities.toFixed(2)}</span>
                       </div>
                     </div>
 
                     {/* Equity */}
                     <div style={{ marginBottom: '1.5rem' }}>
-                      <h4 style={{ fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c', borderBottom: '2px solid #4A6B50', paddingBottom: '0.25rem', margin: '0 0 0.75rem 0', fontWeight: 700, letterSpacing: '0.05em' }}>Owner Equity</h4>
+                      <h4 style={{ fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c', borderBottom: '2px solid #4A6B50', paddingBottom: '0.25rem', margin: '0 0 0.75rem 0', fontWeight: 700, letterSpacing: '0.05em' }}>{t('financeadmin.ownerEquity')}</h4>
                       {balanceSheet.equity.map(e => (
                         <div key={e.name} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0.75rem', fontSize: '0.875rem', color: '#2C302E' }}>
                           <span>{e.name}</span>
@@ -618,14 +618,14 @@ export const FinanceAdmin: React.FC = () => {
                         </div>
                       ))}
                       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0.75rem', fontSize: '0.8125rem', fontWeight: 700, borderTop: '1px solid #E8EAE6', color: '#8a8f8c' }}>
-                        <span>Total Equity</span>
+                        <span>{t('financeadmin.totalEquity')}</span>
                         <span>${balanceSheet.totalEquity.toFixed(2)}</span>
                       </div>
                     </div>
 
                     {/* Total Liabilities & Equity footer */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem 0.75rem', fontSize: '0.875rem', fontWeight: 700, borderTop: '2px solid #2C302E', borderBottom: '4px double #2C302E', background: '#FAF9F5', marginTop: 'auto' }}>
-                      <span>Total Liabilities & Equity</span>
+                      <span>{t('financeadmin.totalLiabilitiesEquity')}</span>
                       <span>${balanceSheet.totalLiabilitiesAndEquity.toFixed(2)}</span>
                     </div>
 
@@ -654,16 +654,16 @@ export const FinanceAdmin: React.FC = () => {
             {overviewSubTab === 'trial_balance' && (
               <div>
                 <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-                  <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', color: '#2C302E', margin: '0 0 0.25rem 0' }}>General Ledger Trial Balance</h3>
-                  <span style={{ fontSize: '0.8125rem', color: '#8a8f8c', fontWeight: 600 }}>Checks that total debits match total credits</span>
+                  <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', color: '#2C302E', margin: '0 0 0.25rem 0' }}>{t('reports.trialBalance')}</h3>
+                  <span style={{ fontSize: '0.8125rem', color: '#8a8f8c', fontWeight: 600 }}>{t('financeadmin.checksThatTotalDebitsMatchTotalCredits')}</span>
                 </div>
 
                 <div className={styles.tableWrapper}>
                   <table className={styles.table} style={{ width: '100%' }}>
                     <thead>
                       <tr style={{ background: '#FDFCFA' }}>
-                        <th>Account Code</th>
-                        <th>Account Name</th>
+                        <th>{t('financeadmin.accountCode')}</th>
+                        <th>{t('financeadmin.accountName')}</th>
                         <th>Classification</th>
                         <th style={{ textAlign: 'right' }}>Debit Balance ($)</th>
                         <th style={{ textAlign: 'right' }}>Credit Balance ($)</th>
@@ -684,7 +684,7 @@ export const FinanceAdmin: React.FC = () => {
                         </tr>
                       ))}
                       <tr style={{ background: '#FAF9F5', fontWeight: 700 }}>
-                        <td colSpan={3} style={{ padding: '1rem' }}>General Ledger Totals</td>
+                        <td colSpan={3} style={{ padding: '1rem' }}>{t('financeadmin.generalLedgerTotals')}</td>
                         <td style={{ textAlign: 'right', padding: '1rem' }}>${trialBalance.totalDebits.toFixed(2)}</td>
                         <td style={{ textAlign: 'right', padding: '1rem' }}>${trialBalance.totalCredits.toFixed(2)}</td>
                       </tr>
@@ -706,8 +706,8 @@ export const FinanceAdmin: React.FC = () => {
             {overviewSubTab === 'coa' && (
               <div>
                 <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-                  <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', color: '#2C302E', margin: '0 0 0.25rem 0' }}>Chart of Accounts Registry</h3>
-                  <span style={{ fontSize: '0.8125rem', color: '#8a8f8c', fontWeight: 600 }}>Standard business ledger account rules</span>
+                  <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', color: '#2C302E', margin: '0 0 0.25rem 0' }}>{t('financeadmin.chartOfAccountsRegistry')}</h3>
+                  <span style={{ fontSize: '0.8125rem', color: '#8a8f8c', fontWeight: 600 }}>{t('financeadmin.standardBusinessLedgerAccountRules')}</span>
                 </div>
 
                 <div className={styles.tableWrapper}>
@@ -715,11 +715,11 @@ export const FinanceAdmin: React.FC = () => {
                     <thead>
                       <tr style={{ background: '#FDFCFA' }}>
                         <th>GL Code</th>
-                        <th>Account Name</th>
+                        <th>{t('financeadmin.accountName')}</th>
                         <th>Type</th>
-                        <th>Normal Balance</th>
-                        <th>Active Status</th>
-                        <th>Account Description</th>
+                        <th>{t('financeadmin.normalBalance')}</th>
+                        <th>{t('financeadmin.activeStatus')}</th>
+                        <th>{t('financeadmin.accountDescription')}</th>
                         <th style={{ textAlign: 'right' }}>Actions</th>
                       </tr>
                     </thead>
@@ -779,8 +779,8 @@ export const FinanceAdmin: React.FC = () => {
             {overviewSubTab === 'close' && (
               <div style={{ maxWidth: '600px', margin: '0 auto' }}>
                 <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                  <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', color: '#2C302E', margin: '0 0 0.25rem 0' }}>Period Close Controls</h3>
-                  <span style={{ fontSize: '0.8125rem', color: '#8a8f8c', fontWeight: 600 }}>Lock past accounting periods to prevent retroactive modifications</span>
+                  <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', color: '#2C302E', margin: '0 0 0.25rem 0' }}>{t('financeadmin.periodCloseControls')}</h3>
+                  <span style={{ fontSize: '0.8125rem', color: '#8a8f8c', fontWeight: 600 }}>{t('financeadmin.lockPastAccountingPeriodsToPreventRetroactiveModifications')}</span>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -800,12 +800,12 @@ export const FinanceAdmin: React.FC = () => {
                       {closedPeriodConfig?.closedPeriodDate ? (
                         <>
                           <ShieldAlert size={20} />
-                          <span>Accounting Period Closed & Locked</span>
+                          <span>{t('financeadmin.accountingPeriodClosedLocked')}</span>
                         </>
                       ) : (
                         <>
                           <ShieldCheck size={20} />
-                          <span>All Periods Open for Postings</span>
+                          <span>{t('financeadmin.allPeriodsOpenForPostings')}</span>
                         </>
                       )}
                     </div>
@@ -834,7 +834,7 @@ export const FinanceAdmin: React.FC = () => {
 
                   {/* Closing Form */}
                   <div style={{ border: '1px solid #E8EAE6', borderRadius: '12px', padding: '1.5rem', backgroundColor: '#FFFFFF' }}>
-                    <h4 style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#2C302E', margin: '0 0 1rem 0' }}>Close & Lock Accounting Period</h4>
+                    <h4 style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#2C302E', margin: '0 0 1rem 0' }}>{t('financeadmin.closeLockAccountingPeriod')}</h4>
                     <form onSubmit={handleLockPeriod} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                       <div>
                         <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#8a8f8c', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
@@ -860,7 +860,7 @@ export const FinanceAdmin: React.FC = () => {
                   {/* Unlock Path */}
                   {closedPeriodConfig?.closedPeriodDate && (
                     <div style={{ border: '1px dashed #E5E7EB', borderRadius: '12px', padding: '1.5rem', backgroundColor: '#FAFAFA' }}>
-                      <h4 style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#2C302E', margin: '0 0 0.5rem 0' }}>Unlock Accounting Period</h4>
+                      <h4 style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#2C302E', margin: '0 0 0.5rem 0' }}>{t('financeadmin.unlockAccountingPeriod')}</h4>
                       <p style={{ fontSize: '0.75rem', color: '#6b7280', margin: '0 0 1rem 0' }}>
                         Need to post adjusting entries or corrections to a closed period? Temporarily unlock it.
                       </p>
@@ -925,11 +925,11 @@ export const FinanceAdmin: React.FC = () => {
                 onChange={(e) => setReportingPeriod(e.target.value as ReportingPeriod)}
                 style={{ padding: '0.5rem 0.75rem', border: '1px solid #E8EAE6', borderRadius: '8px', background: '#FFFFFF', fontSize: '0.8125rem', color: '#2C302E', outline: 'none' }}
               >
-                <option value="all_time">All Ledger History</option>
-                <option value="this_month">This Month</option>
-                <option value="this_quarter">This Quarter</option>
-                <option value="this_year">This Year</option>
-                <option value="custom">Custom Date Range</option>
+                <option value="all_time">{t('financeadmin.allLedgerHistory')}</option>
+                <option value="this_month">{t('financeadmin.thisMonth')}</option>
+                <option value="this_quarter">{t('financeadmin.thisQuarter')}</option>
+                <option value="this_year">{t('financeadmin.thisYear')}</option>
+                <option value="custom">{t('financeadmin.customDateRange')}</option>
               </select>
             </div>
 
@@ -949,7 +949,7 @@ export const FinanceAdmin: React.FC = () => {
 
           <CardContent>
             {isLoading ? (
-              <p style={{ padding: '2rem', textAlign: 'center' }}>Loading journal entries...</p>
+              <p style={{ padding: '2rem', textAlign: 'center' }}>{t('financeadmin.loadingJournalEntries')}</p>
             ) : filteredLedgerEntries.length === 0 ? (
               <EmptyState
                 title={searchParam ? "No matching journal entries." : "No ledger entries logged."}
@@ -967,7 +967,7 @@ export const FinanceAdmin: React.FC = () => {
                     <tr style={{ background: '#FDFCFA' }}>
                       <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>Date</th>
                       <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>Order Ref / ID</th>
-                      <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>General Ledger Account</th>
+                      <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>{t('financeadmin.generalLedgerAccount')}</th>
                       <th className={styles.amountCol} style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>Debit Balance ($)</th>
                       <th className={styles.amountCol} style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>Credit Balance ($)</th>
                     </tr>

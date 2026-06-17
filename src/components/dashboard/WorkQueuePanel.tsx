@@ -4,10 +4,12 @@ import { useAdminStore, type Order } from '../../store/adminStore';
 import { useToastStore } from '../../store/toastStore';
 import { ArrowRight } from 'lucide-react';
 import styles from './WorkQueuePanel.module.css';
+import { useI18n } from '../../i18n/I18nProvider';
 
 const tabs = ['Needs Attention', 'In Production', 'Deliveries', 'Low Stock'];
 
 export const WorkQueuePanel: React.FC = () => {
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState(0);
   const navigate = useNavigate();
   const { orders, inventory, updateOrderStatus } = useAdminStore();
@@ -86,7 +88,7 @@ export const WorkQueuePanel: React.FC = () => {
   return (
     <div className={styles.panel}>
       <div className={styles.panelHeader}>
-        <h3>Work Queue</h3>
+        <h3>{t('dashboard.workQueue')}</h3>
         <button className={styles.viewAll} onClick={() => {
           if (activeTab === 2) navigate('/admin/deliveries');
           else if (activeTab === 3) navigate('/admin/inventory');

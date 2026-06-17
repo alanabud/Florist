@@ -6,6 +6,7 @@ import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Search, MapPin, Calendar, CheckCircle2, ArrowRight } from 'lucide-react';
 import styles from './TrackOrder.module.css';
+import { useI18n } from '../i18n/I18nProvider';
 
 interface TimelineStep {
   status: string;
@@ -26,6 +27,7 @@ interface TrackingData {
 }
 
 export const TrackOrder: React.FC = () => {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const [orderNumber, setOrderNumber] = useState('');
   const [email, setEmail] = useState('');
@@ -81,7 +83,7 @@ export const TrackOrder: React.FC = () => {
     <div className={styles.trackPage}>
       <div className={styles.container}>
         <div className={styles.intro}>
-          <h1 className={styles.pageTitle}>Track Your Order</h1>
+          <h1 className={styles.pageTitle}>{t('trackorder.trackYourOrder')}</h1>
           <p className={styles.pageSubtitle}>
             Enter your order details below to view delivery progress, dispatch schedules, and arrangements status.
           </p>
@@ -132,7 +134,7 @@ export const TrackOrder: React.FC = () => {
             <Card className={styles.resultCard}>
               <div className={styles.resultHeader}>
                 <div>
-                  <span className={styles.orderLabel}>Order Status</span>
+                  <span className={styles.orderLabel}>{t('trackorder.orderStatus')}</span>
                   <h2>{trackingData.orderNumber}</h2>
                 </div>
                 <div className={`${styles.statusPill} ${styles[`status-${trackingData.status}`]}`}>
@@ -151,7 +153,7 @@ export const TrackOrder: React.FC = () => {
                 <div className={styles.metaItem}>
                   <Calendar size={18} className={styles.metaIcon} />
                   <div>
-                    <h4>Delivery Date</h4>
+                    <h4>{t('trackorder.deliveryDate')}</h4>
                     <p>{new Date(trackingData.deliveryDate).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
                   </div>
                 </div>
@@ -164,7 +166,7 @@ export const TrackOrder: React.FC = () => {
 
               {/* Progress Timeline */}
               <div className={styles.timelineSection}>
-                <h3>Delivery Progress Timeline</h3>
+                <h3>{t('trackorder.deliveryProgressTimeline')}</h3>
                 
                 <div className={styles.timelineSteps}>
                   {trackingSteps.map((step, idx) => {

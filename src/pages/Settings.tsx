@@ -560,7 +560,7 @@ export const Settings: React.FC = () => {
                     disabled={selectedCompanyId !== 'new-company'}
                     required 
                   />
-                  <span className={styles.helperText}>Company code is immutable after creation.</span>
+                  <span className={styles.helperText}>{t('settings.companyCodeIsImmutableAfterCreation')}</span>
                 </div>
                 <div className={styles.formGroup}>
                   <label className={styles.label}>Tax/VAT ID</label>
@@ -592,7 +592,7 @@ export const Settings: React.FC = () => {
                   />
                 </div>
                 <div className={styles.formGroup}>
-                  <label className={styles.label}>Website URL</label>
+                  <label className={styles.label}>{t('settings.websiteUrl')}</label>
                   <input 
                     type="text" 
                     value={profileWebsite} 
@@ -616,7 +616,7 @@ export const Settings: React.FC = () => {
                 </div>
 
                 <div className={styles.formGroupFull}>
-                  <h3 style={{ margin: '1rem 0 0.5rem 0', fontWeight: 600 }}>Address Information</h3>
+                  <h3 style={{ margin: '1rem 0 0.5rem 0', fontWeight: 600 }}>{t('settings.addressInformation')}</h3>
                 </div>
 
                 <div className={styles.formGroup}>
@@ -718,7 +718,7 @@ export const Settings: React.FC = () => {
                   </select>
                 </div>
                 <div className={styles.formGroup}>
-                  <label className={styles.label}>Supported Languages</label>
+                  <label className={styles.label}>{t('settings.supportedLanguages')}</label>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginTop: '0.5rem' }}>
                     {['en-US', 'es-US', 'fr-FR', 'nl-NL'].map(lang => (
                       <label key={lang} className={styles.checkboxContainer}>
@@ -748,7 +748,7 @@ export const Settings: React.FC = () => {
                   </select>
                 </div>
                 <div className={styles.formGroup}>
-                  <label className={styles.label}>Supported Transaction Currencies</label>
+                  <label className={styles.label}>{t('settings.supportedTransactionCurrencies')}</label>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginTop: '0.5rem' }}>
                     {['USD', 'EUR', 'GBP'].map(curr => (
                       <label key={curr} className={styles.checkboxContainer}>
@@ -881,31 +881,31 @@ export const Settings: React.FC = () => {
                 </div>
 
                 <div className={styles.formGroupFull}>
-                  <h3 style={{ margin: '1rem 0 0.5rem 0', fontWeight: 600 }}>Document Number Prefixes</h3>
+                  <h3 style={{ margin: '1rem 0 0.5rem 0', fontWeight: 600 }}>{t('settings.documentNumberPrefixes')}</h3>
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label className={styles.label}>Invoice Prefix</label>
+                  <label className={styles.label}>{t('settings.invoicePrefix')}</label>
                   <input type="text" value={regInvoicePrefix} onChange={(e) => setRegInvoicePrefix(e.target.value)} className={styles.input} required />
                 </div>
                 <div className={styles.formGroup}>
-                  <label className={styles.label}>Order Prefix</label>
+                  <label className={styles.label}>{t('settings.orderPrefix')}</label>
                   <input type="text" value={regOrderPrefix} onChange={(e) => setRegOrderPrefix(e.target.value)} className={styles.input} required />
                 </div>
                 <div className={styles.formGroup}>
-                  <label className={styles.label}>Purchase Order Prefix</label>
+                  <label className={styles.label}>{t('settings.purchaseOrderPrefix')}</label>
                   <input type="text" value={regPurchaseOrderPrefix} onChange={(e) => setRegPurchaseOrderPrefix(e.target.value)} className={styles.input} required />
                 </div>
                 <div className={styles.formGroup}>
-                  <label className={styles.label}>Payment Receipt Prefix</label>
+                  <label className={styles.label}>{t('settings.paymentReceiptPrefix')}</label>
                   <input type="text" value={regPaymentPrefix} onChange={(e) => setRegPaymentPrefix(e.target.value)} className={styles.input} required />
                 </div>
                 <div className={styles.formGroup}>
-                  <label className={styles.label}>Inventory Adjustment Prefix</label>
+                  <label className={styles.label}>{t('settings.inventoryAdjustmentPrefix')}</label>
                   <input type="text" value={regAdjustmentPrefix} onChange={(e) => setRegAdjustmentPrefix(e.target.value)} className={styles.input} required />
                 </div>
                 <div className={styles.formGroup}>
-                  <label className={styles.label}>Journal Entry Prefix</label>
+                  <label className={styles.label}>{t('settings.journalEntryPrefix')}</label>
                   <input type="text" value={regJournalEntryPrefix} onChange={(e) => setRegJournalEntryPrefix(e.target.value)} className={styles.input} required />
                 </div>
 
@@ -1087,11 +1087,11 @@ export const Settings: React.FC = () => {
 
           {/* Simple matrix guide */}
           <div className={styles.formSection}>
-            <h4 style={{ fontWeight: 600, marginBottom: '0.5rem' }}>Access Level Reference Matrix</h4>
+            <h4 style={{ fontWeight: 600, marginBottom: '0.5rem' }}>{t('settings.accessLevelReferenceMatrix')}</h4>
             <div style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)', lineHeight: '1.6' }}>
               <ul>
-                <li><strong>Owner:</strong> Complete management, can edit roles and settings, manage billing.</li>
-                <li><strong>Admin:</strong> Complete operational access, can invite users and manage settings.</li>
+                <li><strong>Owner:</strong> {t('settings.completeManagementCanEditRolesAndSettingsManageBilling')}</li>
+                <li><strong>Admin:</strong> {t('settings.completeOperationalAccessCanInviteUsersAndManageSettings')}</li>
                 <li><strong>Manager:</strong> General view + edit capabilities, branch control. No administrative overrides.</li>
                 <li><strong>Designer / Sales / Accountant:</strong> Workflow-restricted scopes (e.g. Sales cannot edit ledgers; Accountants cannot modify recipes).</li>
                 <li><strong>Viewer:</strong> Read-only lookup across standard screens.</li>
@@ -1183,7 +1183,7 @@ export const Settings: React.FC = () => {
           {can('branch.manage') && (
             <Card>
               <CardHeader>
-                <div style={{ fontWeight: 600, fontSize: '1.125rem' }}>Create New Branch</div>
+                <div style={{ fontWeight: 600, fontSize: '1.125rem' }}>{t('settings.createNewBranch')}</div>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleAddBranch} className={styles.grid}>
@@ -1210,7 +1210,7 @@ export const Settings: React.FC = () => {
                     />
                   </div>
                   <div className={styles.formGroup}>
-                    <label className={styles.label}>Phone Number</label>
+                    <label className={styles.label}>{t('settings.phoneNumber')}</label>
                     <input 
                       type="text" 
                       value={brPhone} 
@@ -1219,7 +1219,7 @@ export const Settings: React.FC = () => {
                     />
                   </div>
                   <div className={styles.formGroup}>
-                    <label className={styles.label}>Email Address</label>
+                    <label className={styles.label}>{t('login.emailLabel')}</label>
                     <input 
                       type="email" 
                       value={brEmail} 
@@ -1229,11 +1229,11 @@ export const Settings: React.FC = () => {
                   </div>
 
                   <div className={styles.formGroupFull}>
-                    <h4 style={{ margin: '1rem 0 0.5rem 0', fontWeight: 600 }}>Branch Location Details</h4>
+                    <h4 style={{ margin: '1rem 0 0.5rem 0', fontWeight: 600 }}>{t('settings.branchLocationDetails')}</h4>
                   </div>
 
                   <div className={styles.formGroup}>
-                    <label className={styles.label}>Street Address</label>
+                    <label className={styles.label}>{t('settings.streetAddress')}</label>
                     <input type="text" value={brAddress} onChange={(e) => setBrAddress(e.target.value)} className={styles.input} />
                   </div>
                   <div className={styles.formGroup}>
@@ -1245,7 +1245,7 @@ export const Settings: React.FC = () => {
                     <input type="text" value={brState} onChange={(e) => setBrState(e.target.value)} className={styles.input} />
                   </div>
                   <div className={styles.formGroup}>
-                    <label className={styles.label}>Postal Code</label>
+                    <label className={styles.label}>{t('settings.postalCode')}</label>
                     <input type="text" value={brPostalCode} onChange={(e) => setBrPostalCode(e.target.value)} className={styles.input} />
                   </div>
                   <div className={styles.formGroup}>
@@ -1300,7 +1300,7 @@ export const Settings: React.FC = () => {
                   />
                 </div>
                 <div className={styles.formGroup}>
-                  <label className={styles.label}>Phone Number</label>
+                  <label className={styles.label}>{t('settings.phoneNumber')}</label>
                   <input 
                     type="text" 
                     value={editingBranch.phone || ''} 
@@ -1309,7 +1309,7 @@ export const Settings: React.FC = () => {
                   />
                 </div>
                 <div className={styles.formGroup}>
-                  <label className={styles.label}>Email Address</label>
+                  <label className={styles.label}>{t('login.emailLabel')}</label>
                   <input 
                     type="email" 
                     value={editingBranch.email || ''} 
@@ -1318,7 +1318,7 @@ export const Settings: React.FC = () => {
                   />
                 </div>
                 <div className={styles.formGroup}>
-                  <label className={styles.label}>Street Address</label>
+                  <label className={styles.label}>{t('settings.streetAddress')}</label>
                   <input 
                     type="text" 
                     value={editingBranch.address || ''} 
@@ -1345,7 +1345,7 @@ export const Settings: React.FC = () => {
                   />
                 </div>
                 <div className={styles.formGroup}>
-                  <label className={styles.label}>Postal Code</label>
+                  <label className={styles.label}>{t('settings.postalCode')}</label>
                   <input 
                     type="text" 
                     value={editingBranch.postalCode || ''} 

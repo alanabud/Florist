@@ -5,8 +5,10 @@ import { Button } from '../Button';
 import { Trash2, Plus, Minus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import styles from './CartDrawer.module.css';
+import { useI18n } from '../../../i18n/I18nProvider';
 
 export const CartDrawer: React.FC = () => {
+  const { t } = useI18n();
   const { isDrawerOpen, closeDrawer, items, updateQuantity, removeItem, getSubtotal } = useCartStore();
   const navigate = useNavigate();
 
@@ -16,13 +18,13 @@ export const CartDrawer: React.FC = () => {
   };
 
   return (
-    <Drawer isOpen={isDrawerOpen} onClose={closeDrawer} title="Your Cart" width="450px">
+    <Drawer isOpen={isDrawerOpen} onClose={closeDrawer} title={t('storefront.cartTitle')} width="450px">
       <div className={styles.container}>
         {items.length === 0 ? (
           <div className={styles.emptyState}>
             <div className={styles.emptyIcon}>🛒</div>
-            <h3>Your cart is empty</h3>
-            <p>Looks like you haven't added any beautiful arrangements yet.</p>
+            <h3>{t('storefront.cartEmpty')}</h3>
+            <p>{t('ui.looksLikeYouHaventAddedAnyBeautifulArrangementsYet')}</p>
             <Button onClick={closeDrawer} className={styles.emptyBtn}>
               Continue Shopping
             </Button>
@@ -42,7 +44,7 @@ export const CartDrawer: React.FC = () => {
                       <button 
                         onClick={() => removeItem(item.id)}
                         className={styles.removeBtn}
-                        aria-label="Remove item"
+                        aria-label={t('ui.removeItem')}
                       >
                         <Trash2 size={16} />
                       </button>
@@ -73,7 +75,7 @@ export const CartDrawer: React.FC = () => {
                 <span>Subtotal</span>
                 <span className={styles.subtotalValue}>${getSubtotal().toFixed(2)}</span>
               </div>
-              <p className={styles.deliveryNote}>Taxes and delivery calculated at checkout.</p>
+              <p className={styles.deliveryNote}>{t('ui.taxesAndDeliveryCalculatedAtCheckout')}</p>
               <Button fullWidth size="lg" onClick={handleCheckout}>
                 Proceed to Checkout
               </Button>

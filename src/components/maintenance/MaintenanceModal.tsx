@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import styles from './MaintenanceModal.module.css';
+import { useI18n } from '../../i18n/I18nProvider';
 
 export interface TabFieldOption {
   value: string | number;
@@ -71,6 +72,7 @@ export const MaintenanceModal: React.FC<MaintenanceModalProps> = ({
   summaryMetrics,
   children,
 }) => {
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState(tabs[0]?.id || '');
   const [formValues, setFormValues] = useState<Record<string, any>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -242,23 +244,23 @@ export const MaintenanceModal: React.FC<MaintenanceModalProps> = ({
               </span>
             </div>
             <div className={styles.ribbonItem}>
-              <span className={styles.ribbonLabel}>Total Amount</span>
+              <span className={styles.ribbonLabel}>{t('maintenance.totalAmount')}</span>
               <span className={styles.ribbonValue} style={{ fontWeight: 700, color: 'var(--color-sage-dark)' }}>
                 {summaryMetrics.total !== undefined ? `$${summaryMetrics.total.toFixed(2)}` : '—'}
               </span>
             </div>
             <div className={styles.ribbonItem}>
-              <span className={styles.ribbonLabel}>Payment Status</span>
+              <span className={styles.ribbonLabel}>{t('maintenance.paymentStatus')}</span>
               <span className={`${styles.ribbonValue} ${styles['payment_' + summaryMetrics.paymentStatus] || ''}`}>
                 {(summaryMetrics.paymentStatus || '—').toUpperCase()}
               </span>
             </div>
             <div className={styles.ribbonItem}>
-              <span className={styles.ribbonLabel}>Assigned Staff</span>
+              <span className={styles.ribbonLabel}>{t('maintenance.assignedStaff')}</span>
               <span className={styles.ribbonValue}>{summaryMetrics.assignedStaff || 'Unassigned'}</span>
             </div>
             <div className={styles.ribbonItem}>
-              <span className={styles.ribbonLabel}>Delivery Date</span>
+              <span className={styles.ribbonLabel}>{t('maintenance.deliveryDate')}</span>
               <span className={styles.ribbonValue}>
                 {summaryMetrics.deliveryDate ? new Date(summaryMetrics.deliveryDate).toLocaleDateString() : '—'}
               </span>
@@ -347,7 +349,7 @@ export const MaintenanceModal: React.FC<MaintenanceModalProps> = ({
                               disabled={isFieldReadOnly}
                               style={hasError ? { borderColor: '#EF4444' } : undefined}
                             >
-                              <option value="">Select option...</option>
+                              <option value="">{t('maintenance.selectOption')}</option>
                               {field.options?.map((opt) => (
                                 <option key={opt.value} value={opt.value}>
                                   {opt.label}

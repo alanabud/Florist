@@ -6,6 +6,7 @@ import { useToastStore } from '../../../store/toastStore';
 import { createVendorPayment, voidVendorPayment } from '../../../services/vendorPaymentService';
 import { useCompany } from '../../../context/CompanyContext';
 import modalStyles from '../../ui/FormModal.module.css';
+import { useI18n } from '../../../i18n/I18nProvider';
 
 interface VendorPaymentFormProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ interface VendorPaymentFormProps {
 }
 
 export const VendorPaymentForm: React.FC<VendorPaymentFormProps> = ({ isOpen, onClose }) => {
+  const { t } = useI18n();
   const { selectedCompanyId } = useCompany();
   const addToast = useToastStore((s) => s.addToast);
   const { modalPayload, vendors, vendorBills, fetchVendors, fetchVendorBills } = useAdminStore();
@@ -275,7 +277,7 @@ export const VendorPaymentForm: React.FC<VendorPaymentFormProps> = ({ isOpen, on
               disabled={isLocked}
               required
             >
-              <option value="">Select a Vendor...</option>
+              <option value="">{t('maintenance.selectAVendor')}</option>
               {vendors.filter(v => v.active).map(v => (
                 <option key={v.id} value={v.id}>{v.name} ({v.id})</option>
               ))}
@@ -296,7 +298,7 @@ export const VendorPaymentForm: React.FC<VendorPaymentFormProps> = ({ isOpen, on
 
           {!drawFromPrepayments ? (
             <div>
-              <label className={modalStyles.formLabel}>Payment Method</label>
+              <label className={modalStyles.formLabel}>{t('maintenance.paymentMethod')}</label>
               <select
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value as any)}
@@ -306,13 +308,13 @@ export const VendorPaymentForm: React.FC<VendorPaymentFormProps> = ({ isOpen, on
                 <option value="check">Check / Voucher</option>
                 <option value="cash">Cash / Drawer</option>
                 <option value="bank_transfer">Bank Transfer / ACH</option>
-                <option value="credit_card">Credit Card</option>
+                <option value="credit_card">{t('maintenance.creditCard')}</option>
                 <option value="other">Other</option>
               </select>
             </div>
           ) : (
             <div>
-              <label className={modalStyles.formLabel}>Payment Method</label>
+              <label className={modalStyles.formLabel}>{t('maintenance.paymentMethod')}</label>
               <input
                 type="text"
                 value="Prepayment Application"
@@ -365,11 +367,11 @@ export const VendorPaymentForm: React.FC<VendorPaymentFormProps> = ({ isOpen, on
         <div style={{ marginBottom: '1.5rem' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '0.3fr 1.5fr 1fr 1fr 1fr 1.5fr', gap: '0.5rem', paddingBottom: '0.5rem', borderBottom: '1px solid #E8EAE6', fontWeight: 600, fontSize: '0.75rem', color: '#8a8f8c', textTransform: 'uppercase' }}>
             <span></span>
-            <span>Bill Number</span>
-            <span>Bill Date</span>
-            <span style={{ textAlign: 'right' }}>Total Cost</span>
-            <span style={{ textAlign: 'right' }}>Balance Due</span>
-            <span style={{ textAlign: 'right' }}>Amount Applied</span>
+            <span>{t('maintenance.billNumber')}</span>
+            <span>{t('maintenance.billDate')}</span>
+            <span style={{ textAlign: 'right' }}>{t('maintenance.totalCost')}</span>
+            <span style={{ textAlign: 'right' }}>{t('finance.balanceDue')}</span>
+            <span style={{ textAlign: 'right' }}>{t('maintenance.amountApplied')}</span>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem', maxHeight: '180px', overflowY: 'auto' }}>

@@ -14,6 +14,7 @@ import {
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../../firebase/config';
 import styles from '../../ui/FormModal.module.css';
+import { useI18n } from '../../../i18n/I18nProvider';
 
 interface PaymentMaintenanceFormProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ interface PaymentMaintenanceFormProps {
 }
 
 export const PaymentMaintenanceForm: React.FC<PaymentMaintenanceFormProps> = ({ isOpen, onClose }) => {
+  const { t } = useI18n();
   const addToast = useToastStore((s) => s.addToast);
   const { customers, orders, modalPayload, fetchPayments, fetchOrders, updatePaymentDetails } = useAdminStore();
   const fetchJournalEntries = useFinanceStore((s) => s.fetchJournalEntries);
@@ -384,8 +386,8 @@ export const PaymentMaintenanceForm: React.FC<PaymentMaintenanceFormProps> = ({ 
         {/* Sub-tab Navigation */}
         <div style={{ display: 'flex', borderBottom: '1px solid #E8EAE6', marginBottom: '1.25rem', gap: '0.5rem' }}>
           <button type="button" onClick={() => setActiveTab('payment')} style={{ padding: '0.5rem 1rem', background: 'none', border: 'none', borderBottom: activeTab === 'payment' ? '2px solid #4A6B50' : 'none', color: activeTab === 'payment' ? '#4A6B50' : '#6b7280', fontWeight: 600, cursor: 'pointer' }}>Payment</button>
-          <button type="button" onClick={() => setActiveTab('allocation')} style={{ padding: '0.5rem 1rem', background: 'none', border: 'none', borderBottom: activeTab === 'allocation' ? '2px solid #4A6B50' : 'none', color: activeTab === 'allocation' ? '#4A6B50' : '#6b7280', fontWeight: 600, cursor: 'pointer' }}>Order Allocation</button>
-          <button type="button" onClick={() => setActiveTab('method')} style={{ padding: '0.5rem 1rem', background: 'none', border: 'none', borderBottom: activeTab === 'method' ? '2px solid #4A6B50' : 'none', color: activeTab === 'method' ? '#4A6B50' : '#6b7280', fontWeight: 600, cursor: 'pointer' }}>Method Details</button>
+          <button type="button" onClick={() => setActiveTab('allocation')} style={{ padding: '0.5rem 1rem', background: 'none', border: 'none', borderBottom: activeTab === 'allocation' ? '2px solid #4A6B50' : 'none', color: activeTab === 'allocation' ? '#4A6B50' : '#6b7280', fontWeight: 600, cursor: 'pointer' }}>{t('maintenance.orderAllocation')}</button>
+          <button type="button" onClick={() => setActiveTab('method')} style={{ padding: '0.5rem 1rem', background: 'none', border: 'none', borderBottom: activeTab === 'method' ? '2px solid #4A6B50' : 'none', color: activeTab === 'method' ? '#4A6B50' : '#6b7280', fontWeight: 600, cursor: 'pointer' }}>{t('maintenance.methodDetails')}</button>
           <button type="button" onClick={() => setActiveTab('gl')} style={{ padding: '0.5rem 1rem', background: 'none', border: 'none', borderBottom: activeTab === 'gl' ? '2px solid #4A6B50' : 'none', color: activeTab === 'gl' ? '#4A6B50' : '#6b7280', fontWeight: 600, cursor: 'pointer' }}>GL / Audit</button>
         </div>
 
@@ -405,7 +407,7 @@ export const PaymentMaintenanceForm: React.FC<PaymentMaintenanceFormProps> = ({ 
                   className={styles.formInput}
                   disabled={isReadOnly}
                 >
-                  <option value="">Select customer...</option>
+                  <option value="">{t('maintenance.selectCustomer')}</option>
                   {customers.map(c => (
                     <option key={c.id} value={c.id}>{c.name} (AR Bal: $${(c.arBalance || 0).toFixed(2)})</option>
                   ))}
@@ -446,7 +448,7 @@ export const PaymentMaintenanceForm: React.FC<PaymentMaintenanceFormProps> = ({ 
             </div>
 
             <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
-              <label className={styles.formLabel}>Reference Notes</label>
+              <label className={styles.formLabel}>{t('maintenance.referenceNotes')}</label>
               <textarea 
                 value={formValues.notes || ''} 
                 onChange={(e) => handleFieldChange('notes', e.target.value)}
@@ -480,10 +482,10 @@ export const PaymentMaintenanceForm: React.FC<PaymentMaintenanceFormProps> = ({ 
                 <thead>
                   <tr style={{ background: '#FAFAF8', borderBottom: '1px solid #E8EAE6', textAlign: 'left' }}>
                     <th style={{ padding: '8px 12px' }}>Order #</th>
-                    <th style={{ padding: '8px 12px' }}>Due Date</th>
+                    <th style={{ padding: '8px 12px' }}>{t('maintenance.dueDate')}</th>
                     <th style={{ padding: '8px 12px', textAlign: 'right' }}>Total</th>
-                    <th style={{ padding: '8px 12px', textAlign: 'right' }}>Balance Due</th>
-                    <th style={{ padding: '8px 12px', textAlign: 'right', width: '140px' }}>Apply Amount</th>
+                    <th style={{ padding: '8px 12px', textAlign: 'right' }}>{t('finance.balanceDue')}</th>
+                    <th style={{ padding: '8px 12px', textAlign: 'right', width: '140px' }}>{t('maintenance.applyAmount')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -548,8 +550,8 @@ export const PaymentMaintenanceForm: React.FC<PaymentMaintenanceFormProps> = ({ 
               >
                 <option value="cash">Cash</option>
                 <option value="check">Check</option>
-                <option value="credit_card">Credit Card</option>
-                <option value="stripe">Stripe Integration</option>
+                <option value="credit_card">{t('maintenance.creditCard')}</option>
+                <option value="stripe">{t('maintenance.stripeIntegration')}</option>
                 <option value="bank_transfer">ACH/Bank Transfer</option>
                 <option value="other">Other</option>
               </select>
@@ -584,7 +586,7 @@ export const PaymentMaintenanceForm: React.FC<PaymentMaintenanceFormProps> = ({ 
                 </strong>
               </div>
               <div style={{ padding: '0.75rem', background: '#FAFAF8', borderRadius: '8px', border: '1px solid #E8EAE6' }}>
-                <span style={{ fontSize: '0.75rem', color: '#8a8f8c', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Journal Entry ID</span>
+                <span style={{ fontSize: '0.75rem', color: '#8a8f8c', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>{t('maintenance.journalEntryId')}</span>
                 <span style={{ fontFamily: 'monospace', fontSize: '0.875rem' }}>
                   {formValues.journalEntryId || 'UNPOSTED'}
                 </span>
@@ -594,7 +596,7 @@ export const PaymentMaintenanceForm: React.FC<PaymentMaintenanceFormProps> = ({ 
             {/* Refund Logs if any */}
             {formValues.refunds && formValues.refunds.length > 0 && (
               <div style={{ marginBottom: '1.5rem' }}>
-                <span style={{ fontSize: '0.75rem', color: '#8a8f8c', textTransform: 'uppercase', display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Refund History</span>
+                <span style={{ fontSize: '0.75rem', color: '#8a8f8c', textTransform: 'uppercase', display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>{t('maintenance.refundHistory')}</span>
                 <div style={{ border: '1px solid #E8EAE6', borderRadius: '6px', background: '#FAFAF8', padding: '0.5rem' }}>
                   {formValues.refunds.map((ref: any, idx: number) => (
                     <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 8px', borderBottom: idx < formValues.refunds.length - 1 ? '1px dashed #E8EAE6' : 'none', fontSize: '0.75rem' }}>

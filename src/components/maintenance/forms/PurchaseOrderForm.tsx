@@ -6,6 +6,7 @@ import { useToastStore } from '../../../store/toastStore';
 import { createPurchaseOrder, updatePurchaseOrder, approvePurchaseOrder } from '../../../services/purchaseOrderService';
 import { useCompany } from '../../../context/CompanyContext';
 import modalStyles from '../../ui/FormModal.module.css';
+import { useI18n } from '../../../i18n/I18nProvider';
 
 interface PurchaseOrderFormProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ interface PurchaseOrderFormProps {
 }
 
 export const PurchaseOrderForm: React.FC<PurchaseOrderFormProps> = ({ isOpen, onClose }) => {
+  const { t } = useI18n();
   const { selectedCompanyId } = useCompany();
   const addToast = useToastStore((s) => s.addToast);
   const { modalPayload, vendors, inventory, fetchVendors } = useAdminStore();
@@ -205,7 +207,7 @@ export const PurchaseOrderForm: React.FC<PurchaseOrderFormProps> = ({ isOpen, on
               disabled={isLocked}
               required
             >
-              <option value="">Select a Vendor...</option>
+              <option value="">{t('maintenance.selectAVendor')}</option>
               {vendors.filter(v => v.active).map(v => (
                 <option key={v.id} value={v.id}>{v.name} ({v.id})</option>
               ))}
@@ -223,7 +225,7 @@ export const PurchaseOrderForm: React.FC<PurchaseOrderFormProps> = ({ isOpen, on
             />
           </div>
           <div>
-            <label className={modalStyles.formLabel}>Expected Delivery</label>
+            <label className={modalStyles.formLabel}>{t('maintenance.expectedDelivery')}</label>
             <input
               type="date"
               value={expectedDeliveryDate}
@@ -236,7 +238,7 @@ export const PurchaseOrderForm: React.FC<PurchaseOrderFormProps> = ({ isOpen, on
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
           <div>
-            <label className={modalStyles.formLabel}>Receiving Location</label>
+            <label className={modalStyles.formLabel}>{t('maintenance.receivingLocation')}</label>
             <input
               type="text"
               value={location}
@@ -259,7 +261,7 @@ export const PurchaseOrderForm: React.FC<PurchaseOrderFormProps> = ({ isOpen, on
             />
           </div>
           <div>
-            <label className={modalStyles.formLabel}>Freight Treatment</label>
+            <label className={modalStyles.formLabel}>{t('maintenance.freightTreatment')}</label>
             <select
               value={freightTreatment}
               onChange={(e) => setFreightTreatment(e.target.value as any)}
@@ -289,9 +291,9 @@ export const PurchaseOrderForm: React.FC<PurchaseOrderFormProps> = ({ isOpen, on
         <div style={{ marginBottom: '1.25rem' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '3fr 1fr 1fr 1fr 0.5fr', gap: '0.75rem', paddingBottom: '0.5rem', borderBottom: '1px solid #E8EAE6', fontWeight: 600, fontSize: '0.8125rem', color: '#8a8f8c', textTransform: 'uppercase' }}>
             <span>Item (Inventory Stock)</span>
-            <span style={{ textAlign: 'right' }}>Ordered Qty</span>
+            <span style={{ textAlign: 'right' }}>{t('maintenance.orderedQty')}</span>
             <span style={{ textAlign: 'right' }}>Unit Cost ($)</span>
-            <span style={{ textAlign: 'right' }}>Line Total</span>
+            <span style={{ textAlign: 'right' }}>{t('maintenance.lineTotal')}</span>
             <span></span>
           </div>
 
@@ -305,7 +307,7 @@ export const PurchaseOrderForm: React.FC<PurchaseOrderFormProps> = ({ isOpen, on
                   disabled={isLocked}
                   style={{ padding: '0.45rem' }}
                 >
-                  <option value="">Select item...</option>
+                  <option value="">{t('maintenance.selectItem')}</option>
                   {inventory.map(item => (
                     <option key={item.id} value={item.id}>
                       {item.sku} — {item.name} (${item.unitCost?.toFixed(2)})

@@ -5,8 +5,10 @@ import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Trash2, Plus, Minus, ArrowLeft, ShoppingBag } from 'lucide-react';
 import styles from './Cart.module.css';
+import { useI18n } from '../i18n/I18nProvider';
 
 export const Cart: React.FC = () => {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const { items, updateQuantity, removeItem, getSubtotal } = useCartStore();
 
@@ -28,8 +30,8 @@ export const Cart: React.FC = () => {
         <div className={styles.emptyIcon}>
           <ShoppingBag size={48} />
         </div>
-        <h2>Your flower cart is empty</h2>
-        <p>Explore our seasonal curations and artisan arrangements to say it beautifully.</p>
+        <h2>{t('cart.yourFlowerCartIsEmpty')}</h2>
+        <p>{t('cart.exploreOurSeasonalCurationsAndArtisanArrangementsToSayItBeautifully')}</p>
         <Button onClick={() => navigate('/shop')} style={{ background: 'linear-gradient(135deg, #4A6B50, #6C8271)', border: 'none' }}>
           Browse Shop
         </Button>
@@ -44,7 +46,7 @@ export const Cart: React.FC = () => {
           <button className={styles.backBtn} onClick={() => navigate('/shop')}>
             <ArrowLeft size={16} /> Continue Shopping
           </button>
-          <h1 className={styles.title}>Your Shopping Cart</h1>
+          <h1 className={styles.title}>{t('cart.yourShoppingCart')}</h1>
         </div>
 
         <div className={styles.cartGrid}>
@@ -56,7 +58,7 @@ export const Cart: React.FC = () => {
                   <div className={styles.itemDetails}>
                     <div className={styles.itemMeta}>
                       <h3 className={styles.itemName}>{item.name}</h3>
-                      {item.isCustom && <span className={styles.customBadge}>Custom Bouquet</span>}
+                      {item.isCustom && <span className={styles.customBadge}>{t('landing.hero.customBouquet')}</span>}
                     </div>
                     <div className={styles.itemPricing}>
                       <span className={styles.unitPrice}>${item.price.toFixed(2)} each</span>
@@ -93,7 +95,7 @@ export const Cart: React.FC = () => {
 
           <aside className={styles.summarySection}>
             <Card className={styles.summaryCard}>
-              <h2>Order Summary</h2>
+              <h2>{t('cart.orderSummary')}</h2>
               
               <div className={styles.summaryRows}>
                 <div className={styles.summaryRow}>
@@ -109,7 +111,7 @@ export const Cart: React.FC = () => {
                   <span>${taxEstimate.toFixed(2)}</span>
                 </div>
                 <div className={`${styles.summaryRow} ${styles.totalRow}`}>
-                  <span>Estimated Total</span>
+                  <span>{t('cart.estimatedTotal')}</span>
                   <span>${estimatedTotal.toFixed(2)}</span>
                 </div>
               </div>

@@ -4,8 +4,10 @@ import { useToastStore } from '../../store/toastStore';
 import { restockInventoryAndPostFinancials } from '../../services/financeService';
 import { AlertTriangle, UserPlus, ShieldCheck } from 'lucide-react';
 import styles from './ActionRequiredPanel.module.css';
+import { useI18n } from '../../i18n/I18nProvider';
 
 export const ActionRequiredPanel: React.FC = () => {
+  const { t } = useI18n();
   const { inventory, orders, updateOrderStatus, updateOrderDetails } = useAdminStore();
   const addToast = useToastStore(s => s.addToast);
 
@@ -71,8 +73,8 @@ export const ActionRequiredPanel: React.FC = () => {
         <div className={styles.headerLeft}>
           <AlertTriangle className={styles.alertHeaderIcon} size={18} />
           <div>
-            <h3 className={styles.title}>Action Required</h3>
-            <p className={styles.subtitle}>Critical issues requiring immediate operations approval.</p>
+            <h3 className={styles.title}>{t('dashboard.actionRequired')}</h3>
+            <p className={styles.subtitle}>{t('dashboard.criticalIssuesRequiringImmediateOperationsApproval')}</p>
           </div>
         </div>
         <span className={styles.alertCountBadge}>
@@ -84,7 +86,7 @@ export const ActionRequiredPanel: React.FC = () => {
         {!hasAlerts ? (
           <div className={styles.allClear}>
             <ShieldCheck size={32} className={styles.allClearIcon} />
-            <p className={styles.allClearText}>All operations clear. No urgent tasks pending approval.</p>
+            <p className={styles.allClearText}>{t('dashboard.allOperationsClearNoUrgentTasksPendingApproval')}</p>
           </div>
         ) : (
           <>
@@ -92,7 +94,7 @@ export const ActionRequiredPanel: React.FC = () => {
             {lowStockItems.map(item => (
               <div key={item.id} className={`${styles.alertItem} ${styles.alertStock}`}>
                 <div className={styles.alertLeft}>
-                  <div className={styles.alertBadgeStock}>Low Inventory</div>
+                  <div className={styles.alertBadgeStock}>{t('dashboard.lowInventory')}</div>
                   <div>
                     <h4 className={styles.alertTitle}>{item.name}</h4>
                     <p className={styles.alertMeta}>
@@ -130,7 +132,7 @@ export const ActionRequiredPanel: React.FC = () => {
             {unassignedOrders.map(order => (
               <div key={order.id} className={`${styles.alertItem} ${styles.alertCourier}`}>
                 <div className={styles.alertLeft}>
-                  <div className={styles.alertBadgeCourier}>Needs Courier</div>
+                  <div className={styles.alertBadgeCourier}>{t('dashboard.needsCourier')}</div>
                   <div>
                     <h4 className={styles.alertTitle}>Delivery for {order.customerName}</h4>
                     <p className={styles.alertMeta}>
@@ -160,7 +162,7 @@ export const ActionRequiredPanel: React.FC = () => {
             {unconfirmedOrders.map(order => (
               <div key={order.id} className={`${styles.alertItem} ${styles.alertConfirm}`}>
                 <div className={styles.alertLeft}>
-                  <div className={styles.alertBadgeConfirm}>Urgent Draft</div>
+                  <div className={styles.alertBadgeConfirm}>{t('dashboard.urgentDraft')}</div>
                   <div>
                     <h4 className={styles.alertTitle}>Arrangement Draft: {order.customerName}</h4>
                     <p className={styles.alertMeta}>

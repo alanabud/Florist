@@ -16,7 +16,7 @@ export const Subscriptions: React.FC = () => {
   const { subscriptions, setActiveModal, toggleSubscriptionStatus } = useAdminStore();
   const [searchParams, setSearchParams] = useSearchParams();
   const addToast = useToastStore((state) => state.addToast);
-  const { language } = useI18n();
+  const { t, language } = useI18n();
 
   // Filter local states
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>('all');
@@ -150,11 +150,11 @@ export const Subscriptions: React.FC = () => {
             <Repeat size={24} />
           </div>
           <div>
-            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#8a8f8c', fontWeight: 700, letterSpacing: '0.05em' }}>Total Accounts</div>
+            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#8a8f8c', fontWeight: 700, letterSpacing: '0.05em' }}>{t('subscriptions.totalAccounts')}</div>
             <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#2C302E', marginTop: '0.25rem', fontFamily: 'var(--font-serif)' }}>
               {totalSubscribers} <span style={{ fontSize: '0.8125rem', fontWeight: 500, color: '#6b7280' }}>Active/Paused</span>
             </div>
-            <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '0.125rem' }}>Total subscription profiles</div>
+            <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '0.125rem' }}>{t('subscriptions.totalSubscriptionProfiles')}</div>
           </div>
         </div>
 
@@ -163,11 +163,11 @@ export const Subscriptions: React.FC = () => {
             <CheckCircle size={24} />
           </div>
           <div>
-            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#8a8f8c', fontWeight: 700, letterSpacing: '0.05em' }}>Active Subscriptions</div>
+            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#8a8f8c', fontWeight: 700, letterSpacing: '0.05em' }}>{t('subscriptions.activeSubscriptions')}</div>
             <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#10b981', marginTop: '0.25rem', fontFamily: 'var(--font-serif)' }}>
               {activeSubscribers} <span style={{ fontSize: '0.8125rem', fontWeight: 500, color: '#047857' }}>Live</span>
             </div>
-            <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '0.125rem' }}>Currently billing cycles</div>
+            <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '0.125rem' }}>{t('subscriptions.currentlyBillingCycles')}</div>
           </div>
         </div>
 
@@ -176,11 +176,11 @@ export const Subscriptions: React.FC = () => {
             <DollarSign size={24} />
           </div>
           <div>
-            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#8a8f8c', fontWeight: 700, letterSpacing: '0.05em' }}>Monthly MRR Value</div>
+            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#8a8f8c', fontWeight: 700, letterSpacing: '0.05em' }}>{t('subscriptions.monthlyMrrValue')}</div>
             <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#2C302E', marginTop: '0.25rem', fontFamily: 'var(--font-serif)' }}>
               ${mrrSum.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
-            <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '0.125rem' }}>Recurring business baseline</div>
+            <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '0.125rem' }}>{t('subscriptions.recurringBusinessBaseline')}</div>
           </div>
         </div>
 
@@ -193,7 +193,7 @@ export const Subscriptions: React.FC = () => {
             <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#d97706', marginTop: '0.25rem', fontFamily: 'var(--font-serif)' }}>
               {nextSevenCount} <span style={{ fontSize: '0.8125rem', fontWeight: 500, color: '#b45309' }}>Stops</span>
             </div>
-            <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '0.125rem' }}>Due for courier generation</div>
+            <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '0.125rem' }}>{t('subscriptions.dueForCourierGeneration')}</div>
           </div>
         </div>
       </div>
@@ -268,7 +268,7 @@ export const Subscriptions: React.FC = () => {
               onChange={(e) => setFrequencyFilter(e.target.value)}
               style={{ padding: '0.5rem 0.75rem', border: '1px solid #E8EAE6', borderRadius: '8px', background: '#FFFFFF', fontSize: '0.8125rem', color: '#2C302E', outline: 'none' }}
             >
-              <option value="all">All Frequencies</option>
+              <option value="all">{t('subscriptions.allFrequencies')}</option>
               {uniqueFrequencies.map(freq => (
                 <option key={freq} value={freq}>{freq.toUpperCase()}</option>
               ))}
@@ -276,13 +276,13 @@ export const Subscriptions: React.FC = () => {
           </div>
 
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.75rem', color: '#8a8f8c', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Billing Status</span>
+            <span style={{ fontSize: '0.75rem', color: '#8a8f8c', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('subscriptions.billingStatus')}</span>
             <select
               value={billingFilter}
               onChange={(e) => setBillingFilter(e.target.value)}
               style={{ padding: '0.5rem 0.75rem', border: '1px solid #E8EAE6', borderRadius: '8px', background: '#FFFFFF', fontSize: '0.8125rem', color: '#2C302E', outline: 'none' }}
             >
-              <option value="all">All Billings</option>
+              <option value="all">{t('subscriptions.allBillings')}</option>
               <option value="paid">Paid</option>
               <option value="pending">Pending</option>
               <option value="failed">Failed / Overdue</option>
@@ -321,12 +321,12 @@ export const Subscriptions: React.FC = () => {
             <table className={styles.table} style={{ width: '100%' }}>
               <thead>
                 <tr style={{ background: '#FDFCFA' }}>
-                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>Subscriber Name</th>
-                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>Plan Arrangement</th>
-                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>Delivery Frequency</th>
-                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>Next Scheduled Date</th>
-                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>Price Per Cycle</th>
-                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>Billing Status</th>
+                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>{t('subscriptions.subscriberName')}</th>
+                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>{t('subscriptions.planArrangement')}</th>
+                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>{t('subscriptions.deliveryFrequency')}</th>
+                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>{t('subscriptions.nextScheduledDate')}</th>
+                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>{t('subscriptions.pricePerCycle')}</th>
+                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>{t('subscriptions.billingStatus')}</th>
                   <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>Status</th>
                   <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c', textAlign: 'right' }}>Actions</th>
                 </tr>

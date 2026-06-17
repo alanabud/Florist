@@ -5,6 +5,7 @@ import { useToastStore } from '../../../store/toastStore';
 import { validateCustomer } from '../../../services/validators';
 import { writeAuditLog } from '../../../services/auditService';
 import { normalizeCustomer } from '../../../services/normalizers';
+import { useI18n } from '../../../i18n/I18nProvider';
 
 interface CustomerMaintenanceFormProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface CustomerMaintenanceFormProps {
 }
 
 export const CustomerMaintenanceForm: React.FC<CustomerMaintenanceFormProps> = ({ isOpen, onClose }) => {
+  const { t } = useI18n();
   const addToast = useToastStore((s) => s.addToast);
   const { addCustomer, updateCustomerDetails, deleteCustomer, modalPayload, customers } = useAdminStore();
 
@@ -204,7 +206,7 @@ export const CustomerMaintenanceForm: React.FC<CustomerMaintenanceFormProps> = (
             const auditList = values.auditTrail || [];
             return (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <label style={{ fontSize: '0.8125rem', fontWeight: 600 }}>Customer Engagement Timeline</label>
+                <label style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{t('maintenance.customerEngagementTimeline')}</label>
                 <div style={{ maxHeight: '150px', overflowY: 'auto', border: '1px solid #E8EAE6', borderRadius: '8px', padding: '0.5rem', background: '#FAFAF8', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                   {auditList.map((log: string, idx: number) => (
                     <div key={idx} style={{ fontSize: '0.75rem', borderBottom: '1px solid #F0EDE6', paddingBottom: '0.25rem' }}>

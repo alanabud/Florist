@@ -7,6 +7,7 @@ import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Check, ChevronRight, ChevronLeft } from 'lucide-react';
 import styles from './CustomBouquet.module.css';
+import { useI18n } from '../i18n/I18nProvider';
 
 const STEPS = [
   { id: 'occasion', title: 'Occasion' },
@@ -19,6 +20,7 @@ const STEPS = [
 ];
 
 export const CustomBouquet: React.FC = () => {
+  const { t } = useI18n();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const { state, updateField, reset } = useBuilderStore();
   const { addItem } = useCartStore();
@@ -66,7 +68,7 @@ export const CustomBouquet: React.FC = () => {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h1>Design Your Custom Bouquet</h1>
+        <h1>{t('custombouquet.designYourCustomBouquet')}</h1>
         <p>Work with our artisans to create a one-of-a-kind arrangement.</p>
       </div>
 
@@ -102,7 +104,7 @@ export const CustomBouquet: React.FC = () => {
 
         {currentStepIndex === 1 && (
           <div className={styles.stepPane}>
-            <h2>Choose a color palette</h2>
+            <h2>{t('custombouquet.chooseAColorPalette')}</h2>
             <div className={styles.grid}>
               {[
                 { name: 'Soft Blush & Cream', color: 'linear-gradient(to right, #fdf5f5, #fdfbf7)' },
@@ -127,8 +129,8 @@ export const CustomBouquet: React.FC = () => {
 
         {currentStepIndex === 2 && (
           <div className={styles.stepPane}>
-            <h2>Any specific flower preferences?</h2>
-            <p className={styles.helperText}>Select all that apply, or let us choose the best seasonal blooms.</p>
+            <h2>{t('custombouquet.anySpecificFlowerPreferences')}</h2>
+            <p className={styles.helperText}>{t('custombouquet.selectAllThatApplyOrLetUsChooseTheBestSeasonalBlooms')}</p>
             <div className={styles.grid}>
               {['Roses', 'Peonies', 'Lilies', 'Orchids', 'Hydrangeas', 'Tulips', 'Ranunculus', 'Eucalyptus'].map(flower => {
                 const isSelected = state.flowers.includes(flower);
@@ -154,7 +156,7 @@ export const CustomBouquet: React.FC = () => {
 
         {currentStepIndex === 3 && (
           <div className={styles.stepPane}>
-            <h2>Select size and budget</h2>
+            <h2>{t('custombouquet.selectSizeAndBudget')}</h2>
             <div className={styles.grid3}>
               {([
                 { size: 'Standard', price: 75, desc: 'A beautiful, modest arrangement perfect for a desk or side table.' },
@@ -180,9 +182,9 @@ export const CustomBouquet: React.FC = () => {
 
         {currentStepIndex === 4 && (
           <div className={styles.stepPane}>
-            <h2>When should we deliver?</h2>
+            <h2>{t('custombouquet.whenShouldWeDeliver')}</h2>
             <div className={styles.inputGroup}>
-              <label>Delivery Date</label>
+              <label>{t('custombouquet.deliveryDate')}</label>
               <input 
                 type="date" 
                 className={styles.input}
@@ -198,7 +200,7 @@ export const CustomBouquet: React.FC = () => {
           <div className={styles.stepPane}>
             <h2>Add a gift message (Optional)</h2>
             <div className={styles.inputGroup}>
-              <label>Message to recipient</label>
+              <label>{t('custombouquet.messageToRecipient')}</label>
               <textarea 
                 className={styles.textarea}
                 rows={4}
@@ -212,7 +214,7 @@ export const CustomBouquet: React.FC = () => {
 
         {currentStepIndex === 6 && (
           <div className={styles.stepPane}>
-            <h2>Review Your Custom Bouquet</h2>
+            <h2>{t('custombouquet.reviewYourCustomBouquet')}</h2>
             <Card className={styles.reviewCard}>
               <div className={styles.reviewRow}>
                 <span>Occasion:</span>

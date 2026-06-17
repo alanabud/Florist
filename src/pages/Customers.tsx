@@ -16,7 +16,7 @@ export const Customers: React.FC = () => {
   const { customers, setActiveModal } = useAdminStore();
   const [searchParams, setSearchParams] = useSearchParams();
   const addToast = useToastStore((state) => state.addToast);
-  const { language } = useI18n();
+  const { t, language } = useI18n();
 
   // Filter local states
   const [selectedTierFilter, setSelectedTierFilter] = useState<string>('all');
@@ -137,11 +137,11 @@ export const Customers: React.FC = () => {
             <Users size={24} />
           </div>
           <div>
-            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#8a8f8c', fontWeight: 700, letterSpacing: '0.05em' }}>Total CRM Profiles</div>
+            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#8a8f8c', fontWeight: 700, letterSpacing: '0.05em' }}>{t('customers.totalCrmProfiles')}</div>
             <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#2C302E', marginTop: '0.25rem', fontFamily: 'var(--font-serif)' }}>
               {totalCRM} <span style={{ fontSize: '0.8125rem', fontWeight: 500, color: '#6b7280' }}>Clients</span>
             </div>
-            <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '0.125rem' }}>Active database contacts</div>
+            <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '0.125rem' }}>{t('customers.activeDatabaseContacts')}</div>
           </div>
         </div>
 
@@ -150,7 +150,7 @@ export const Customers: React.FC = () => {
             <Star size={24} />
           </div>
           <div>
-            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#8a8f8c', fontWeight: 700, letterSpacing: '0.05em' }}>Loyalty Members</div>
+            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#8a8f8c', fontWeight: 700, letterSpacing: '0.05em' }}>{t('customers.loyaltyMembers')}</div>
             <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#d97706', marginTop: '0.25rem', fontFamily: 'var(--font-serif)' }}>
               {loyaltyMembersCount} <span style={{ fontSize: '0.8125rem', fontWeight: 500, color: '#b45309' }}>Tiered</span>
             </div>
@@ -167,7 +167,7 @@ export const Customers: React.FC = () => {
             <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#10b981', marginTop: '0.25rem', fontFamily: 'var(--font-serif)' }}>
               ${ltvSum.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
-            <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '0.125rem' }}>Cumulative revenue settled</div>
+            <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '0.125rem' }}>{t('customers.cumulativeRevenueSettled')}</div>
           </div>
         </div>
 
@@ -180,7 +180,7 @@ export const Customers: React.FC = () => {
             <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#dc2626', marginTop: '0.25rem', fontFamily: 'var(--font-serif)' }}>
               ${outstandingBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
-            <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '0.125rem' }}>Uncollected client ledger credit</div>
+            <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '0.125rem' }}>{t('customers.uncollectedClientLedgerCredit')}</div>
           </div>
         </div>
       </div>
@@ -250,15 +250,15 @@ export const Customers: React.FC = () => {
           />
 
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.75rem', color: '#8a8f8c', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Account Type</span>
+            <span style={{ fontSize: '0.75rem', color: '#8a8f8c', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('customers.accountType')}</span>
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
               style={{ padding: '0.5rem 0.75rem', border: '1px solid #E8EAE6', borderRadius: '8px', background: '#FFFFFF', fontSize: '0.8125rem', color: '#2C302E', outline: 'none' }}
             >
-              <option value="all">All Accounts</option>
-              <option value="retail">Retail Client</option>
-              <option value="corporate">Corporate Account</option>
+              <option value="all">{t('customers.allAccounts')}</option>
+              <option value="retail">{t('customers.retailClient')}</option>
+              <option value="corporate">{t('customers.corporateAccount')}</option>
             </select>
           </div>
 
@@ -293,13 +293,13 @@ export const Customers: React.FC = () => {
             <table className={styles.table} style={{ width: '100%' }}>
               <thead>
                 <tr style={{ background: '#FDFCFA' }}>
-                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>Client Name</th>
-                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>Contact Info</th>
-                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>Account Type</th>
-                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>Loyalty Level</th>
-                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>Total Orders</th>
-                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>Open Balance</th>
-                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>Lifetime Value</th>
+                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>{t('customers.clientName')}</th>
+                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>{t('customers.contactInfo')}</th>
+                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>{t('customers.accountType')}</th>
+                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>{t('customers.loyaltyLevel')}</th>
+                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>{t('customers.totalOrders')}</th>
+                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>{t('customers.openBalance')}</th>
+                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>{t('customers.lifetimeValue')}</th>
                   <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c', textAlign: 'right' }}>Actions</th>
                 </tr>
               </thead>

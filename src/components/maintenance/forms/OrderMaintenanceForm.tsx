@@ -12,6 +12,7 @@ import { postOrderFinancials, reverseCOGSForOrder } from '../../../services/fina
 import { useAuthStore } from '../../../store/authStore';
 import { normalizeOrder } from '../../../services/normalizers';
 import { Plus, Trash2, RefreshCw } from 'lucide-react';
+import { useI18n } from '../../../i18n/I18nProvider';
 
 
 interface OrderMaintenanceFormProps {
@@ -20,6 +21,7 @@ interface OrderMaintenanceFormProps {
 }
 
 export const OrderMaintenanceForm: React.FC<OrderMaintenanceFormProps> = ({ isOpen, onClose }) => {
+  const { t } = useI18n();
   const addToast = useToastStore((s) => s.addToast);
   const { role, user } = useAuthStore();
   const { orders, products, addOrder, updateOrderDetails, deleteOrder, modalPayload, postOrderFinancialsAction } = useAdminStore();
@@ -778,10 +780,10 @@ export const OrderMaintenanceForm: React.FC<OrderMaintenanceFormProps> = ({ isOp
             const auditList = values.auditTrail || [];
             return (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
-                <label style={{ fontSize: '0.8125rem', fontWeight: 600 }}>System Audit Timeline</label>
+                <label style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{t('maintenance.systemAuditTimeline')}</label>
                 <div style={{ maxHeight: '180px', overflowY: 'auto', border: '1px solid #E8EAE6', borderRadius: '8px', padding: '0.75rem', background: '#FAFAF8', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                   {auditList.length === 0 ? (
-                    <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>No logs recorded yet.</div>
+                    <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>{t('maintenance.noLogsRecordedYet')}</div>
                   ) : (
                     auditList.map((log: string, i: number) => (
                       <div key={i} style={{ display: 'flex', gap: '0.5rem', fontSize: '0.75rem', borderBottom: '1px solid #F0EDE6', paddingBottom: '0.25rem' }}>

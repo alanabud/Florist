@@ -11,8 +11,10 @@ import { cancelPurchaseOrder } from '../services/purchaseOrderService';
 import { postVendorBill, voidVendorBill } from '../services/vendorBillService';
 import { voidVendorPayment } from '../services/vendorPaymentService';
 import styles from './FinanceAdmin.module.css';
+import { useI18n } from '../i18n/I18nProvider';
 
 export const PurchasingConsole: React.FC = () => {
+  const { t } = useI18n();
   const {
     vendors,
     purchaseOrders,
@@ -142,7 +144,7 @@ export const PurchasingConsole: React.FC = () => {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h1 className={styles.title}>Purchasing & Payables Console</h1>
+        <h1 className={styles.title}>{t('purchasingconsole.purchasingPayablesConsole')}</h1>
         <p className={styles.subtitle}>
           Control the supply chain: setup vendor accounts, create POs, track warehouse receiving, register AP bills, and disburse cash.
         </p>
@@ -177,7 +179,7 @@ export const PurchasingConsole: React.FC = () => {
         <Card>
           <CardContent className={styles.statContent}>
             <div className={styles.statInfo}>
-              <span className={styles.statName}>Active Purchase Orders</span>
+              <span className={styles.statName}>{t('purchasingconsole.activePurchaseOrders')}</span>
               <span className={styles.statValue}>{openPOCount} Orders</span>
             </div>
             <div className={styles.statIconWrapper} style={{ backgroundColor: '#FDF2F8', color: '#BE185D' }}>
@@ -204,11 +206,11 @@ export const PurchasingConsole: React.FC = () => {
       {/* Tabs Header */}
       <div className={styles.tabsHeader}>
         <button className={`${styles.tabBtn} ${activeTab === 'vendors' ? styles.activeTabBtn : ''}`} onClick={() => { setActiveTab('vendors'); setSearchTerm(''); }}>Suppliers</button>
-        <button className={`${styles.tabBtn} ${activeTab === 'pos' ? styles.activeTabBtn : ''}`} onClick={() => { setActiveTab('pos'); setSearchTerm(''); }}>Purchase Orders</button>
-        <button className={`${styles.tabBtn} ${activeTab === 'receiving' ? styles.activeTabBtn : ''}`} onClick={() => { setActiveTab('receiving'); setSearchTerm(''); }}>Receiving Center</button>
-        <button className={`${styles.tabBtn} ${activeTab === 'bills' ? styles.activeTabBtn : ''}`} onClick={() => { setActiveTab('bills'); setSearchTerm(''); }}>Vendor Bills</button>
-        <button className={`${styles.tabBtn} ${activeTab === 'payments' ? styles.activeTabBtn : ''}`} onClick={() => { setActiveTab('payments'); setSearchTerm(''); }}>Payments Log</button>
-        <button className={`${styles.tabBtn} ${activeTab === 'reports' ? styles.activeTabBtn : ''}`} onClick={() => { setActiveTab('reports'); setSearchTerm(''); }}>Valuations & Aging</button>
+        <button className={`${styles.tabBtn} ${activeTab === 'pos' ? styles.activeTabBtn : ''}`} onClick={() => { setActiveTab('pos'); setSearchTerm(''); }}>{t('purchasingconsole.purchaseOrders')}</button>
+        <button className={`${styles.tabBtn} ${activeTab === 'receiving' ? styles.activeTabBtn : ''}`} onClick={() => { setActiveTab('receiving'); setSearchTerm(''); }}>{t('purchasingconsole.receivingCenter')}</button>
+        <button className={`${styles.tabBtn} ${activeTab === 'bills' ? styles.activeTabBtn : ''}`} onClick={() => { setActiveTab('bills'); setSearchTerm(''); }}>{t('purchasingconsole.vendorBills')}</button>
+        <button className={`${styles.tabBtn} ${activeTab === 'payments' ? styles.activeTabBtn : ''}`} onClick={() => { setActiveTab('payments'); setSearchTerm(''); }}>{t('purchasingconsole.paymentsLog')}</button>
+        <button className={`${styles.tabBtn} ${activeTab === 'reports' ? styles.activeTabBtn : ''}`} onClick={() => { setActiveTab('reports'); setSearchTerm(''); }}>{t('purchasingconsole.valuationsAging')}</button>
       </div>
 
       {/* Control Row */}
@@ -264,12 +266,12 @@ export const PurchasingConsole: React.FC = () => {
               <table className={styles.table}>
                 <thead>
                   <tr>
-                    <th>Vendor ID</th>
-                    <th>Supplier Name</th>
-                    <th>Contact Person</th>
+                    <th>{t('purchasingconsole.vendorId')}</th>
+                    <th>{t('purchasingconsole.supplierName')}</th>
+                    <th>{t('purchasingconsole.contactPerson')}</th>
                     <th>Email / Phone</th>
-                    <th>Payment Terms</th>
-                    <th className={styles.amountCol}>Open Balance</th>
+                    <th>{t('purchasingconsole.paymentTerms')}</th>
+                    <th className={styles.amountCol}>{t('purchasingconsole.openBalance')}</th>
                     <th>Status</th>
                     <th></th>
                   </tr>
@@ -305,7 +307,7 @@ export const PurchasingConsole: React.FC = () => {
                   {vendors.length === 0 && (
                     <tr>
                       <td colSpan={8}>
-                        <EmptyState title="No Suppliers Registered" description="Create supplier dossiers to link Purchase Orders, receive warehouse stock, and log Accounts Payable bills." icon={Truck} />
+                        <EmptyState title={t('purchasingconsole.noSuppliersRegistered')} description="Create supplier dossiers to link Purchase Orders, receive warehouse stock, and log Accounts Payable bills." icon={Truck} />
                       </td>
                     </tr>
                   )}
@@ -321,12 +323,12 @@ export const PurchasingConsole: React.FC = () => {
                 <thead>
                   <tr>
                     <th>PO ID</th>
-                    <th>Supplier Name</th>
-                    <th>Order Date</th>
-                    <th>Warehouse Location</th>
+                    <th>{t('purchasingconsole.supplierName')}</th>
+                    <th>{t('purchasingconsole.orderDate')}</th>
+                    <th>{t('purchasingconsole.warehouseLocation')}</th>
                     <th>Items</th>
-                    <th className={styles.amountCol}>Total Cost</th>
-                    <th>Fulfillment Status</th>
+                    <th className={styles.amountCol}>{t('purchasingconsole.totalCost')}</th>
+                    <th>{t('purchasingconsole.fulfillmentStatus')}</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -372,7 +374,7 @@ export const PurchasingConsole: React.FC = () => {
                   {purchaseOrders.length === 0 && (
                     <tr>
                       <td colSpan={8}>
-                        <EmptyState title="No Purchase Orders" description="Draft purchase orders to source fresh roses, fillers, ribbons, and florist design materials." icon={FileText} />
+                        <EmptyState title={t('purchasingconsole.noPurchaseOrders')} description="Draft purchase orders to source fresh roses, fillers, ribbons, and florist design materials." icon={FileText} />
                       </td>
                     </tr>
                   )}
@@ -387,13 +389,13 @@ export const PurchasingConsole: React.FC = () => {
               <table className={styles.table}>
                 <thead>
                   <tr>
-                    <th>Receipt ID</th>
-                    <th>Linked PO</th>
-                    <th>Supplier Name</th>
-                    <th>Date Received</th>
-                    <th>Accepted Stems</th>
+                    <th>{t('purchasingconsole.receiptId')}</th>
+                    <th>{t('purchasingconsole.linkedPo')}</th>
+                    <th>{t('purchasingconsole.supplierName')}</th>
+                    <th>{t('purchasingconsole.dateReceived')}</th>
+                    <th>{t('purchasingconsole.acceptedStems')}</th>
                     <th>Damaged / Rejected</th>
-                    <th>Freight Post</th>
+                    <th>{t('purchasingconsole.freightPost')}</th>
                     <th>GL Entry</th>
                     <th></th>
                   </tr>
@@ -436,7 +438,7 @@ export const PurchasingConsole: React.FC = () => {
                   {inventoryReceipts.length === 0 && (
                     <tr>
                       <td colSpan={9}>
-                        <EmptyState title="No Inventory Received" description="Record warehouse delivery notes. Accepted stock triggers auto average unit cost updates and GRNI posting." icon={Truck} />
+                        <EmptyState title={t('purchasingconsole.noInventoryReceived')} description="Record warehouse delivery notes. Accepted stock triggers auto average unit cost updates and GRNI posting." icon={Truck} />
                       </td>
                     </tr>
                   )}
@@ -451,16 +453,16 @@ export const PurchasingConsole: React.FC = () => {
               <table className={styles.table}>
                 <thead>
                   <tr>
-                    <th>Bill ID</th>
-                    <th>Supplier Name</th>
-                    <th>Invoice No</th>
-                    <th>Linked PO</th>
-                    <th>Bill Date</th>
-                    <th>Due Date</th>
-                    <th className={styles.amountCol}>Total Bill</th>
-                    <th className={styles.amountCol}>Balance Due</th>
-                    <th>Match Status</th>
-                    <th>Filing Status</th>
+                    <th>{t('purchasingconsole.billId')}</th>
+                    <th>{t('purchasingconsole.supplierName')}</th>
+                    <th>{t('purchasingconsole.invoiceNo')}</th>
+                    <th>{t('purchasingconsole.linkedPo')}</th>
+                    <th>{t('purchasingconsole.billDate')}</th>
+                    <th>{t('purchasingconsole.dueDate')}</th>
+                    <th className={styles.amountCol}>{t('purchasingconsole.totalBill')}</th>
+                    <th className={styles.amountCol}>{t('finance.balanceDue')}</th>
+                    <th>{t('purchasingconsole.matchStatus')}</th>
+                    <th>{t('purchasingconsole.filingStatus')}</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -516,7 +518,7 @@ export const PurchasingConsole: React.FC = () => {
                   {vendorBills.length === 0 && (
                     <tr>
                       <td colSpan={11}>
-                        <EmptyState title="No Accounts Payable Bills" description="Post vendor bills to match PO costs, clear Accrued Purchases, and credit Accounts Payable liabilities." icon={FileText} />
+                        <EmptyState title={t('purchasingconsole.noAccountsPayableBills')} description="Post vendor bills to match PO costs, clear Accrued Purchases, and credit Accounts Payable liabilities." icon={FileText} />
                       </td>
                     </tr>
                   )}
@@ -531,14 +533,14 @@ export const PurchasingConsole: React.FC = () => {
               <table className={styles.table}>
                 <thead>
                   <tr>
-                    <th>Payment ID</th>
-                    <th>Supplier Name</th>
-                    <th>Posting Date</th>
+                    <th>{t('purchasingconsole.paymentId')}</th>
+                    <th>{t('purchasingconsole.supplierName')}</th>
+                    <th>{t('purchasingconsole.postingDate')}</th>
                     <th>Method</th>
                     <th>Check/Ref No</th>
-                    <th className={styles.amountCol}>Cash Disbursed</th>
-                    <th className={styles.amountCol}>Applied amount</th>
-                    <th>Posting Status</th>
+                    <th className={styles.amountCol}>{t('purchasingconsole.cashDisbursed')}</th>
+                    <th className={styles.amountCol}>{t('purchasingconsole.appliedAmount')}</th>
+                    <th>{t('purchasingconsole.postingStatus')}</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -584,7 +586,7 @@ export const PurchasingConsole: React.FC = () => {
                   {vendorPayments.length === 0 && (
                     <tr>
                       <td colSpan={9}>
-                        <EmptyState title="No Cash Disbursements Logged" description="Record vendor disbursements to clear accounts payable liabilities and credit bank accounts." icon={CreditCard} />
+                        <EmptyState title={t('purchasingconsole.noCashDisbursementsLogged')} description="Record vendor disbursements to clear accounts payable liabilities and credit bank accounts." icon={CreditCard} />
                       </td>
                     </tr>
                   )}
@@ -610,7 +612,7 @@ export const PurchasingConsole: React.FC = () => {
                           <th style={{ padding: '0.5rem', textAlign: 'right' }}>31-60 Days</th>
                           <th style={{ padding: '0.5rem', textAlign: 'right' }}>61-90 Days</th>
                           <th style={{ padding: '0.5rem', textAlign: 'right' }}>90+ Days</th>
-                          <th style={{ padding: '0.5rem', textAlign: 'right' }}>Total Payables</th>
+                          <th style={{ padding: '0.5rem', textAlign: 'right' }}>{t('purchasingconsole.totalPayables')}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -637,16 +639,16 @@ export const PurchasingConsole: React.FC = () => {
 
                 {/* Weighted-Average Inventory Valuations */}
                 <div style={{ background: '#FAFAF8', padding: '1.5rem', borderRadius: '12px', border: '1px solid #E8EAE6' }}>
-                  <h3 style={{ margin: '0 0 1rem 0', fontFamily: 'var(--font-serif)', color: 'var(--color-text-main)' }}>Inventory WAC Valuation Report</h3>
+                  <h3 style={{ margin: '0 0 1rem 0', fontFamily: 'var(--font-serif)', color: 'var(--color-text-main)' }}>{t('purchasingconsole.inventoryWacValuationReport')}</h3>
                   <div className={styles.tableWrapper}>
                     <table className={styles.table} style={{ fontSize: '0.8125rem' }}>
                       <thead>
                         <tr>
                           <th style={{ padding: '0.5rem' }}>SKU</th>
-                          <th style={{ padding: '0.5rem' }}>Stock Item Name</th>
-                          <th style={{ padding: '0.5rem', textAlign: 'right' }}>On Hand</th>
+                          <th style={{ padding: '0.5rem' }}>{t('purchasingconsole.stockItemName')}</th>
+                          <th style={{ padding: '0.5rem', textAlign: 'right' }}>{t('purchasingconsole.onHand')}</th>
                           <th style={{ padding: '0.5rem', textAlign: 'right' }}>Avg Unit Cost (WAC)</th>
-                          <th style={{ padding: '0.5rem', textAlign: 'right' }}>Valuation Total</th>
+                          <th style={{ padding: '0.5rem', textAlign: 'right' }}>{t('purchasingconsole.valuationTotal')}</th>
                         </tr>
                       </thead>
                       <tbody>

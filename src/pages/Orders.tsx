@@ -17,7 +17,7 @@ export const Orders: React.FC = () => {
   const { orders, updateOrderStatus, setActiveModal, fetchOrders, ordersLoading, postOrderFinancialsAction } = useAdminStore();
   const [searchParams, setSearchParams] = useSearchParams();
   const addToast = useToastStore((state) => state.addToast);
-  const { language } = useI18n();
+  const { t, language } = useI18n();
 
   useEffect(() => {
     fetchOrders();
@@ -162,11 +162,11 @@ export const Orders: React.FC = () => {
             <DollarSign size={24} />
           </div>
           <div>
-            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#8a8f8c', fontWeight: 700, letterSpacing: '0.05em' }}>Gross Revenue</div>
+            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#8a8f8c', fontWeight: 700, letterSpacing: '0.05em' }}>{t('orders.grossRevenue')}</div>
             <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#2C302E', marginTop: '0.25rem', fontFamily: 'var(--font-serif)' }}>
               ${grossRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
-            <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '0.125rem' }}>Active sales summary</div>
+            <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '0.125rem' }}>{t('orders.activeSalesSummary')}</div>
           </div>
         </div>
 
@@ -175,11 +175,11 @@ export const Orders: React.FC = () => {
             <Sparkles size={24} />
           </div>
           <div>
-            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#8a8f8c', fontWeight: 700, letterSpacing: '0.05em' }}>Design Pipeline</div>
+            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#8a8f8c', fontWeight: 700, letterSpacing: '0.05em' }}>{t('orders.designPipeline')}</div>
             <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#2C302E', marginTop: '0.25rem', fontFamily: 'var(--font-serif)' }}>
-              {activePreparing} <span style={{ fontSize: '0.8125rem', fontWeight: 500, color: '#d97706' }}>In Assembly</span>
+              {activePreparing} <span style={{ fontSize: '0.8125rem', fontWeight: 500, color: '#d97706' }}>{t('orders.inAssembly')}</span>
             </div>
-            <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '0.125rem' }}>Awaiting stem makeup</div>
+            <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '0.125rem' }}>{t('orders.awaitingStemMakeup')}</div>
           </div>
         </div>
 
@@ -188,11 +188,11 @@ export const Orders: React.FC = () => {
             <ShoppingBag size={24} />
           </div>
           <div>
-            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#8a8f8c', fontWeight: 700, letterSpacing: '0.05em' }}>Transit Status</div>
+            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#8a8f8c', fontWeight: 700, letterSpacing: '0.05em' }}>{t('orders.transitStatus')}</div>
             <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#2C302E', marginTop: '0.25rem', fontFamily: 'var(--font-serif)' }}>
-              {inTransitCount} <span style={{ fontSize: '0.8125rem', fontWeight: 500, color: '#6366f1' }}>On Route</span>
+              {inTransitCount} <span style={{ fontSize: '0.8125rem', fontWeight: 500, color: '#6366f1' }}>{t('orders.onRoute')}</span>
             </div>
-            <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '0.125rem' }}>Active driver dispatches</div>
+            <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '0.125rem' }}>{t('orders.activeDriverDispatches')}</div>
           </div>
         </div>
 
@@ -205,7 +205,7 @@ export const Orders: React.FC = () => {
             <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#2C302E', marginTop: '0.25rem', fontFamily: 'var(--font-serif)' }}>
               ${unpaidBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
-            <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '0.125rem' }}>Awaiting settlement</div>
+            <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '0.125rem' }}>{t('orders.awaitingSettlement')}</div>
           </div>
         </div>
       </div>
@@ -283,9 +283,9 @@ export const Orders: React.FC = () => {
               onChange={(e) => setPaymentFilter(e.target.value)}
               style={{ padding: '0.5rem 0.75rem', border: '1px solid #E8EAE6', borderRadius: '8px', background: '#FFFFFF', fontSize: '0.8125rem', color: '#2C302E', outline: 'none' }}
             >
-              <option value="all">All Billings</option>
+              <option value="all">{t('orders.allBillings')}</option>
               <option value="paid">Settled (Paid)</option>
-              <option value="unpaid">Awaiting Payment</option>
+              <option value="unpaid">{t('orders.awaitingPayment')}</option>
             </select>
           </div>
 
@@ -296,7 +296,7 @@ export const Orders: React.FC = () => {
               onChange={(e) => setPriorityFilter(e.target.value)}
               style={{ padding: '0.5rem 0.75rem', border: '1px solid #E8EAE6', borderRadius: '8px', background: '#FFFFFF', fontSize: '0.8125rem', color: '#2C302E', outline: 'none' }}
             >
-              <option value="all">All Priorities</option>
+              <option value="all">{t('orders.allPriorities')}</option>
               <option value="low">Low</option>
               <option value="normal">Normal</option>
               <option value="high">High</option>
@@ -324,7 +324,7 @@ export const Orders: React.FC = () => {
         {ordersLoading ? (
           <div style={{ padding: '4rem', textAlign: 'center', color: '#6b7280' }}>
             <div style={{ fontSize: '2rem', marginBottom: '1rem', animation: 'spin 2s linear infinite', display: 'inline-block' }}>❁</div>
-            <p style={{ fontFamily: 'var(--font-sans)', fontWeight: 500 }}>Fetching live Firestore orders...</p>
+            <p style={{ fontFamily: 'var(--font-sans)', fontWeight: 500 }}>{t('orders.fetchingLiveFirestoreOrders')}</p>
             <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
           </div>
         ) : filteredOrders.length === 0 ? (
@@ -342,12 +342,12 @@ export const Orders: React.FC = () => {
             <table className={styles.table} style={{ width: '100%' }}>
               <thead>
                 <tr style={{ background: '#FDFCFA' }}>
-                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>Order ID</th>
+                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>{t('orders.orderId')}</th>
                   <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>Date</th>
                   <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>Customer</th>
                   <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>Total</th>
                   <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>Payment</th>
-                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>Assigned Staff</th>
+                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>{t('orders.assignedStaff')}</th>
                   <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>Status</th>
                   <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c', textAlign: 'right' }}>Actions</th>
                 </tr>
@@ -407,7 +407,7 @@ export const Orders: React.FC = () => {
                           <option value="draft">Draft</option>
                           <option value="confirmed">Confirmed</option>
                           <option value="preparing">Preparing</option>
-                          <option value="out_for_delivery">Out for Delivery</option>
+                          <option value="out_for_delivery">{t('orders.outForDelivery')}</option>
                           <option value="delivered">Delivered</option>
                           <option value="cancelled">Cancelled</option>
                         </select>

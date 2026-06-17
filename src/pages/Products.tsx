@@ -16,7 +16,7 @@ export const Products: React.FC = () => {
   const { products, setActiveModal } = useAdminStore();
   const [searchParams, setSearchParams] = useSearchParams();
   const addToast = useToastStore((state) => state.addToast);
-  const { language } = useI18n();
+  const { t, language } = useI18n();
 
   // Filter local states
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>('all');
@@ -139,11 +139,11 @@ export const Products: React.FC = () => {
             <Flower2 size={24} />
           </div>
           <div>
-            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#8a8f8c', fontWeight: 700, letterSpacing: '0.05em' }}>Total Catalog</div>
+            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#8a8f8c', fontWeight: 700, letterSpacing: '0.05em' }}>{t('products.totalCatalog')}</div>
             <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#2C302E', marginTop: '0.25rem', fontFamily: 'var(--font-serif)' }}>
               {totalCatalog} <span style={{ fontSize: '0.8125rem', fontWeight: 500, color: '#6b7280' }}>Items</span>
             </div>
-            <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '0.125rem' }}>Active designer collections</div>
+            <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '0.125rem' }}>{t('products.activeDesignerCollections')}</div>
           </div>
         </div>
 
@@ -152,11 +152,11 @@ export const Products: React.FC = () => {
             <Package size={24} />
           </div>
           <div>
-            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#8a8f8c', fontWeight: 700, letterSpacing: '0.05em' }}>In Stock</div>
+            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#8a8f8c', fontWeight: 700, letterSpacing: '0.05em' }}>{t('products.inStock')}</div>
             <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#10b981', marginTop: '0.25rem', fontFamily: 'var(--font-serif)' }}>
               {inStockCount} <span style={{ fontSize: '0.8125rem', fontWeight: 500, color: '#047857' }}>Active</span>
             </div>
-            <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '0.125rem' }}>Available for ordering</div>
+            <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '0.125rem' }}>{t('products.availableForOrdering')}</div>
           </div>
         </div>
 
@@ -165,11 +165,11 @@ export const Products: React.FC = () => {
             <AlertTriangle size={24} />
           </div>
           <div>
-            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#8a8f8c', fontWeight: 700, letterSpacing: '0.05em' }}>Low Stock Items</div>
+            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#8a8f8c', fontWeight: 700, letterSpacing: '0.05em' }}>{t('products.lowStockItems')}</div>
             <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#d97706', marginTop: '0.25rem', fontFamily: 'var(--font-serif)' }}>
               {lowStockCount} <span style={{ fontSize: '0.8125rem', fontWeight: 500, color: '#b45309' }}>Alerts</span>
             </div>
-            <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '0.125rem' }}>Below threshold triggers</div>
+            <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '0.125rem' }}>{t('products.belowThresholdTriggers')}</div>
           </div>
         </div>
 
@@ -178,11 +178,11 @@ export const Products: React.FC = () => {
             <TrendingUp size={24} />
           </div>
           <div>
-            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#8a8f8c', fontWeight: 700, letterSpacing: '0.05em' }}>Average Retail Price</div>
+            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#8a8f8c', fontWeight: 700, letterSpacing: '0.05em' }}>{t('products.averageRetailPrice')}</div>
             <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#2C302E', marginTop: '0.25rem', fontFamily: 'var(--font-serif)' }}>
               ${avgPrice.toFixed(2)}
             </div>
-            <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '0.125rem' }}>Retail markup standard</div>
+            <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '0.125rem' }}>{t('products.retailMarkupStandard')}</div>
           </div>
         </div>
       </div>
@@ -257,7 +257,7 @@ export const Products: React.FC = () => {
               onChange={(e) => setCategoryFilter(e.target.value)}
               style={{ padding: '0.5rem 0.75rem', border: '1px solid #E8EAE6', borderRadius: '8px', background: '#FFFFFF', fontSize: '0.8125rem', color: '#2C302E', outline: 'none' }}
             >
-              <option value="all">All Categories</option>
+              <option value="all">{t('products.allCategories')}</option>
               {uniqueCategories.map(cat => (
                 <option key={cat} value={cat}>{cat}</option>
               ))}
@@ -265,15 +265,15 @@ export const Products: React.FC = () => {
           </div>
 
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.75rem', color: '#8a8f8c', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Delivery Mode</span>
+            <span style={{ fontSize: '0.75rem', color: '#8a8f8c', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('products.deliveryMode')}</span>
             <select
               value={sameDayFilter}
               onChange={(e) => setSameDayFilter(e.target.value)}
               style={{ padding: '0.5rem 0.75rem', border: '1px solid #E8EAE6', borderRadius: '8px', background: '#FFFFFF', fontSize: '0.8125rem', color: '#2C302E', outline: 'none' }}
             >
-              <option value="all">All Modes</option>
+              <option value="all">{t('products.allModes')}</option>
               <option value="eligible">Same-Day Delivery</option>
-              <option value="ineligible">Standard Shipping</option>
+              <option value="ineligible">{t('products.standardShipping')}</option>
             </select>
           </div>
 
@@ -309,12 +309,12 @@ export const Products: React.FC = () => {
             <table className={styles.table} style={{ width: '100%' }}>
               <thead>
                 <tr style={{ background: '#FDFCFA' }}>
-                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>Catalog Item</th>
+                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>{t('products.catalogItem')}</th>
                   <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>SKU</th>
                   <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>Category</th>
-                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>Retail Price</th>
-                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>Delivery Eligibility</th>
-                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>Fulfillment Status</th>
+                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>{t('products.retailPrice')}</th>
+                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>{t('products.deliveryEligibility')}</th>
+                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>{t('products.fulfillmentStatus')}</th>
                   <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>Status</th>
                   <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c', textAlign: 'right' }}>Actions</th>
                 </tr>

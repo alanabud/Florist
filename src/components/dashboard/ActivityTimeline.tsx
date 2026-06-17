@@ -4,6 +4,7 @@ import { getRecentAuditLogs, type AuditRecord } from '../../services/auditServic
 import { useCompany } from '../../context/CompanyContext';
 import styles from './ActivityTimeline.module.css';
 import { ShoppingBag, CreditCard, Flower2, Truck, Package, CalendarHeart, FileText } from 'lucide-react';
+import { useI18n } from '../../i18n/I18nProvider';
 
 const activityTemplates = [
   { icon: ShoppingBag, color: '#6C8271', label: 'New order placed' },
@@ -15,6 +16,7 @@ const activityTemplates = [
 ];
 
 export const ActivityTimeline: React.FC = () => {
+  const { t } = useI18n();
   const { orders } = useAdminStore();
   const { selectedCompanyId } = useCompany();
   const [logs, setLogs] = useState<AuditRecord[]>([]);
@@ -125,7 +127,7 @@ export const ActivityTimeline: React.FC = () => {
 
   return (
     <div className={styles.panel}>
-      <h3 className={styles.panelTitle}>Recent Activity</h3>
+      <h3 className={styles.panelTitle}>{t('dashboard.recentActivity')}</h3>
       <div className={styles.timeline}>
         {activities.map((activity, index) => (
           <div key={activity.id + index} className={styles.timelineItem}>

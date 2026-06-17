@@ -1,10 +1,14 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { MaintenanceModal, type TabConfig } from '../MaintenanceModal';
 import { useAdminStore } from '../../../store/adminStore';
 import { useToastStore } from '../../../store/toastStore';
 import { validateDelivery } from '../../../services/validators';
 import { writeAuditLog } from '../../../services/auditService';
 import { normalizeOrder } from '../../../services/normalizers';
+import { useI18n } from '../../../i18n/I18nProvider';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../../../firebase/config';
+import { useCompany } from '../../../context/CompanyContext';
 
 interface DeliveryMaintenanceFormProps {
   isOpen: boolean;
@@ -12,15 +16,42 @@ interface DeliveryMaintenanceFormProps {
 }
 
 export const DeliveryMaintenanceForm: React.FC<DeliveryMaintenanceFormProps> = ({ isOpen, onClose }) => {
+  const { t } = useI18n();
   const addToast = useToastStore((s) => s.addToast);
   const { orders, updateOrderDetails, modalPayload } = useAdminStore();
+  const { selectedCompanyId, memberships } = useCompany();
+
+  const [deliveryRecord, setDeliveryRecord] = useState<any>(null);
+
+  const currentMember = memberships.find((m) => m.companyId === selectedCompanyId);
+  const userRole = currentMember?.role || 'viewer';
+  const isDriver = userRole === 'driver';
+
+  useEffect(() => {
+    if (isOpen && modalPayload?.id) {
+      const getDelivery = async () => {
+        try {
+          const docRef = doc(db, 'deliveries', modalPayload.id);
+          const snap = await getDoc(docRef);
+          if (snap.exists()) {
+            setDeliveryRecord(snap.data());
+          } else {
+            setDeliveryRecord(null);
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      };
+      getDelivery();
+    } else {
+      setDeliveryRecord(null);
+    }
+  }, [isOpen, modalPayload]);
 
   const mode = modalPayload?.id ? 'edit' : 'create';
-  // Deliveries are backed by Orders in the store, so we fetch the order record
   const rawInitial = modalPayload?.id ? modalPayload : {};
   const initialValues = normalizeOrder(rawInitial);
 
-  // Map values from order standard fields to delivery naming specs if necessary
   const deliveryValues = {
     ...initialValues,
     recipientName: initialValues.recipientName || initialValues.customerName,
@@ -37,7 +68,6 @@ export const DeliveryMaintenanceForm: React.FC<DeliveryMaintenanceFormProps> = (
       const orderId = values.id;
       const oldOrder = orders.find((o) => o.id === orderId);
 
-      // Map back fields to order schema
       const updates = {
         recipientName: values.recipientName,
         recipientPhone: values.recipientPhone,
@@ -58,7 +88,6 @@ export const DeliveryMaintenanceForm: React.FC<DeliveryMaintenanceFormProps> = (
         safeDropAllowed: !!values.safeDropAllowed,
         signatureRequired: !!values.signatureRequired,
         
-        // Dispatch fields
         dispatchTime: values.dispatchTime,
         deliveredTime: values.deliveredTime,
         deliveryAttemptCount: parseInt(values.deliveryAttemptCount) || 0,
@@ -67,7 +96,6 @@ export const DeliveryMaintenanceForm: React.FC<DeliveryMaintenanceFormProps> = (
         driverNotes: values.driverNotes,
         customerDeliveryNotes: values.customerDeliveryNotes,
         
-        // Proof
         proofOfDelivery: values.proofOfDelivery,
         deliveryPhotoUrl: values.deliveryPhotoUrl,
       };
@@ -156,12 +184,63 @@ export const DeliveryMaintenanceForm: React.FC<DeliveryMaintenanceFormProps> = (
             { value: 'Marcus T.', label: 'Marcus T.' },
             { value: 'Elena R.', label: 'Elena R.' },
             { value: 'James K.', label: 'James K.' },
+            { value: 'Julian V.', label: 'Julian V. (Uber Mock)' },
+            { value: 'Local Courier', label: 'Manual Courier' }
           ],
         },
         { name: 'routeNumber', label: 'Route number', type: 'text', colSpan: 1 },
         { name: 'dispatchTime', label: 'Dispatch Timestamp', type: 'text', colSpan: 1 },
         { name: 'deliveredTime', label: 'Delivered Timestamp', type: 'text', colSpan: 1 },
         { name: 'deliveryAttemptCount', label: 'Delivery Attempt Count', type: 'number', colSpan: 1 },
+        {
+          name: 'dispatch_details',
+          label: 'Third-Party Dispatch Operational Data',
+          type: 'custom',
+          colSpan: 3,
+          render: () => {
+            if (!deliveryRecord) return null;
+            const token = deliveryRecord.providerMetadata?.publicTrackingToken;
+
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1rem', padding: '1rem', background: '#FAFAF8', borderRadius: '12px', border: '1px solid #E8EAE6' }}>
+                <h4 style={{ fontSize: '0.8125rem', fontWeight: 700, margin: 0 }}>{t('delivery.dispatchHub.logisticsDispatchDetails')}</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', fontSize: '0.8125rem' }}>
+                  <div>
+                    <span style={{ color: '#8a8f8c', fontWeight: 600 }}>Provider:</span> {t(`delivery.provider.${deliveryRecord.provider}`)}
+                  </div>
+                  <div>
+                    <span style={{ color: '#8a8f8c', fontWeight: 600 }}>Status:</span> {deliveryRecord.status}
+                  </div>
+                  {token && (
+                    <div style={{ gridColumn: 'span 2' }}>
+                      <span style={{ color: '#8a8f8c', fontWeight: 600 }}>Public Tracking Link:</span>{' '}
+                      <a href={`/track-delivery/${token}`} target="_blank" rel="noopener noreferrer" style={{ color: '#4A6B50', fontWeight: 600 }}>
+                        /track-delivery/{token}
+                      </a>
+                    </div>
+                  )}
+                </div>
+
+                {!isDriver && (
+                  <div style={{ borderTop: '1px dashed #E8EAE6', paddingTop: '0.75rem', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem', fontSize: '0.8125rem' }}>
+                    <div>
+                      <span style={{ color: '#8a8f8c', fontWeight: 600 }}>Collected Fee:</span> ${deliveryRecord.quote?.customerDeliveryCharge?.toFixed(2) || '0.00'}
+                    </div>
+                    <div>
+                      <span style={{ color: '#8a8f8c', fontWeight: 600 }}>Provider Cost:</span> ${deliveryRecord.quote?.estimatedProviderCost?.toFixed(2) || '0.00'}
+                    </div>
+                    <div>
+                      <span style={{ color: '#8a8f8c', fontWeight: 600 }}>Margin:</span>{' '}
+                      <span style={{ fontWeight: 600, color: (deliveryRecord.quote?.customerDeliveryCharge - deliveryRecord.quote?.estimatedProviderCost) >= 0 ? '#10B981' : '#EF4444' }}>
+                        ${(deliveryRecord.quote?.customerDeliveryCharge - deliveryRecord.quote?.estimatedProviderCost).toFixed(2) || '0.00'}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          }
+        }
       ],
     },
     {
@@ -192,7 +271,7 @@ export const DeliveryMaintenanceForm: React.FC<DeliveryMaintenanceFormProps> = (
             const auditList = values.auditTrail || [];
             return (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <label style={{ fontSize: '0.8125rem', fontWeight: 600 }}>Logistics Audit Timeline</label>
+                <label style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{t('maintenance.logisticsAuditTimeline')}</label>
                 <div style={{ maxHeight: '150px', overflowY: 'auto', border: '1px solid #E8EAE6', borderRadius: '8px', padding: '0.5rem', background: '#FAFAF8', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                   {auditList.map((log: string, idx: number) => (
                     <div key={idx} style={{ fontSize: '0.75rem', borderBottom: '1px solid #F0EDE6', paddingBottom: '0.25rem' }}>

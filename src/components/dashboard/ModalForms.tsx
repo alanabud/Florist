@@ -24,6 +24,7 @@ import { PurchaseOrderForm } from '../maintenance/forms/PurchaseOrderForm';
 import { InventoryReceiptForm } from '../maintenance/forms/InventoryReceiptForm';
 import { VendorBillForm } from '../maintenance/forms/VendorBillForm';
 import { VendorPaymentForm } from '../maintenance/forms/VendorPaymentForm';
+import { useI18n } from '../../i18n/I18nProvider';
 
 // Helper functions to generate stable IDs outside the render lifecycle to satisfy ESLint purity rules
 const generateCustomProductId = () => `p-custom-${Date.now()}`;
@@ -64,6 +65,7 @@ export const ModalForms: React.FC<ModalFormsProps> = ({ activeModal, onClose }) 
 
 /* ==================== CREATE CUSTOM BOUQUET MODAL ==================== */
 function CreateCustomBouquetModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const { t } = useI18n();
   const addToast = useToastStore(s => s.addToast);
   const { addProduct, deductStemsFromInventory } = useAdminStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -201,7 +203,7 @@ function CreateCustomBouquetModal({ isOpen, onClose }: { isOpen: boolean; onClos
             <input type="number" name="eucalyptus" value={form.eucalyptus} onChange={update} className={modalStyles.formInput} min="0" />
           </div>
           <div className={modalStyles.formGroup}>
-            <label className={modalStyles.formLabel}>Ribbon Selection</label>
+            <label className={modalStyles.formLabel}>{t('dashboard.ribbonSelection')}</label>
             <select name="ribbon" value={form.ribbon} onChange={update} className={modalStyles.formInput}>
               <option value="satin">Satin Ribbon (+$5.00)</option>
               <option value="velvet">Velvet Ribbon (+$8.00)</option>
@@ -210,7 +212,7 @@ function CreateCustomBouquetModal({ isOpen, onClose }: { isOpen: boolean; onClos
             </select>
           </div>
           <div className={modalStyles.formGroup}>
-            <label className={modalStyles.formLabel}>Packaging Option</label>
+            <label className={modalStyles.formLabel}>{t('dashboard.packagingOption')}</label>
             <select name="packaging" value={form.packaging} onChange={update} className={modalStyles.formInput}>
               <option value="kraft">Kraft Paper Wrap (+$5.00)</option>
               <option value="box">Signature Gift Box (+$15.00)</option>
@@ -243,6 +245,7 @@ function CreateCustomBouquetModal({ isOpen, onClose }: { isOpen: boolean; onClos
 
 /* ==================== NEW JOURNAL ENTRY MODAL ==================== */
 function NewJournalModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const { t } = useI18n();
   const addToast = useToastStore(s => s.addToast);
   const { fetchJournalEntries, chartOfAccounts, fetchChartOfAccounts } = useFinanceStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -383,7 +386,7 @@ function NewJournalModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
   };
 
   return (
-    <FormModal isOpen={isOpen} onClose={onClose} title="Log Balanced Journal Entry">
+    <FormModal isOpen={isOpen} onClose={onClose} title={t('dashboard.logBalancedJournalEntry')}>
       <form onSubmit={handleSubmit} style={{ maxWidth: '750px', width: '100%' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
           <div>
@@ -460,7 +463,7 @@ function NewJournalModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
                   onClick={() => handleRemoveLine(index)}
                   disabled={lines.length <= 2}
                   style={{ border: 'none', background: 'none', color: '#EF4444', fontSize: '1.125rem', cursor: 'pointer', opacity: lines.length <= 2 ? 0.3 : 1 }}
-                  title="Remove Line"
+                  title={t('dashboard.removeLine')}
                 >
                   ✕
                 </button>
@@ -514,6 +517,7 @@ function NewJournalModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
 
 /* ==================== VIP CLIENT CONTACT CARD MODAL ==================== */
 function VipClientModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const { t } = useI18n();
   const { orders, modalPayload } = useAdminStore();
   const customerName = (modalPayload?.name as string) || 'Eleanor Vance';
   const customerEmail = (modalPayload?.email as string) || 'eleanor@example.com';
@@ -539,17 +543,17 @@ function VipClientModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
           <div style={{ background: '#F9ECEC', padding: '0.75rem', borderRadius: '10px' }}>
-            <p style={{ margin: 0, fontSize: '0.75rem', color: '#6b7280' }}>Lifetime Value</p>
+            <p style={{ margin: 0, fontSize: '0.75rem', color: '#6b7280' }}>{t('dashboard.lifetimeValue')}</p>
             <p style={{ margin: '0.125rem 0 0 0', fontSize: '1.125rem', fontWeight: 700, color: 'var(--color-text-main)' }}>{ltv}</p>
           </div>
           <div style={{ background: '#EAF0EB', padding: '0.75rem', borderRadius: '10px' }}>
-            <p style={{ margin: 0, fontSize: '0.75rem', color: '#6b7280' }}>Total Orders</p>
+            <p style={{ margin: 0, fontSize: '0.75rem', color: '#6b7280' }}>{t('dashboard.totalOrders')}</p>
             <p style={{ margin: '0.125rem 0 0 0', fontSize: '1.125rem', fontWeight: 700, color: 'var(--color-text-main)' }}>{totalOrders}</p>
           </div>
         </div>
 
         <div style={{ marginBottom: '1.5rem' }}>
-          <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.875rem', color: 'var(--color-text-main)' }}>Contact Channels</h4>
+          <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.875rem', color: 'var(--color-text-main)' }}>{t('dashboard.contactChannels')}</h4>
           <div style={{ display: 'flex', gap: '0.75rem' }}>
             <a href={`mailto:${customerEmail}`} style={{ flex: 1, textDecoration: 'none', textAlign: 'center', padding: '0.5rem', borderRadius: '8px', border: '1px solid #E8EAE6', background: '#FFFFFF', color: 'var(--color-text-main)', fontSize: '0.8125rem', fontWeight: 600, transition: 'all 150ms' }}
                onMouseEnter={e => e.currentTarget.style.background = '#F5F1E7'}
@@ -565,10 +569,10 @@ function VipClientModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
         </div>
 
         <div>
-          <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.875rem', color: 'var(--color-text-main)' }}>Recent Order History</h4>
+          <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.875rem', color: 'var(--color-text-main)' }}>{t('dashboard.recentOrderHistory')}</h4>
           <div style={{ maxHeight: '150px', overflowY: 'auto', border: '1px solid #E8EAE6', borderRadius: '10px', padding: '0.5rem' }}>
             {clientOrders.length === 0 ? (
-              <p style={{ margin: 0, fontSize: '0.75rem', color: '#6b7280', textAlign: 'center', padding: '1rem' }}>No orders found.</p>
+              <p style={{ margin: 0, fontSize: '0.75rem', color: '#6b7280', textAlign: 'center', padding: '1rem' }}>{t('dashboard.noOrdersFound')}</p>
             ) : (
               clientOrders.map(o => (
                 <div key={o.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.35rem 0.5rem', borderBottom: '1px solid #F0EDE6', fontSize: '0.75rem' }}>

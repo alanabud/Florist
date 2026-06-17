@@ -26,7 +26,9 @@ import { Reports } from './pages/Reports';
 import { QA } from './pages/QA';
 import { AccountsReceivable } from './pages/AccountsReceivable';
 import { PurchasingConsole } from './pages/PurchasingConsole';
+import { TrackDelivery } from './pages/TrackDelivery';
 import { ToastContainer } from './components/ui/Toast';
+import { useI18n } from './i18n/I18nProvider';
 
 // Placeholder pages for about/contact
 const SimplePage = ({ title }: { title: string }) => (
@@ -39,6 +41,7 @@ const SimplePage = ({ title }: { title: string }) => (
 );
 
 function App() {
+  const { t } = useI18n();
   return (
     <Router>
       <Routes>
@@ -52,9 +55,10 @@ function App() {
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/track-order" element={<TrackOrder />} />
+          <Route path="/track-delivery/:publicTrackingToken" element={<TrackDelivery />} />
           <Route path="/order-confirmation/:trackingLookupId" element={<OrderConfirmation />} />
-          <Route path="/about" element={<SimplePage title="Our Story" />} />
-          <Route path="/contact" element={<SimplePage title="Contact Us" />} />
+          <Route path="/about" element={<SimplePage title={t('landing.footer.ourStory')} />} />
+          <Route path="/contact" element={<SimplePage title={t('common.contactUs')} />} />
         </Route>
 
         <Route path="/admin/login" element={<Login />} />

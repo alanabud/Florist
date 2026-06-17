@@ -14,6 +14,7 @@ import { getLocalDateInNY, generateCustomerStatement, exportStatementPdf } from 
 import { collection, addDoc, getDocs, query, where, orderBy, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import styles from './FinanceAdmin.module.css';
+import { useI18n } from '../i18n/I18nProvider';
 
 interface CollectionNote {
   id?: string;
@@ -27,6 +28,7 @@ interface CollectionNote {
 }
 
 export const AccountsReceivable: React.FC = () => {
+  const { t } = useI18n();
   const { 
     orders, 
     customers, 
@@ -264,7 +266,7 @@ export const AccountsReceivable: React.FC = () => {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '80vh', textAlign: 'center', padding: '2rem' }}>
         <Landmark size={64} style={{ color: '#EF4444', marginBottom: '1.5rem' }} />
-        <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.75rem', fontWeight: 600, color: 'var(--color-text-main)', margin: '0 0 0.5rem 0' }}>Access Denied</h2>
+        <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.75rem', fontWeight: 600, color: 'var(--color-text-main)', margin: '0 0 0.5rem 0' }}>{t('accountsreceivable.accessDenied')}</h2>
         <p style={{ color: '#726E64', fontSize: '0.95rem', maxWidth: '400px', lineHeight: 1.6 }}>
           You do not have authorization to view Accounts Receivable controls. Please contact your manager.
         </p>
@@ -367,12 +369,12 @@ export const AccountsReceivable: React.FC = () => {
                 <thead>
                   <tr>
                     <th>Order #</th>
-                    <th>Customer Name</th>
-                    <th>Fulfillment Date</th>
-                    <th style={{ textAlign: 'right' }}>Total Cost</th>
+                    <th>{t('accountsreceivable.customerName')}</th>
+                    <th>{t('accountsreceivable.fulfillmentDate')}</th>
+                    <th style={{ textAlign: 'right' }}>{t('accountsreceivable.totalCost')}</th>
                     <th style={{ textAlign: 'right' }}>Paid</th>
-                    <th style={{ textAlign: 'right' }}>Balance Due</th>
-                    <th style={{ textAlign: 'center' }}>Collection Status</th>
+                    <th style={{ textAlign: 'right' }}>{t('finance.balanceDue')}</th>
+                    <th style={{ textAlign: 'center' }}>{t('accountsreceivable.collectionStatus')}</th>
                     <th style={{ textAlign: 'right' }}>Actions</th>
                   </tr>
                 </thead>
@@ -380,7 +382,7 @@ export const AccountsReceivable: React.FC = () => {
                   {openARList.length === 0 ? (
                     <tr>
                       <td colSpan={8} style={{ padding: '2rem', textAlign: 'center' }}>
-                        <EmptyState title="No Outstanding AR Invoices" description="All delivered and posted florist sales have been fully paid." />
+                        <EmptyState title={t('accountsreceivable.noOutstandingArInvoices')} description="All delivered and posted florist sales have been fully paid." />
                       </td>
                     </tr>
                   ) : (
@@ -419,12 +421,12 @@ export const AccountsReceivable: React.FC = () => {
                               }}
                             >
                               <option value="current">Current</option>
-                              <option value="due_soon">Due Soon</option>
-                              <option value="past_due">Past Due</option>
-                              <option value="promise_to_pay">Promise to Pay</option>
+                              <option value="due_soon">{t('accountsreceivable.dueSoon')}</option>
+                              <option value="past_due">{t('accountsreceivable.pastDue')}</option>
+                              <option value="promise_to_pay">{t('accountsreceivable.promiseToPay')}</option>
                               <option value="disputed">Disputed</option>
-                              <option value="on_hold">On Hold</option>
-                              <option value="sent_to_collections">Sent to Collections</option>
+                              <option value="on_hold">{t('accountsreceivable.onHold')}</option>
+                              <option value="sent_to_collections">{t('accountsreceivable.sentToCollections')}</option>
                             </select>
                           </td>
                           <td style={{ textAlign: 'right', display: 'flex', gap: '0.25rem', justifyContent: 'flex-end' }}>
@@ -456,14 +458,14 @@ export const AccountsReceivable: React.FC = () => {
           {/* TAB 2: Aging Breakdown */}
           {activeTab === 'aging' && (
             <div>
-              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem', color: '#2C302E', marginBottom: '1.5rem', fontWeight: 600 }}>Aging Schedule by Customer</h3>
+              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem', color: '#2C302E', marginBottom: '1.5rem', fontWeight: 600 }}>{t('accountsreceivable.agingScheduleByCustomer')}</h3>
               
               <div className={styles.tableWrapper}>
                 <table className={styles.table}>
                   <thead>
                     <tr style={{ background: '#FDFCFA' }}>
-                      <th>Customer Name</th>
-                      <th style={{ textAlign: 'right' }}>Total Outstanding</th>
+                      <th>{t('accountsreceivable.customerName')}</th>
+                      <th style={{ textAlign: 'right' }}>{t('accountsreceivable.totalOutstanding')}</th>
                       <th style={{ textAlign: 'right' }}>Current (0-30 days)</th>
                       <th style={{ textAlign: 'right' }}>31 - 60 Days</th>
                       <th style={{ textAlign: 'right' }}>61 - 90 Days</th>
@@ -521,11 +523,11 @@ export const AccountsReceivable: React.FC = () => {
                   <tr>
                     <th>Payment #</th>
                     <th>Customer</th>
-                    <th>Payment Date</th>
+                    <th>{t('accountsreceivable.paymentDate')}</th>
                     <th>Method</th>
                     <th>Reference</th>
-                    <th style={{ textAlign: 'right' }}>Total Amount</th>
-                    <th style={{ textAlign: 'right' }}>Unapplied Credit</th>
+                    <th style={{ textAlign: 'right' }}>{t('accountsreceivable.totalAmount')}</th>
+                    <th style={{ textAlign: 'right' }}>{t('accountsreceivable.unappliedCredit')}</th>
                     <th>Status</th>
                     <th style={{ textAlign: 'right' }}>Actions</th>
                   </tr>
@@ -534,7 +536,7 @@ export const AccountsReceivable: React.FC = () => {
                   {filteredPayments.length === 0 ? (
                     <tr>
                       <td colSpan={9} style={{ padding: '2rem', textAlign: 'center' }}>
-                        <EmptyState title="No Payment Receipts Logged" description="Create a new payment receipt to record incoming cash." />
+                        <EmptyState title={t('accountsreceivable.noPaymentReceiptsLogged')} description="Create a new payment receipt to record incoming cash." />
                       </td>
                     </tr>
                   ) : (
@@ -584,11 +586,11 @@ export const AccountsReceivable: React.FC = () => {
               <table className={styles.table}>
                 <thead>
                   <tr>
-                    <th>Generation Date</th>
-                    <th>Customer Name</th>
-                    <th>Start Date</th>
-                    <th>End Date</th>
-                    <th style={{ textAlign: 'right' }}>Ending Net Balance</th>
+                    <th>{t('accountsreceivable.generationDate')}</th>
+                    <th>{t('accountsreceivable.customerName')}</th>
+                    <th>{t('accountsreceivable.startDate')}</th>
+                    <th>{t('accountsreceivable.endDate')}</th>
+                    <th style={{ textAlign: 'right' }}>{t('accountsreceivable.endingNetBalance')}</th>
                     <th style={{ textAlign: 'right' }}>Actions</th>
                   </tr>
                 </thead>
@@ -596,7 +598,7 @@ export const AccountsReceivable: React.FC = () => {
                   {filteredStatements.length === 0 ? (
                     <tr>
                       <td colSpan={6} style={{ padding: '2rem', textAlign: 'center' }}>
-                        <EmptyState title="No Generated Statements History" description="Choose a customer and calculate statements above to save history logs." />
+                        <EmptyState title={t('accountsreceivable.noGeneratedStatementsHistory')} description="Choose a customer and calculate statements above to save history logs." />
                       </td>
                     </tr>
                   ) : (
@@ -695,7 +697,7 @@ export const AccountsReceivable: React.FC = () => {
                     );
                   })}
                   {customers.filter(c => (c.arBalance || 0) > 0).length === 0 && (
-                    <p style={{ textAlign: 'center', padding: '20px', color: '#8a8f8c', fontSize: '0.8125rem' }}>No delinquent accounts currently.</p>
+                    <p style={{ textAlign: 'center', padding: '20px', color: '#8a8f8c', fontSize: '0.8125rem' }}>{t('accountsreceivable.noDelinquentAccountsCurrently')}</p>
                   )}
                 </div>
               </div>
@@ -736,7 +738,7 @@ export const AccountsReceivable: React.FC = () => {
 
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
                         <div className={styles.formGroup}>
-                          <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#6b7280', marginBottom: '4px' }}>Promised Payment Date</label>
+                          <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#6b7280', marginBottom: '4px' }}>{t('accountsreceivable.promisedPaymentDate')}</label>
                           <input
                             type="date"
                             value={promisedDate}
@@ -773,9 +775,9 @@ export const AccountsReceivable: React.FC = () => {
                         Contact Logs & Notes
                       </h4>
                       {isNotesLoading ? (
-                        <p style={{ fontSize: '0.8125rem', color: '#6b7280' }}>Loading contact logs...</p>
+                        <p style={{ fontSize: '0.8125rem', color: '#6b7280' }}>{t('accountsreceivable.loadingContactLogs')}</p>
                       ) : collectionNotes.length === 0 ? (
-                        <p style={{ fontSize: '0.8125rem', color: '#8a8f8c', padding: '10px 0', fontStyle: 'italic' }}>No collections history recorded yet.</p>
+                        <p style={{ fontSize: '0.8125rem', color: '#8a8f8c', padding: '10px 0', fontStyle: 'italic' }}>{t('accountsreceivable.noCollectionsHistoryRecordedYet')}</p>
                       ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '250px', overflowY: 'auto' }}>
                           {collectionNotes.map(note => (
@@ -800,7 +802,7 @@ export const AccountsReceivable: React.FC = () => {
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '250px', border: '1px dashed #E8EAE6', borderRadius: '12px', color: '#8a8f8c' }}>
                     <MessageSquare size={36} style={{ marginBottom: '0.5rem', opacity: 0.5 }} />
-                    <p style={{ fontSize: '0.875rem' }}>Select a delinquent customer on the left to review contact logs.</p>
+                    <p style={{ fontSize: '0.875rem' }}>{t('accountsreceivable.selectADelinquentCustomerOnTheLeftToReviewContactLogs')}</p>
                   </div>
                 )}
               </div>
@@ -815,7 +817,7 @@ export const AccountsReceivable: React.FC = () => {
                 <thead>
                   <tr style={{ background: '#FDFCFA' }}>
                     <th>Date</th>
-                    <th>Entry Ref</th>
+                    <th>{t('accountsreceivable.entryRef')}</th>
                     <th>Memo / Description</th>
                     <th>GL Account</th>
                     <th style={{ textAlign: 'right' }}>Debit ($)</th>
@@ -827,7 +829,7 @@ export const AccountsReceivable: React.FC = () => {
                   {filteredPaymentGL.length === 0 ? (
                     <tr>
                       <td colSpan={7} style={{ padding: '2rem', textAlign: 'center' }}>
-                        <EmptyState title="No Payment Ledgers Logged" description="Posted cash receipts and voided transaction histories will show up here." />
+                        <EmptyState title={t('accountsreceivable.noPaymentLedgersLogged')} description="Posted cash receipts and voided transaction histories will show up here." />
                       </td>
                     </tr>
                   ) : (

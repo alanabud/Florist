@@ -8,7 +8,7 @@ import { db } from '../firebase/config';
 import { postOrderFinancials, reverseJournalEntry, postCOGSForDeliveredOrder } from '../services/financeService';
 import { calculateOrderTotals } from '../services/orderCalculationService';
 
-export type OrderStatus = 'draft' | 'confirmed' | 'scheduled' | 'in_design' | 'ready' | 'out_for_delivery' | 'delivered' | 'cancelled' | 'refunded';
+export type OrderStatus = 'draft' | 'confirmed' | 'scheduled' | 'in_design' | 'ready' | 'out_for_delivery' | 'delivered' | 'cancelled' | 'refunded' | 'delivery_exception' | 'delivery_cancelled';
 
 export type CollectionStatus =
   | 'current'

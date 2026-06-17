@@ -12,12 +12,14 @@ import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
+import { useI18n } from '../i18n/I18nProvider';
 import { 
   ShieldAlert, ShieldCheck, RefreshCw, Database, 
   Trash2, ArrowRight, CheckCircle2, XCircle, FileText, Download
 } from 'lucide-react';
 
 export const QA: React.FC = () => {
+  const { t } = useI18n();
   const { selectedCompanyId } = useCompany();
   const { resetToDemo, orders, fetchOrders } = useAdminStore();
   const { fetchJournalEntries, journalEntries } = useFinanceStore();
@@ -187,7 +189,7 @@ export const QA: React.FC = () => {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '80vh', textAlign: 'center', padding: '2rem' }}>
         <ShieldAlert size={64} style={{ color: '#EF4444', marginBottom: '1.5rem' }} />
-        <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.75rem', fontWeight: 600, color: 'var(--color-text-main)', margin: '0 0 0.5rem 0' }}>Access Denied</h2>
+        <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.75rem', fontWeight: 600, color: 'var(--color-text-main)', margin: '0 0 0.5rem 0' }}>{t('qa.accessDenied')}</h2>
         <p style={{ color: '#726E64', fontSize: '0.95rem', maxWidth: '400px', lineHeight: 1.6 }}>
           You do not have authorization to view the QA Verification Console. Please contact your administrator for credentials.
         </p>
@@ -235,7 +237,7 @@ export const QA: React.FC = () => {
           <Card style={{ padding: '1.5rem', height: '100%' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', borderBottom: '1px solid #E8EAE6', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
               <ShieldCheck size={24} style={{ color: 'var(--color-sage-dark)' }} />
-              <h3 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: '1.25rem' }}>Automated QA Verification Checks</h3>
+              <h3 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: '1.25rem' }}>{t('qa.automatedQaVerificationChecks')}</h3>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -282,7 +284,7 @@ export const QA: React.FC = () => {
               ))}
 
               {qaResults.length === 0 && (
-                <p style={{ textAlign: 'center', color: '#888', padding: '2rem' }}>No checks run yet. Click Refresh or Run Verification.</p>
+                <p style={{ textAlign: 'center', color: '#888', padding: '2rem' }}>{t('qa.noChecksRunYetClickRefreshOrRunVerification')}</p>
               )}
             </div>
           </Card>
@@ -295,7 +297,7 @@ export const QA: React.FC = () => {
           <Card style={{ padding: '1.5rem', background: '#F9FBF8', border: '1px solid #E2EADA' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', borderBottom: '1px solid #E2EADA', paddingBottom: '0.75rem', marginBottom: '1rem' }}>
               <ShieldCheck size={20} style={{ color: 'var(--color-sage-dark)' }} />
-              <h4 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: '1.1rem', color: 'var(--color-text-main)' }}>Evidence Lockdown</h4>
+              <h4 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: '1.1rem', color: 'var(--color-text-main)' }}>{t('qa.evidenceLockdown')}</h4>
             </div>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', fontSize: '0.825rem', color: '#555', marginBottom: '1.25rem' }}>
@@ -355,7 +357,7 @@ export const QA: React.FC = () => {
           <Card style={{ padding: '1.5rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', borderBottom: '1px solid #E8EAE6', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
               <Database size={24} style={{ color: 'var(--color-sage-dark)' }} />
-              <h3 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: '1.25rem' }}>Data Seeding & Ledger Sync</h3>
+              <h3 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: '1.25rem' }}>{t('qa.dataSeedingLedgerSync')}</h3>
             </div>
             <p style={{ margin: '0 0 1.25rem 0', fontSize: '0.85rem', color: '#555', lineHeight: '1.4' }}>
               Sync general ledger entries from orders. Seeding is fully idempotent and prevents inflated treasury metrics.
@@ -393,7 +395,7 @@ export const QA: React.FC = () => {
                 </div>
               ))}
               {history.length === 0 && (
-                <p style={{ textAlign: 'center', color: '#999', fontSize: '0.75rem', margin: '1rem 0' }}>No verification history found.</p>
+                <p style={{ textAlign: 'center', color: '#999', fontSize: '0.75rem', margin: '1rem 0' }}>{t('qa.noVerificationHistoryFound')}</p>
               )}
             </div>
           </Card>
@@ -455,7 +457,7 @@ export const QA: React.FC = () => {
       <Card style={{ padding: '1.5rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', borderBottom: '1px solid #E8EAE6', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
           <ShieldCheck size={24} style={{ color: 'var(--color-sage-dark)' }} />
-          <h3 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: '1.25rem' }}>Recent Database Audit Trail</h3>
+          <h3 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: '1.25rem' }}>{t('qa.recentDatabaseAuditTrail')}</h3>
         </div>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
@@ -464,7 +466,7 @@ export const QA: React.FC = () => {
                 <th style={{ padding: '0.5rem' }}>Actor</th>
                 <th style={{ padding: '0.5rem' }}>Action</th>
                 <th style={{ padding: '0.5rem' }}>Entity</th>
-                <th style={{ padding: '0.5rem' }}>Entity ID</th>
+                <th style={{ padding: '0.5rem' }}>{t('qa.entityId')}</th>
                 <th style={{ padding: '0.5rem' }}>Details (Before &rarr; After)</th>
                 <th style={{ padding: '0.5rem' }}>Timestamp</th>
               </tr>
@@ -500,7 +502,7 @@ export const QA: React.FC = () => {
 
               {auditLogs.length === 0 && (
                 <tr>
-                  <td colSpan={6} style={{ textAlign: 'center', padding: '2rem', color: '#888' }}>No audit logs recorded yet. Perform some mutations to write logs.</td>
+                  <td colSpan={6} style={{ textAlign: 'center', padding: '2rem', color: '#888' }}>{t('qa.noAuditLogsRecordedYetPerformSomeMutationsToWriteLogs')}</td>
                 </tr>
               )}
             </tbody>

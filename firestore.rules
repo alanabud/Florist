@@ -44,9 +44,14 @@ service cloud.firestore {
         && getCompanyMember(companyId).role in ["owner", "admin", "manager"];
     }
 
+    function isCompanyDispatcher(companyId) {
+      return isActiveCompanyMember(companyId)
+        && getCompanyMember(companyId).role in ["owner", "admin", "manager", "dispatcher"];
+    }
+
     function isCompanyStaff(companyId) {
       return isActiveCompanyMember(companyId)
-        && getCompanyMember(companyId).role in ["owner", "admin", "manager", "designer", "sales", "accountant"];
+        && getCompanyMember(companyId).role in ["owner", "admin", "manager", "designer", "sales", "accountant", "dispatcher", "driver"];
     }
 
     // Standard business document rules matching companyId
@@ -221,9 +226,39 @@ service cloud.firestore {
     // DELIVERIES
     match /deliveries/{deliveryId} {
       allow read: if canReadCompanyDoc();
-      allow create: if canCreateCompanyDoc() && isCompanyStaff(request.resource.data.companyId);
+      allow create: if canCreateCompanyDoc() && (getCompanyMember(request.resource.data.companyId).role in ["owner", "admin", "manager", "dispatcher", "sales"]);
       allow update: if canUpdateCompanyDoc() && isCompanyStaff(resource.data.companyId);
       allow delete: if canDeleteCompanyDoc();
+    }
+
+    // DELIVERY QUOTES
+    match /deliveryQuotes/{quoteId} {
+      allow read: if canReadCompanyDoc() && (getCompanyMember(resource.data.companyId).role in ["owner", "admin", "manager", "dispatcher", "sales"]);
+      allow create: if canCreateCompanyDoc() && (getCompanyMember(request.resource.data.companyId).role in ["owner", "admin", "manager", "dispatcher", "sales"]);
+      allow update: if canUpdateCompanyDoc() && (getCompanyMember(resource.data.companyId).role in ["owner", "admin", "manager", "dispatcher", "sales"]);
+      allow delete: if canDeleteCompanyDoc();
+    }
+
+    // DELIVERY EVENTS
+    match /deliveryEvents/{eventId} {
+      allow read: if canReadCompanyDoc() && (getCompanyMember(resource.data.companyId).role in ["owner", "admin", "manager", "dispatcher"]);
+      allow create: if canCreateCompanyDoc() && isCompanyStaff(request.resource.data.companyId);
+      allow update, delete: if false;
+    }
+
+    // DELIVERY PROVIDER CONFIGS
+    match /deliveryProviderConfigs/{configId} {
+      allow read: if canReadCompanyDoc() && (getCompanyMember(resource.data.companyId).role in ["owner", "admin", "manager", "dispatcher"]);
+      allow create, update: if canCreateCompanyDoc() && (getCompanyMember(request.resource.data.companyId).role in ["owner", "admin", "manager"]);
+      allow delete: if canDeleteCompanyDoc() && (getCompanyMember(resource.data.companyId).role in ["owner", "admin", "manager"]);
+    }
+
+    // PUBLIC DELIVERY TRACKING
+    match /publicDeliveryTracking/{trackingToken} {
+      allow get: if true;
+      allow list: if false;
+      allow create, update: if (request.auth != null && isCompanyStaff(request.resource.data.companyId));
+      allow delete: if (request.auth != null && isCompanyAdmin(request.resource.data.companyId));
     }
 
     // INVENTORY

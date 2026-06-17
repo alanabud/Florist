@@ -37,7 +37,7 @@ export interface CompanyMember {
   companyId: string;
   email: string;
   displayName: string;
-  role: 'owner' | 'admin' | 'manager' | 'designer' | 'sales' | 'accountant' | 'viewer';
+  role: 'owner' | 'admin' | 'manager' | 'dispatcher' | 'driver' | 'designer' | 'sales' | 'accountant' | 'viewer';
   status: 'active' | 'invited' | 'disabled';
   languagePreference?: string;
   defaultBranchId?: string;
@@ -93,6 +93,12 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
     'company.view', 'members.view', 'settings.view', 'customers.manage', 'orders.manage',
     'inventory.manage', 'purchasing.manage', 'payments.manage', 'finance.view', 'reports.view',
     'reports.export', 'branch.manage'
+  ],
+  dispatcher: [
+    'company.view', 'orders.manage', 'deliveries.view', 'deliveries.manage', 'reports.view'
+  ],
+  driver: [
+    'company.view', 'deliveries.view', 'deliveries.updateStatus'
   ],
   designer: [
     'company.view', 'orders.manage', 'inventory.manage', 'reports.view'

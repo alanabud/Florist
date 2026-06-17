@@ -269,8 +269,8 @@ export const Reports: React.FC = () => {
     <div className={styles.container} style={{ maxWidth: '1600px', padding: '2rem 3rem' }}>
       <div className={styles.header} style={{ marginBottom: '2rem' }}>
         <div>
-          <h1 className={styles.title} style={{ fontSize: '2.5rem', fontFamily: 'var(--font-serif)', color: '#2C302E', margin: 0, fontWeight: 600 }}>Reports & Analytics</h1>
-          <p className={styles.subtitle} style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '0.5rem' }}>Business intelligence, financial exports, and operational audit tools.</p>
+          <h1 className={styles.title} style={{ fontSize: '2.5rem', fontFamily: 'var(--font-serif)', color: '#2C302E', margin: 0, fontWeight: 600 }}>{t('reports.reportsAnalytics')}</h1>
+          <p className={styles.subtitle} style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '0.5rem' }}>{t('reports.businessIntelligenceFinancialExportsAndOperationalAuditTools')}</p>
         </div>
         <div className={styles.actions} style={{ display: 'flex', gap: '0.75rem' }}>
           <button 
@@ -369,11 +369,11 @@ export const Reports: React.FC = () => {
           {/* Summary Cards Row */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem' }}>
             <div style={{ background: '#FFFFFF', border: '1px solid #E8EAE6', borderRadius: '16px', padding: '1.5rem', boxShadow: '0 4px 20px rgba(44,48,46,0.03)' }}>
-              <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#8a8f8c', fontWeight: 700, letterSpacing: '0.05em' }}>Gross Revenue</span>
+              <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#8a8f8c', fontWeight: 700, letterSpacing: '0.05em' }}>{t('reports.grossRevenue')}</span>
               <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#2C302E', marginTop: '0.25rem', fontFamily: 'var(--font-serif)' }}>
                 {formatCurrency(deliveredRevenue, companySettings?.baseCurrencyCode || 'USD')}
               </div>
-              <span style={{ fontSize: '0.7rem', color: '#9ca3af' }}>Delivered orders only</span>
+              <span style={{ fontSize: '0.7rem', color: '#9ca3af' }}>{t('reports.deliveredOrdersOnly')}</span>
             </div>
 
             <div style={{ background: '#FFFFFF', border: '1px solid #E8EAE6', borderRadius: '16px', padding: '1.5rem', boxShadow: '0 4px 20px rgba(44,48,46,0.03)' }}>
@@ -397,7 +397,7 @@ export const Reports: React.FC = () => {
               <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#4A6B50', marginTop: '0.25rem', fontFamily: 'var(--font-serif)' }}>
                 {grossMarginPercent.toFixed(1)}%
               </div>
-              <span style={{ fontSize: '0.7rem', color: '#9ca3af' }}>Profitability yield ratio</span>
+              <span style={{ fontSize: '0.7rem', color: '#9ca3af' }}>{t('reports.profitabilityYieldRatio')}</span>
             </div>
           </div>
 
@@ -433,7 +433,7 @@ export const Reports: React.FC = () => {
                 border: '1px solid',
                 borderColor: Math.abs(inventoryVariance) < 0.01 ? '#A7F3D0' : '#FCA5A5'
               }}>
-                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: Math.abs(inventoryVariance) < 0.01 ? '#047857' : '#B91C1C', textTransform: 'uppercase' }}>Inventory Variance</span>
+                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: Math.abs(inventoryVariance) < 0.01 ? '#047857' : '#B91C1C', textTransform: 'uppercase' }}>{t('reports.inventoryVariance')}</span>
                 <div style={{ fontSize: '1.25rem', fontWeight: 700, color: Math.abs(inventoryVariance) < 0.01 ? '#047857' : '#B91C1C', marginTop: '0.25rem' }}>
                   {formatCurrency(inventoryVariance, companySettings?.baseCurrencyCode || 'USD')}
                 </div>
@@ -454,7 +454,7 @@ export const Reports: React.FC = () => {
               {Math.abs(inventoryVariance) < 0.01 ? (
                 <>
                   <ShieldCheck size={16} />
-                  <span>Subledger and General Ledger inventory balances are fully reconciled.</span>
+                  <span>{t('reports.subledgerAndGeneralLedgerInventoryBalancesAreFullyReconciled')}</span>
                 </>
               ) : (
                 <>
@@ -468,15 +468,15 @@ export const Reports: React.FC = () => {
           {/* Product Margins Table */}
           <div style={{ background: '#FFFFFF', border: '1px solid #E8EAE6', borderRadius: '16px', boxShadow: '0 4px 20px rgba(44,48,46,0.03)', overflow: 'hidden' }}>
             <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid #E8EAE6', background: '#FAFAF8' }}>
-              <h3 style={{ fontSize: '1.1rem', fontFamily: 'var(--font-serif)', color: '#2C302E', margin: 0, fontWeight: 600 }}>Product Gross Margins</h3>
+              <h3 style={{ fontSize: '1.1rem', fontFamily: 'var(--font-serif)', color: '#2C302E', margin: 0, fontWeight: 600 }}>{t('reports.grossMargin')}</h3>
             </div>
             <div className={styles.tableWrapper}>
               <table className={styles.table} style={{ width: '100%' }}>
                 <thead>
                   <tr style={{ background: '#FDFCFA' }}>
-                    <th style={{ padding: '0.75rem 1.5rem' }}>Product Name</th>
+                    <th style={{ padding: '0.75rem 1.5rem' }}>{t('reports.productName')}</th>
                     <th style={{ padding: '0.75rem 1.5rem' }}>Category</th>
-                    <th style={{ padding: '0.75rem 1.5rem', textAlign: 'center' }}>Units Sold</th>
+                    <th style={{ padding: '0.75rem 1.5rem', textAlign: 'center' }}>{t('reports.unitsSold')}</th>
                     <th style={{ padding: '0.75rem 1.5rem', textAlign: 'right' }}>Revenue ({companySettings?.baseCurrencyCode || 'USD'})</th>
                     <th style={{ padding: '0.75rem 1.5rem', textAlign: 'right' }}>Cost of Goods ({companySettings?.baseCurrencyCode || 'USD'})</th>
                     <th style={{ padding: '0.75rem 1.5rem', textAlign: 'right' }}>Margin ({companySettings?.baseCurrencyCode || 'USD'})</th>
@@ -507,15 +507,15 @@ export const Reports: React.FC = () => {
           {/* Material Stock Consumption Table */}
           <div style={{ background: '#FFFFFF', border: '1px solid #E8EAE6', borderRadius: '16px', boxShadow: '0 4px 20px rgba(44,48,46,0.03)', overflow: 'hidden' }}>
             <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid #E8EAE6', background: '#FAFAF8' }}>
-              <h3 style={{ fontSize: '1.1rem', fontFamily: 'var(--font-serif)', color: '#2C302E', margin: 0, fontWeight: 600 }}>Material consumption cost ledger</h3>
+              <h3 style={{ fontSize: '1.1rem', fontFamily: 'var(--font-serif)', color: '#2C302E', margin: 0, fontWeight: 600 }}>{t('reports.materialConsumptionCostLedger')}</h3>
             </div>
             <div className={styles.tableWrapper}>
               <table className={styles.table} style={{ width: '100%' }}>
                 <thead>
                   <tr style={{ background: '#FDFCFA' }}>
                     <th style={{ padding: '0.75rem 1.5rem' }}>SKU</th>
-                    <th style={{ padding: '0.75rem 1.5rem' }}>Material Name</th>
-                    <th style={{ padding: '0.75rem 1.5rem', textAlign: 'center' }}>Quantity Consumed</th>
+                    <th style={{ padding: '0.75rem 1.5rem' }}>{t('reports.materialName')}</th>
+                    <th style={{ padding: '0.75rem 1.5rem', textAlign: 'center' }}>{t('reports.quantityConsumed')}</th>
                     <th style={{ padding: '0.75rem 1.5rem', textAlign: 'right' }}>Unit Cost (WAC)</th>
                     <th style={{ padding: '0.75rem 1.5rem', textAlign: 'right' }}>Total Cost Value ({companySettings?.baseCurrencyCode || 'USD'})</th>
                   </tr>

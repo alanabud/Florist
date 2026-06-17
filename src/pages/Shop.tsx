@@ -9,10 +9,12 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { SlidersHorizontal, X, Heart, Search } from 'lucide-react';
 import styles from './Shop.module.css';
+import { useI18n } from '../i18n/I18nProvider';
 
 type SortOption = 'popular' | 'price-low' | 'price-high' | 'newest';
 
 export const Shop: React.FC = () => {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const { products } = useAdminStore();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -115,7 +117,7 @@ export const Shop: React.FC = () => {
       <div className={styles.shopHeader}>
         <div className={styles.headerContent}>
           <h1>{searchQueryParam ? `Results for "${searchQueryParam}"` : occasionFilter !== 'all' ? occasionFilter : 'All Arrangements'}</h1>
-          <p>Handcrafted with love and delivered fresh to your door.</p>
+          <p>{t('shop.handcraftedWithLoveAndDeliveredFreshToYourDoor')}</p>
         </div>
       </div>
 
@@ -153,7 +155,7 @@ export const Shop: React.FC = () => {
               <option value="popular">Popularity</option>
               <option value="price-low">Price: Low to High</option>
               <option value="price-high">Price: High to Low</option>
-              <option value="newest">Newest Arrivals</option>
+              <option value="newest">{t('shop.newestArrivals')}</option>
             </select>
           </div>
         </div>
@@ -193,7 +195,7 @@ export const Shop: React.FC = () => {
             </div>
 
             <div className={styles.filterSection}>
-              <h4>Color Palette</h4>
+              <h4>{t('shop.colorPalette')}</h4>
               <ul className={styles.filterList}>
                 <li>
                   <button 
@@ -244,8 +246,8 @@ export const Shop: React.FC = () => {
             {filteredProducts.length === 0 ? (
               <div className={styles.emptyState}>
                 <div className={styles.emptyIcon}><Search size={48} /></div>
-                <h3>No arrangements found</h3>
-                <p>Try adjusting your filters or browsing our full collection.</p>
+                <h3>{t('shop.noArrangementsFound')}</h3>
+                <p>{t('shop.tryAdjustingYourFiltersOrBrowsingOurFullCollection')}</p>
                 <Button onClick={() => { 
                   searchParams.delete('occasion');
                   searchParams.delete('search');
@@ -265,7 +267,7 @@ export const Shop: React.FC = () => {
                     <Card key={product.id} className={styles.productCard} onClick={() => navigate(`/product/${product.id}`)}>
                       <div className={styles.productImageWrapper}>
                         <img src={product.imageUrl} alt={product.name} loading="lazy" className={styles.productImage} />
-                        {product.isSameDay && <div className={styles.tag}>Same Day</div>}
+                        {product.isSameDay && <div className={styles.tag}>{t('landing.bestsellers.sameDay')}</div>}
                         
                         <button 
                           className={`${styles.wishlistToggle} ${isWished ? styles.wished : ''}`}
@@ -275,7 +277,7 @@ export const Shop: React.FC = () => {
                         </button>
 
                         <div className={styles.quickActions}>
-                          <Button size="sm" onClick={(e) => handleAddToCart(e, product)}>Add to Cart</Button>
+                          <Button size="sm" onClick={(e) => handleAddToCart(e, product)}>{t('landing.featured.addToCart')}</Button>
                         </div>
                       </div>
                       <div className={styles.productInfo}>

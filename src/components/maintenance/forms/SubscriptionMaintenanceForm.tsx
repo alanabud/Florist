@@ -5,6 +5,7 @@ import { useToastStore } from '../../../store/toastStore';
 import { validateSubscription } from '../../../services/validators';
 import { writeAuditLog } from '../../../services/auditService';
 import { normalizeSubscription } from '../../../services/normalizers';
+import { useI18n } from '../../../i18n/I18nProvider';
 
 interface SubscriptionMaintenanceFormProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface SubscriptionMaintenanceFormProps {
 }
 
 export const SubscriptionMaintenanceForm: React.FC<SubscriptionMaintenanceFormProps> = ({ isOpen, onClose }) => {
+  const { t } = useI18n();
   const addToast = useToastStore((s) => s.addToast);
   const { addSubscription, updateSubscriptionDetails, deleteSubscription, modalPayload, subscriptions } = useAdminStore();
 
@@ -206,7 +208,7 @@ export const SubscriptionMaintenanceForm: React.FC<SubscriptionMaintenanceFormPr
             const auditList = values.auditTrail || [];
             return (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <label style={{ fontSize: '0.8125rem', fontWeight: 600 }}>Subscription Operations Timeline</label>
+                <label style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{t('maintenance.subscriptionOperationsTimeline')}</label>
                 <div style={{ maxHeight: '150px', overflowY: 'auto', border: '1px solid #E8EAE6', borderRadius: '8px', padding: '0.5rem', background: '#FAFAF8', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                   {auditList.map((log: string, idx: number) => (
                     <div key={idx} style={{ fontSize: '0.75rem', borderBottom: '1px solid #F0EDE6', paddingBottom: '0.25rem' }}>

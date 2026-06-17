@@ -4,6 +4,7 @@ import { useAdminStore } from '../../../store/adminStore';
 import { useToastStore } from '../../../store/toastStore';
 import { receivePurchaseOrder } from '../../../services/receivingService';
 import modalStyles from '../../ui/FormModal.module.css';
+import { useI18n } from '../../../i18n/I18nProvider';
 
 interface InventoryReceiptFormProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface InventoryReceiptFormProps {
 }
 
 export const InventoryReceiptForm: React.FC<InventoryReceiptFormProps> = ({ isOpen, onClose }) => {
+  const { t } = useI18n();
   const addToast = useToastStore((s) => s.addToast);
   const { purchaseOrders, fetchPurchaseOrders } = useAdminStore();
 
@@ -140,7 +142,7 @@ export const InventoryReceiptForm: React.FC<InventoryReceiptFormProps> = ({ isOp
   };
 
   return (
-    <FormModal isOpen={isOpen} onClose={onClose} title="Log Inventory Receipt">
+    <FormModal isOpen={isOpen} onClose={onClose} title={t('maintenance.logInventoryReceipt')}>
       <form onSubmit={handleSubmit} style={{ maxWidth: '850px', width: '100%' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
           <div>
@@ -151,7 +153,7 @@ export const InventoryReceiptForm: React.FC<InventoryReceiptFormProps> = ({ isOp
               className={modalStyles.formInput}
               required
             >
-              <option value="">Select an Ordered PO...</option>
+              <option value="">{t('maintenance.selectAnOrderedPo')}</option>
               {activePOs.map(po => (
                 <option key={po.id} value={po.id}>
                   {po.id} — {po.vendorName} (Ordered: {new Date(po.orderDate).toLocaleDateString()})
@@ -186,7 +188,7 @@ export const InventoryReceiptForm: React.FC<InventoryReceiptFormProps> = ({ isOp
               />
             </div>
             <div>
-              <label className={modalStyles.formLabel}>Freight Accounting Treatment</label>
+              <label className={modalStyles.formLabel}>{t('maintenance.freightAccountingTreatment')}</label>
               <select
                 value={freightTreatment}
                 onChange={(e) => setFreightTreatment(e.target.value as any)}
@@ -203,9 +205,9 @@ export const InventoryReceiptForm: React.FC<InventoryReceiptFormProps> = ({ isOp
         {poId && (
           <div style={{ marginBottom: '1.5rem' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr', gap: '0.5rem', paddingBottom: '0.5rem', borderBottom: '1px solid #E8EAE6', fontWeight: 600, fontSize: '0.75rem', color: '#8a8f8c', textTransform: 'uppercase', textAlign: 'right' }}>
-              <span style={{ textAlign: 'left' }}>Item description</span>
+              <span style={{ textAlign: 'left' }}>{t('maintenance.itemDescription')}</span>
               <span>PO Qty</span>
-              <span>Prev Recd</span>
+              <span>{t('maintenance.prevRecd')}</span>
               <span>Delivered</span>
               <span>Damaged</span>
               <span>Rejected</span>

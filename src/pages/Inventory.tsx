@@ -20,7 +20,7 @@ export const Inventory: React.FC = () => {
   const fetchJournalEntries = useFinanceStore(s => s.fetchJournalEntries);
   const [searchParams, setSearchParams] = useSearchParams();
   const addToast = useToastStore((state) => state.addToast);
-  const { language } = useI18n();
+  const { t, language } = useI18n();
 
   // Filters local states
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>('all');
@@ -203,11 +203,11 @@ export const Inventory: React.FC = () => {
             <Package size={24} />
           </div>
           <div>
-            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#8a8f8c', fontWeight: 700, letterSpacing: '0.05em' }}>Stems On Hand</div>
+            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#8a8f8c', fontWeight: 700, letterSpacing: '0.05em' }}>{t('inventory.stemsOnHand')}</div>
             <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#2C302E', marginTop: '0.25rem', fontFamily: 'var(--font-serif)' }}>
               {totalStems.toLocaleString()} <span style={{ fontSize: '0.8125rem', fontWeight: 500, color: '#6b7280' }}>units</span>
             </div>
-            <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '0.125rem' }}>Gross material inventory</div>
+            <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '0.125rem' }}>{t('inventory.grossMaterialInventory')}</div>
           </div>
         </div>
 
@@ -216,11 +216,11 @@ export const Inventory: React.FC = () => {
             <AlertTriangle size={24} />
           </div>
           <div>
-            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#8a8f8c', fontWeight: 700, letterSpacing: '0.05em' }}>Low Stock Alerts</div>
+            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#8a8f8c', fontWeight: 700, letterSpacing: '0.05em' }}>{t('dashboard.lowStockAlerts')}</div>
             <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#d97706', marginTop: '0.25rem', fontFamily: 'var(--font-serif)' }}>
               {lowStockCount} <span style={{ fontSize: '0.8125rem', fontWeight: 500, color: '#92400e' }}>Items</span>
             </div>
-            <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '0.125rem' }}>Below target reorder level</div>
+            <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '0.125rem' }}>{t('inventory.belowTargetReorderLevel')}</div>
           </div>
         </div>
 
@@ -229,11 +229,11 @@ export const Inventory: React.FC = () => {
             <AlertOctagon size={24} />
           </div>
           <div>
-            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#8a8f8c', fontWeight: 700, letterSpacing: '0.05em' }}>Out Of Stock</div>
+            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#8a8f8c', fontWeight: 700, letterSpacing: '0.05em' }}>{t('inventory.outOfStock')}</div>
             <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#dc2626', marginTop: '0.25rem', fontFamily: 'var(--font-serif)' }}>
               {outOfStockCount} <span style={{ fontSize: '0.8125rem', fontWeight: 500, color: '#b91c1c' }}>Depleted</span>
             </div>
-            <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '0.125rem' }}>Require urgent orders</div>
+            <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '0.125rem' }}>{t('inventory.requireUrgentOrders')}</div>
           </div>
         </div>
 
@@ -242,11 +242,11 @@ export const Inventory: React.FC = () => {
             <TrendingUp size={24} />
           </div>
           <div>
-            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#8a8f8c', fontWeight: 700, letterSpacing: '0.05em' }}>Asset Valuation</div>
+            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#8a8f8c', fontWeight: 700, letterSpacing: '0.05em' }}>{t('inventory.assetValuation')}</div>
             <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#2C302E', marginTop: '0.25rem', fontFamily: 'var(--font-serif)' }}>
               ${totalValuation.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
-            <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '0.125rem' }}>Valued at wholesale cost</div>
+            <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '0.125rem' }}>{t('inventory.valuedAtWholesaleCost')}</div>
           </div>
         </div>
       </div>
@@ -320,7 +320,7 @@ export const Inventory: React.FC = () => {
               onChange={(e) => setCategoryFilter(e.target.value)}
               style={{ padding: '0.5rem 0.75rem', border: '1px solid #E8EAE6', borderRadius: '8px', background: '#FFFFFF', fontSize: '0.8125rem', color: '#2C302E', outline: 'none' }}
             >
-              <option value="all">All Categories</option>
+              <option value="all">{t('inventory.allCategories')}</option>
               <option value="Flowers">Flowers</option>
               <option value="Greens">Greens</option>
               <option value="Supplies">Supplies</option>
@@ -359,11 +359,11 @@ export const Inventory: React.FC = () => {
               <thead>
                 <tr style={{ background: '#FDFCFA' }}>
                   <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>SKU</th>
-                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>Item Name</th>
+                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>{t('inventory.itemName')}</th>
                   <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>Category</th>
                   <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>Supplier</th>
-                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>On Hand</th>
-                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>Wholesale Cost</th>
+                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>{t('inventory.onHand')}</th>
+                  <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>{t('inventory.wholesaleCost')}</th>
                   <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c' }}>Status</th>
                   <th style={{ padding: '1.125rem 1.5rem', fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase', color: '#8a8f8c', textAlign: 'right' }}>Actions</th>
                 </tr>
@@ -548,7 +548,7 @@ export const Inventory: React.FC = () => {
               </div>
 
               <div style={{ background: '#FDFCFA', border: '1px dashed #E8EAE6', borderRadius: '8px', padding: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.75rem', color: '#8a8f8c', fontWeight: 600, textTransform: 'uppercase' }}>Financial Impact</span>
+                <span style={{ fontSize: '0.75rem', color: '#8a8f8c', fontWeight: 600, textTransform: 'uppercase' }}>{t('inventory.financialImpact')}</span>
                 <span style={{ fontSize: '1rem', fontWeight: 700, color: adjustDirection === 'decrease' ? '#B91C1C' : '#047857' }}>
                   {adjustDirection === 'decrease' ? '-' : '+'}${ (adjustQty * adjustItem.unitCost).toFixed(2) }
                 </span>

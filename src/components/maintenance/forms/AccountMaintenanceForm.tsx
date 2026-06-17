@@ -5,6 +5,7 @@ import { useToastStore } from '../../../store/toastStore';
 import { useAdminStore } from '../../../store/adminStore';
 import { validateGLAccount } from '../../../services/chartOfAccountsService';
 import { type AccountType, type NormalBalance } from '../../../services/chartOfAccounts';
+import { useI18n } from '../../../i18n/I18nProvider';
 
 interface AccountMaintenanceFormProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface AccountMaintenanceFormProps {
 }
 
 export const AccountMaintenanceForm: React.FC<AccountMaintenanceFormProps> = ({ isOpen, onClose }) => {
+  const { t } = useI18n();
   const addToast = useToastStore((s) => s.addToast);
   const { chartOfAccounts, addAccount, updateAccount, journalEntries } = useFinanceStore();
   const { modalPayload } = useAdminStore();
@@ -308,10 +310,10 @@ export const AccountMaintenanceForm: React.FC<AccountMaintenanceFormProps> = ({ 
                 <div><strong>2000–2999:</strong> Liabilities</div>
                 <div><strong>3000–3999:</strong> Equity</div>
                 <div><strong>4000–4999:</strong> Revenue</div>
-                <div><strong>5000–5999:</strong> Cost of Goods Sold</div>
-                <div><strong>6000–6999:</strong> Operating Expenses</div>
-                <div><strong>7000–7999:</strong> Other Income</div>
-                <div><strong>8000–8999:</strong> Other Expenses</div>
+                <div><strong>5000–5999:</strong> {t('finance.cogs')}</div>
+                <div><strong>6000–6999:</strong> {t('maintenance.operatingExpenses')}</div>
+                <div><strong>7000–7999:</strong> {t('maintenance.otherIncome')}</div>
+                <div><strong>8000–8999:</strong> {t('maintenance.otherExpenses')}</div>
               </div>
             </div>
           )

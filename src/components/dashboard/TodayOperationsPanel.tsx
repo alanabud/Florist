@@ -4,8 +4,10 @@ import { useAdminStore } from '../../store/adminStore';
 import { useToastStore } from '../../store/toastStore';
 import { Truck, Sparkles, Clock, CheckCircle2, ChevronRight, AlertCircle, Play } from 'lucide-react';
 import styles from './TodayOperationsPanel.module.css';
+import { useI18n } from '../../i18n/I18nProvider';
 
 export const TodayOperationsPanel: React.FC = () => {
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<'deliveries' | 'production' | 'alerts'>('production');
   const navigate = useNavigate();
   const { orders, updateOrderStatus, updateOrderDetails } = useAdminStore();
@@ -89,7 +91,7 @@ export const TodayOperationsPanel: React.FC = () => {
         {activeTab === 'production' && (
           <div className={styles.list}>
             {productionQueue.length === 0 ? (
-              <p className={styles.emptyState}>No arrangements currently in the production line.</p>
+              <p className={styles.emptyState}>{t('dashboard.noArrangementsCurrentlyInTheProductionLine')}</p>
             ) : (
               productionQueue.map(order => (
                 <div key={order.id} className={styles.card}>
@@ -128,7 +130,7 @@ export const TodayOperationsPanel: React.FC = () => {
         {activeTab === 'deliveries' && (
           <div className={styles.list}>
             {todaysDeliveries.length === 0 ? (
-              <p className={styles.emptyState}>No deliveries scheduled or in transit today.</p>
+              <p className={styles.emptyState}>{t('dashboard.noDeliveriesScheduledOrInTransitToday')}</p>
             ) : (
               todaysDeliveries.map(order => (
                 <div key={order.id} className={styles.card}>
@@ -149,7 +151,7 @@ export const TodayOperationsPanel: React.FC = () => {
                           defaultValue=""
                           onChange={(e) => handleAssignDriver(order.id, e.target.value)}
                         >
-                          <option value="" disabled>Assign Courier</option>
+                          <option value="" disabled>{t('dashboard.assignCourier')}</option>
                           <option value="Julian V.">Julian V.</option>
                           <option value="Clara M.">Clara M.</option>
                           <option value="Marcus K.">Marcus K.</option>

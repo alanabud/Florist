@@ -4,6 +4,7 @@ import type { AdminModal } from '../../store/adminStore';
 import { useFinanceStore } from '../../store/financeStore';
 import { Sparkles, Hammer, Target, ShieldCheck } from 'lucide-react';
 import styles from './CommandSummary.module.css';
+import { useI18n } from '../../i18n/I18nProvider';
 
 interface CommandSummaryProps {
   onOpenModal: (type: AdminModal) => void;
@@ -26,6 +27,7 @@ function toDate(value: unknown): Date | null {
 }
 
 export const CommandSummary: React.FC<CommandSummaryProps> = ({ onOpenModal }) => {
+  const { t } = useI18n();
   const { orders, inventory } = useAdminStore();
   const { journalEntries } = useFinanceStore();
 
@@ -171,8 +173,8 @@ export const CommandSummary: React.FC<CommandSummaryProps> = ({ onOpenModal }) =
 
       <div className={styles.briefingHeader}>
         <div>
-          <h2 className={styles.title}>Daily Briefing & Operational Workload</h2>
-          <p className={styles.subtitle}>Unified console for live boutique logistics, client pipelines, and treasury audits.</p>
+          <h2 className={styles.title}>{t('dashboard.dailyBriefingOperationalWorkload')}</h2>
+          <p className={styles.subtitle}>{t('dashboard.unifiedConsoleForLiveBoutiqueLogisticsClientPipelinesAndTreasuryAudi')}ts.</p>
         </div>
         <div className={styles.timestamp}>
           {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
@@ -183,7 +185,7 @@ export const CommandSummary: React.FC<CommandSummaryProps> = ({ onOpenModal }) =
         {/* Card 1: Daily Goals Progress (Refreshed layout) */}
         <div className={styles.layeredCard}>
           <div className={styles.cardHeader}>
-            <span className={styles.cardLabel}>Daily Goal Progress</span>
+            <span className={styles.cardLabel}>{t('dashboard.dailyGoalProgress')}</span>
             <Target className={styles.iconS} size={16} />
           </div>
           <div className={styles.cardValueLarge}>
@@ -203,13 +205,13 @@ export const CommandSummary: React.FC<CommandSummaryProps> = ({ onOpenModal }) =
         {/* Card 2: Studio Capacity */}
         <div className={styles.layeredCard}>
           <div className={styles.cardHeader}>
-            <span className={styles.cardLabel}>Studio Capacity</span>
+            <span className={styles.cardLabel}>{t('dashboard.studioCapacity')}</span>
             <Hammer className={styles.iconH} size={16} />
           </div>
           <div className={styles.statsRow}>
             <div className={styles.statCell}>
               <span className={styles.statVal}>{inProduction}</span>
-              <span className={styles.statLabel}>In Crafting</span>
+              <span className={styles.statLabel}>{t('dashboard.inCrafting')}</span>
             </div>
             <div className={styles.divider} />
             <div className={styles.statCell}>
@@ -219,7 +221,7 @@ export const CommandSummary: React.FC<CommandSummaryProps> = ({ onOpenModal }) =
             <div className={styles.divider} />
             <div className={styles.statCell}>
               <span className={styles.statVal}>{needsReview}</span>
-              <span className={styles.statLabel}>Pending Review</span>
+              <span className={styles.statLabel}>{t('dashboard.pendingReview')}</span>
             </div>
           </div>
           <span className={styles.cardFooter}>
@@ -230,7 +232,7 @@ export const CommandSummary: React.FC<CommandSummaryProps> = ({ onOpenModal }) =
         {/* Card 3: Next Recommended Action */}
         <div className={`${styles.layeredCard} ${styles.recommendationCard}`}>
           <div className={styles.cardHeader}>
-            <span className={styles.cardLabel}>Recommended Action</span>
+            <span className={styles.cardLabel}>{t('dashboard.recommendedAction')}</span>
             <Sparkles className={styles.iconSparkle} size={16} />
           </div>
           <p className={styles.recommendationText}>

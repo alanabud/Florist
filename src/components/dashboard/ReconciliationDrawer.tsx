@@ -5,6 +5,7 @@ import type { JournalEntry } from '../../services/financeService';
 import { useFinanceStore } from '../../store/financeStore';
 import { useAdminStore } from '../../store/adminStore';
 import styles from './ReconciliationDrawer.module.css';
+import { useI18n } from '../../i18n/I18nProvider';
 
 interface ReconciliationDrawerProps {
   isOpen: boolean;
@@ -72,6 +73,7 @@ export const ReconciliationDrawer: React.FC<ReconciliationDrawerProps> = ({
   orders,
   journalEntries,
 }) => {
+  const { t } = useI18n();
   // Listen for Escape key to close the drawer
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -184,8 +186,8 @@ export const ReconciliationDrawer: React.FC<ReconciliationDrawerProps> = ({
       >
         {/* Header */}
         <div className={styles.header}>
-          <h2 className={styles.title}>Reconciliation Detail</h2>
-          <button className={styles.closeButton} onClick={onClose} aria-label="Close drawer">
+          <h2 className={styles.title}>{t('dashboard.reconciliationDetail')}</h2>
+          <button className={styles.closeButton} onClick={onClose} aria-label={t('dashboard.closeDrawer')}>
             <X size={20} />
           </button>
         </div>
@@ -224,12 +226,12 @@ export const ReconciliationDrawer: React.FC<ReconciliationDrawerProps> = ({
             <>
               {/* Formula */}
               <div className={styles.formulaCard}>
-                <div className={styles.formulaTitle}>Formula Derivation</div>
+                <div className={styles.formulaTitle}>{t('dashboard.formulaDerivation')}</div>
                 <div className={styles.formulaMath}>
                   Paid Orders (${paidOrCompletedOrderTotals.toFixed(2)}) + Standalone GL Cash (${standaloneCashTotal.toFixed(2)})
                 </div>
                 <div className={styles.formulaSummary}>
-                  <span className={styles.summaryLabel}>Total Cash Collected</span>
+                  <span className={styles.summaryLabel}>{t('dashboard.totalCashCollected')}</span>
                   <span className={styles.summaryValue}>${cashAssetTotal.toFixed(2)}</span>
                 </div>
               </div>
@@ -239,12 +241,12 @@ export const ReconciliationDrawer: React.FC<ReconciliationDrawerProps> = ({
                 <h3 className={styles.sectionTitle}>Paid / Completed Orders ({paidOrCompletedOrders.length})</h3>
                 <div className={styles.tableWrapper}>
                   {paidOrCompletedOrders.length === 0 ? (
-                    <div className={styles.emptyState}>No paid orders recorded.</div>
+                    <div className={styles.emptyState}>{t('dashboard.noPaidOrdersRecorded')}</div>
                   ) : (
                     <table className={styles.table}>
                       <thead>
                         <tr>
-                          <th>Order ID</th>
+                          <th>{t('dashboard.orderId')}</th>
                           <th>Customer</th>
                           <th>Status</th>
                           <th>Date</th>
@@ -278,16 +280,16 @@ export const ReconciliationDrawer: React.FC<ReconciliationDrawerProps> = ({
                 <h3 className={styles.sectionTitle}>Standalone Cash GL Transactions ({standaloneCashEntries.length})</h3>
                 <div className={styles.tableWrapper}>
                   {standaloneCashEntries.length === 0 ? (
-                    <div className={styles.emptyState}>No standalone cash GL entries.</div>
+                    <div className={styles.emptyState}>{t('dashboard.noStandaloneCashGlEntries')}</div>
                   ) : (
                     <table className={styles.table}>
                       <thead>
                         <tr>
-                          <th>Entry ID</th>
+                          <th>{t('dashboard.entryId')}</th>
                           <th>Source</th>
                           <th>Description</th>
                           <th>Date</th>
-                          <th style={{ textAlign: 'right' }}>Cash Effect</th>
+                          <th style={{ textAlign: 'right' }}>{t('dashboard.cashEffect')}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -334,7 +336,7 @@ export const ReconciliationDrawer: React.FC<ReconciliationDrawerProps> = ({
             <>
               {/* Formula */}
               <div className={styles.formulaCard}>
-                <div className={styles.formulaTitle}>Formula Derivation</div>
+                <div className={styles.formulaTitle}>{t('dashboard.formulaDerivation')}</div>
                 <div className={styles.formulaMath}>
                   Sum of Totals for Today's Paid & Completed Orders
                 </div>
@@ -351,12 +353,12 @@ export const ReconciliationDrawer: React.FC<ReconciliationDrawerProps> = ({
                 <h3 className={styles.sectionTitle}>Today's Paid / Completed Orders ({todayPaidOrders.length})</h3>
                 <div className={styles.tableWrapper}>
                   {todayPaidOrders.length === 0 ? (
-                    <div className={styles.emptyState}>No paid orders today.</div>
+                    <div className={styles.emptyState}>{t('dashboard.noPaidOrdersToday')}</div>
                   ) : (
                     <table className={styles.table}>
                       <thead>
                         <tr>
-                          <th>Order ID</th>
+                          <th>{t('dashboard.orderId')}</th>
                           <th>Customer</th>
                           <th>Status</th>
                           <th>Date</th>
@@ -390,12 +392,12 @@ export const ReconciliationDrawer: React.FC<ReconciliationDrawerProps> = ({
                 <h3 className={styles.sectionTitle}>Lifetime Paid / Completed Orders ({lifetimePaidOrders.length})</h3>
                 <div className={styles.tableWrapper}>
                   {lifetimePaidOrders.length === 0 ? (
-                    <div className={styles.emptyState}>No lifetime paid orders.</div>
+                    <div className={styles.emptyState}>{t('dashboard.noLifetimePaidOrders')}</div>
                   ) : (
                     <table className={styles.table}>
                       <thead>
                         <tr>
-                          <th>Order ID</th>
+                          <th>{t('dashboard.orderId')}</th>
                           <th>Customer</th>
                           <th>Status</th>
                           <th>Date</th>
@@ -430,7 +432,7 @@ export const ReconciliationDrawer: React.FC<ReconciliationDrawerProps> = ({
             <>
               {/* Formula */}
               <div className={styles.formulaCard}>
-                <div className={styles.formulaTitle}>Formula Derivation</div>
+                <div className={styles.formulaTitle}>{t('dashboard.formulaDerivation')}</div>
                 <div className={styles.formulaMath}>
                   AR Invoices (${arAssetTotal.toFixed(2)}) - Customer Credits (${customerCreditsTotal.toFixed(2)})
                 </div>
@@ -455,17 +457,17 @@ export const ReconciliationDrawer: React.FC<ReconciliationDrawerProps> = ({
                 <h3 className={styles.sectionTitle}>Outstanding Unpaid Orders ({arOrders.length})</h3>
                 <div className={styles.tableWrapper}>
                   {arOrders.length === 0 ? (
-                    <div className={styles.emptyState}>No outstanding accounts receivable.</div>
+                    <div className={styles.emptyState}>{t('dashboard.noOutstandingAccountsReceivable')}</div>
                   ) : (
                     <table className={styles.table}>
                       <thead>
                         <tr>
-                          <th>Order ID</th>
+                          <th>{t('dashboard.orderId')}</th>
                           <th>Customer</th>
                           <th>Status</th>
                           <th>Date</th>
                           <th style={{ textAlign: 'right' }}>Total</th>
-                          <th style={{ textAlign: 'right' }}>Balance Due</th>
+                          <th style={{ textAlign: 'right' }}>{t('finance.balanceDue')}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -507,12 +509,12 @@ export const ReconciliationDrawer: React.FC<ReconciliationDrawerProps> = ({
             <>
               {/* Formula */}
               <div className={styles.formulaCard}>
-                <div className={styles.formulaTitle}>Formula Derivation</div>
+                <div className={styles.formulaTitle}>{t('dashboard.formulaDerivation')}</div>
                 <div className={styles.formulaMath}>
                   Estimated Tax from Active Orders (Excluding Draft, Cancelled, and Refunded)
                 </div>
                 <div className={styles.formulaSummary}>
-                  <span className={styles.summaryLabel}>Total Tax Liabilities</span>
+                  <span className={styles.summaryLabel}>{t('dashboard.totalTaxLiabilities')}</span>
                   <span className={styles.summaryValue}>${taxLiabilitiesTotal.toFixed(2)}</span>
                 </div>
               </div>
@@ -522,16 +524,16 @@ export const ReconciliationDrawer: React.FC<ReconciliationDrawerProps> = ({
                 <h3 className={styles.sectionTitle}>Taxes by Order ({taxOrders.length})</h3>
                 <div className={styles.tableWrapper}>
                   {taxOrders.length === 0 ? (
-                    <div className={styles.emptyState}>No tax orders recorded.</div>
+                    <div className={styles.emptyState}>{t('dashboard.noTaxOrdersRecorded')}</div>
                   ) : (
                     <table className={styles.table}>
                       <thead>
                         <tr>
-                          <th>Order ID</th>
+                          <th>{t('dashboard.orderId')}</th>
                           <th>Customer</th>
                           <th>Status</th>
-                          <th style={{ textAlign: 'right' }}>Order Total</th>
-                          <th style={{ textAlign: 'right' }}>Tax Amount</th>
+                          <th style={{ textAlign: 'right' }}>{t('dashboard.orderTotal')}</th>
+                          <th style={{ textAlign: 'right' }}>{t('dashboard.taxAmount')}</th>
                         </tr>
                       </thead>
                       <tbody>

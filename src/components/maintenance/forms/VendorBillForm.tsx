@@ -8,6 +8,7 @@ import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../../../firebase/config';
 import { useCompany } from '../../../context/CompanyContext';
 import modalStyles from '../../ui/FormModal.module.css';
+import { useI18n } from '../../../i18n/I18nProvider';
 
 interface VendorBillFormProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ interface VendorBillFormProps {
 }
 
 export const VendorBillForm: React.FC<VendorBillFormProps> = ({ isOpen, onClose }) => {
+  const { t } = useI18n();
   const { selectedCompanyId } = useCompany();
   const addToast = useToastStore((s) => s.addToast);
   const { modalPayload, vendors, purchaseOrders, fetchVendors, fetchPurchaseOrders } = useAdminStore();
@@ -310,7 +312,7 @@ export const VendorBillForm: React.FC<VendorBillFormProps> = ({ isOpen, onClose 
                 className={modalStyles.formInput}
                 required
               >
-                <option value="">Select a PO...</option>
+                <option value="">{t('maintenance.selectAPo')}</option>
                 {activePOs.map(po => (
                   <option key={po.id} value={po.id}>{po.id} — {po.vendorName}</option>
                 ))}
@@ -326,7 +328,7 @@ export const VendorBillForm: React.FC<VendorBillFormProps> = ({ isOpen, onClose 
                 disabled={isLocked || billType === 'po'}
                 required
               >
-                <option value="">Select a Vendor...</option>
+                <option value="">{t('maintenance.selectAVendor')}</option>
                 {vendors.filter(v => v.active).map(v => (
                   <option key={v.id} value={v.id}>{v.name}</option>
                 ))}
@@ -348,14 +350,14 @@ export const VendorBillForm: React.FC<VendorBillFormProps> = ({ isOpen, onClose 
           </div>
 
           <div>
-            <label className={modalStyles.formLabel}>Payment Terms</label>
+            <label className={modalStyles.formLabel}>{t('maintenance.paymentTerms')}</label>
             <select
               value={paymentTerms}
               onChange={(e) => setPaymentTerms(e.target.value)}
               className={modalStyles.formInput}
               disabled={isLocked}
             >
-              <option value="Due on Receipt">Due on Receipt</option>
+              <option value="Due on Receipt">{t('maintenance.dueOnReceipt')}</option>
               <option value="Net 15">Net 15</option>
               <option value="Net 30">Net 30 (Default)</option>
               <option value="Net 45">Net 45</option>
@@ -422,7 +424,7 @@ export const VendorBillForm: React.FC<VendorBillFormProps> = ({ isOpen, onClose 
             {billType === 'manual' && <span>GL Account</span>}
             <span style={{ textAlign: 'right' }}>Qty</span>
             <span style={{ textAlign: 'right' }}>Unit Cost ($)</span>
-            <span style={{ textAlign: 'right' }}>Line Total</span>
+            <span style={{ textAlign: 'right' }}>{t('maintenance.lineTotal')}</span>
             <span></span>
           </div>
 

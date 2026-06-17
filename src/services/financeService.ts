@@ -23,7 +23,8 @@ export type JournalSourceType =
   | 'vendor_payment_reversal'
   | 'cogs'
   | 'cogs_reversal'
-  | 'inventory_adjustment';
+  | 'inventory_adjustment'
+  | 'delivery';
 
 export interface JournalLine {
   account: string;

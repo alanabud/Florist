@@ -11,6 +11,7 @@ import type { StatementData } from '../../../services/customerStatementService';
 import { doc, addDoc, collection } from 'firebase/firestore';
 import { db } from '../../../firebase/config';
 import styles from '../../ui/FormModal.module.css';
+import { useI18n } from '../../../i18n/I18nProvider';
 
 interface CustomerStatementFormProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ interface CustomerStatementFormProps {
 }
 
 export const CustomerStatementForm: React.FC<CustomerStatementFormProps> = ({ isOpen, onClose }) => {
+  const { t } = useI18n();
   const addToast = useToastStore((s) => s.addToast);
   const { customers, modalPayload, fetchCustomerStatements } = useAdminStore();
 
@@ -126,7 +128,7 @@ export const CustomerStatementForm: React.FC<CustomerStatementFormProps> = ({ is
     <FormModal 
       isOpen={isOpen} 
       onClose={onClose} 
-      title="Generate Customer Statement"
+      title={t('maintenance.generateCustomerStatement')}
     >
       <div style={{ width: '500px', maxWidth: '100%' }}>
         <form onSubmit={handleGenerate}>
@@ -142,7 +144,7 @@ export const CustomerStatementForm: React.FC<CustomerStatementFormProps> = ({ is
                 className={styles.formInput}
                 required
               >
-                <option value="">Select customer...</option>
+                <option value="">{t('maintenance.selectCustomer')}</option>
                 {customers.map(c => (
                   <option key={c.id} value={c.id}>{c.name} (AR Bal: $${(c.arBalance || 0).toFixed(2)})</option>
                 ))}
@@ -194,19 +196,19 @@ export const CustomerStatementForm: React.FC<CustomerStatementFormProps> = ({ is
             
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem', textAlign: 'center', background: '#FAFAF8', padding: '12px', borderRadius: '8px', border: '1px solid #E8EAE6', marginBottom: '1.25rem' }}>
               <div>
-                <span style={{ fontSize: '0.6875rem', color: '#8a8f8c', textTransform: 'uppercase', display: 'block' }}>Ending AR</span>
+                <span style={{ fontSize: '0.6875rem', color: '#8a8f8c', textTransform: 'uppercase', display: 'block' }}>{t('maintenance.endingAr')}</span>
                 <strong style={{ fontSize: '1rem', color: '#2C302E' }}>
                   ${statementPreview.endingArBalance.toFixed(2)}
                 </strong>
               </div>
               <div>
-                <span style={{ fontSize: '0.6875rem', color: '#8a8f8c', textTransform: 'uppercase', display: 'block' }}>Available Credit</span>
+                <span style={{ fontSize: '0.6875rem', color: '#8a8f8c', textTransform: 'uppercase', display: 'block' }}>{t('maintenance.availableCredit')}</span>
                 <strong style={{ fontSize: '1rem', color: '#2C302E' }}>
                   ${statementPreview.endingCreditBalance.toFixed(2)}
                 </strong>
               </div>
               <div>
-                <span style={{ fontSize: '0.6875rem', color: '#8a8f8c', textTransform: 'uppercase', display: 'block' }}>Net Due</span>
+                <span style={{ fontSize: '0.6875rem', color: '#8a8f8c', textTransform: 'uppercase', display: 'block' }}>{t('maintenance.netDue')}</span>
                 <strong style={{ fontSize: '1rem', color: '#4A6B50' }}>
                   ${statementPreview.endingNetBalance.toFixed(2)}
                 </strong>

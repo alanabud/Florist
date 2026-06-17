@@ -7,8 +7,10 @@ import { ChevronRight, Lock } from 'lucide-react';
 import { getTaxConfigForState, STATE_TAX_RATES } from '../data/taxConfig';
 import { createGuestOrder } from '../services/publicOrderService';
 import styles from './Checkout.module.css';
+import { useI18n } from '../i18n/I18nProvider';
 
 export const Checkout: React.FC = () => {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const { items, getSubtotal, getTaxableSubtotal, clearCart } = useCartStore();
   const [step, setStep] = useState(1);
@@ -99,9 +101,9 @@ export const Checkout: React.FC = () => {
   if (items.length === 0) {
     return (
       <div className={styles.emptyContainer}>
-        <h2>Your cart is empty</h2>
-        <p>You need to add items to your cart before proceeding to checkout.</p>
-        <Button onClick={() => navigate('/shop')}>Return to Shop</Button>
+        <h2>{t('storefront.cartEmpty')}</h2>
+        <p>{t('checkout.youNeedToAddItemsToYourCartBeforeProceedingToCheckout')}</p>
+        <Button onClick={() => navigate('/shop')}>{t('checkout.returnToShop')}</Button>
       </div>
     );
   }
@@ -148,7 +150,7 @@ export const Checkout: React.FC = () => {
               {/* Step 1: Recipient Details */}
               {step === 1 && (
                 <div className={styles.stepContent}>
-                  <h2>Who is this for?</h2>
+                  <h2>{t('checkout.whoIsThisFor')}</h2>
                   <div className={styles.formGrid}>
                     <div className={styles.formGroup}>
                       <label>Recipient's Full Name</label>
@@ -159,7 +161,7 @@ export const Checkout: React.FC = () => {
                       <input required name="recipientPhone" type="tel" value={formData.recipientPhone} onChange={handleInputChange} />
                     </div>
                     <div className={styles.formGroup} style={{ gridColumn: '1 / -1' }}>
-                      <label>Delivery Address</label>
+                      <label>{t('checkout.deliveryAddress')}</label>
                       <input required name="recipientAddress" value={formData.recipientAddress} onChange={handleInputChange} />
                     </div>
                     <div className={styles.formGroup}>
@@ -169,7 +171,7 @@ export const Checkout: React.FC = () => {
                     <div className={styles.formGroup}>
                       <label>State</label>
                       <select required name="recipientState" value={formData.recipientState} onChange={handleInputChange}>
-                        <option value="">Select State</option>
+                        <option value="">{t('checkout.selectState')}</option>
                         {Object.keys(STATE_TAX_RATES).filter(k => k !== 'DEFAULT').map(state => (
                           <option key={state} value={state}>{state}</option>
                         ))}
@@ -180,14 +182,14 @@ export const Checkout: React.FC = () => {
                       <input required name="recipientZip" value={formData.recipientZip} onChange={handleInputChange} />
                     </div>
                   </div>
-                  <Button type="button" onClick={nextStep} className={styles.nextBtn}>Continue to Delivery</Button>
+                  <Button type="button" onClick={nextStep} className={styles.nextBtn}>{t('checkout.continueToDelivery')}</Button>
                 </div>
               )}
 
               {/* Step 2: Delivery/Pickup Choice & Date */}
               {step === 2 && (
                 <div className={styles.stepContent}>
-                  <h2>Delivery Options</h2>
+                  <h2>{t('checkout.deliveryOptions')}</h2>
                   <div className={styles.deliveryOptions}>
                     <label className={styles.radioLabel}>
                       <input 
@@ -199,7 +201,7 @@ export const Checkout: React.FC = () => {
                       />
                       <div className={styles.radioContent}>
                         <strong>Standard Delivery ($9.99)</strong>
-                        <p>Arrives on your selected date</p>
+                        <p>{t('checkout.arrivesOnYourSelectedDate')}</p>
                       </div>
                     </label>
                     <label className={styles.radioLabel}>
@@ -225,19 +227,19 @@ export const Checkout: React.FC = () => {
                       />
                       <div className={styles.radioContent}>
                         <strong>In-Store Pickup (Free)</strong>
-                        <p>Collect from our downtown studio</p>
+                        <p>{t('checkout.collectFromOurDowntownStudio')}</p>
                       </div>
                     </label>
                   </div>
                   
                   <div className={styles.formGroup} style={{ marginTop: '2rem' }}>
-                    <label>Requested Delivery Date</label>
+                    <label>{t('checkout.requestedDeliveryDate')}</label>
                     <input required type="date" name="deliveryDate" value={formData.deliveryDate} onChange={handleInputChange} />
                   </div>
 
                   <div className={styles.btnRow}>
                     <Button type="button" variant="ghost" onClick={prevStep}>Back</Button>
-                    <Button type="button" onClick={nextStep}>Continue to Details</Button>
+                    <Button type="button" onClick={nextStep}>{t('checkout.continueToDetails')}</Button>
                   </div>
                 </div>
               )}
@@ -245,10 +247,10 @@ export const Checkout: React.FC = () => {
               {/* Step 3: Sender Details & Gift Note */}
               {step === 3 && (
                 <div className={styles.stepContent}>
-                  <h2>Your Details & Gift Message</h2>
+                  <h2>{t('checkout.yourDetailsGiftMessage')}</h2>
                   <div className={styles.formGrid}>
                     <div className={styles.formGroup}>
-                      <label>Your Full Name</label>
+                      <label>{t('checkout.yourFullName')}</label>
                       <input required name="senderName" value={formData.senderName} onChange={handleInputChange} />
                     </div>
                     <div className={styles.formGroup}>
@@ -268,7 +270,7 @@ export const Checkout: React.FC = () => {
                   </div>
                   <div className={styles.btnRow}>
                     <Button type="button" variant="ghost" onClick={prevStep}>Back</Button>
-                    <Button type="button" onClick={nextStep}>Continue to Payment</Button>
+                    <Button type="button" onClick={nextStep}>{t('checkout.continueToPayment')}</Button>
                   </div>
                 </div>
               )}
@@ -279,11 +281,11 @@ export const Checkout: React.FC = () => {
                   <h2>Payment</h2>
                   <div className={styles.paymentMock}>
                     <div className={styles.formGroup} style={{ gridColumn: '1 / -1' }}>
-                      <label>Card Number</label>
+                      <label>{t('checkout.cardNumber')}</label>
                       <input required name="cardNumber" placeholder="0000 0000 0000 0000" value={formData.cardNumber} onChange={handleInputChange} />
                     </div>
                     <div className={styles.formGroup}>
-                      <label>Expiry Date</label>
+                      <label>{t('checkout.expiryDate')}</label>
                       <input required name="expiry" placeholder="MM/YY" value={formData.expiry} onChange={handleInputChange} />
                     </div>
                     <div className={styles.formGroup}>
@@ -306,7 +308,7 @@ export const Checkout: React.FC = () => {
         {/* Sidebar: Order Summary */}
         <aside className={styles.sidebar}>
           <Card className={styles.summaryCard}>
-            <h3>Order Summary</h3>
+            <h3>{t('checkout.orderSummary')}</h3>
             <div className={styles.itemsList}>
               {items.map(item => (
                 <div key={item.id} className={styles.summaryItem}>

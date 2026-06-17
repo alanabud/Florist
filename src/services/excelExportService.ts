@@ -977,3 +977,53 @@ function buildJournalEntriesSheet(wb: XLSX.WorkBook, data: any, period: string, 
 
   XLSX.utils.book_append_sheet(wb, ws, 'Journal Entries');
 }
+
+export function exportDeliveriesExcel(deliveries: any[], options?: ExportOptions) {
+  const wb = createStyledWorkbook(options);
+  const locale = options?.locale || 'en-US';
+  const currencyFormat = getExcelCurrencyFormat(options?.currencyCode);
+
+  const ws: XLSX.WorkSheet = {};
+  ws['!ref'] = 'A1';
+  let r = addBrandingHeader(ws, 'Third-Party Delivery Operations Audit Log', `Date: ${new Date().toLocaleDateString()}`, 0, options);
+
+  const headers = ['Delivery ID', 'Date Created', 'Provider', 'Status', 'Recipient', 'Dropoff Address', 'Provider Cost', 'Customer Charge', 'Gross Margin', 'Tracking URL'];
+  headers.forEach((h, ci) => {
+    setCell(ws, r, ci, h, headerStyle);
+  });
+  r++;
+
+  let rowIdx = 0;
+  deliveries.forEach((d: any) => {
+    const style = rowIdx % 2 === 0 ? dataStyle : altRowStyle;
+    const dateStr = d.audit?.createdAt ? getFormattedDate(d.audit.createdAt, locale) : 'N/A';
+    const margin = (d.financials?.customerChargeFinal || 0) - (d.financials?.providerCostFinal || 0);
+
+    setCell(ws, r, 0, d.id.substring(0, 8).toUpperCase(), style);
+    setCell(ws, r, 1, dateStr, style);
+    setCell(ws, r, 2, d.provider ? d.provider.toUpperCase() : 'MANUAL', style);
+    setCell(ws, r, 3, d.status.toUpperCase(), style);
+    setCell(ws, r, 4, d.dropoff?.recipientName || '—', style);
+    setCell(ws, r, 5, d.dropoff?.addressLine1 || '—', style);
+    setCell(ws, r, 6, d.financials?.providerCostFinal || 0, { ...style, alignment: { horizontal: 'right' } }, currencyFormat);
+    setCell(ws, r, 7, d.financials?.customerChargeFinal || 0, { ...style, alignment: { horizontal: 'right' } }, currencyFormat);
+    setCell(ws, r, 8, margin, { ...style, alignment: { horizontal: 'right' }, font: { ...style.font, bold: true, color: { rgb: margin >= 0 ? '10B981' : 'EF4444' } } }, currencyFormat);
+    setCell(ws, r, 9, d.dispatch?.providerTrackingUrl || d.providerMetadata?.publicTrackingToken || '—', style);
+    r++;
+    rowIdx++;
+  });
+
+  // Summary row
+  r++;
+  setCell(ws, r, 0, `Total deliveries: ${deliveries.length}`, metaLabelStyle);
+  r++;
+  setCell(ws, r, 0, options?.reportFooterText || 'Unaudited — For Management Use Only', { font: { italic: true, sz: 8, color: { rgb: TEXT_MUTED } } });
+
+  ensureRange(ws, r, 9);
+  ws['!cols'] = [{ wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 18 }, { wch: 20 }, { wch: 30 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 30 }];
+  ws['!freeze'] = { xSplit: 0, ySplit: 8 };
+
+  XLSX.utils.book_append_sheet(wb, ws, 'Deliveries Manifest');
+  downloadWorkbook(wb, `BloomPro_Delivery_Manifest_${new Date().toISOString().split('T')[0]}.xlsx`);
+}
+

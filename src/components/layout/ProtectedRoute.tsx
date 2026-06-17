@@ -1,8 +1,10 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
+import { useI18n } from '../../i18n/I18nProvider';
 
 export const ProtectedRoute: React.FC = () => {
+  const { t } = useI18n();
   const { user, loading } = useAuthStore();
 
   if (loading) {
@@ -10,7 +12,7 @@ export const ProtectedRoute: React.FC = () => {
       <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--color-cream)' }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: '2rem', marginBottom: '1rem', animation: 'spin 2s linear infinite' }}>❁</div>
-          <p style={{ color: 'var(--color-sage-dark)', fontFamily: 'var(--font-sans)', fontWeight: 500 }}>Loading BloomPro Studio...</p>
+          <p style={{ color: 'var(--color-sage-dark)', fontFamily: 'var(--font-sans)', fontWeight: 500 }}>{t('layout.loadingBloomproStudio')}</p>
         </div>
         <style>
           {`

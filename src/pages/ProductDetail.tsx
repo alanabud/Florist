@@ -8,8 +8,10 @@ import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Heart, Truck, ShieldCheck, ChevronLeft, Star } from 'lucide-react';
 import styles from './ProductDetail.module.css';
+import { useI18n } from '../i18n/I18nProvider';
 
 export const ProductDetail: React.FC = () => {
+  const { t } = useI18n();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { products } = useAdminStore();
@@ -27,8 +29,8 @@ export const ProductDetail: React.FC = () => {
   if (!product) {
     return (
       <div className={styles.notFound}>
-        <h2>Product not found</h2>
-        <Button onClick={() => navigate('/shop')}>Back to Shop</Button>
+        <h2>{t('productdetail.productNotFound')}</h2>
+        <Button onClick={() => navigate('/shop')}>{t('productdetail.backToShop')}</Button>
       </div>
     );
   }
@@ -80,7 +82,7 @@ export const ProductDetail: React.FC = () => {
               <button 
                 className={`${styles.wishlistBtn} ${isWished ? styles.wished : ''}`}
                 onClick={handleToggleWishlist}
-                aria-label="Toggle Wishlist"
+                aria-label={t('productdetail.toggleWishlist')}
               >
                 <Heart size={28} fill={isWished ? 'currentColor' : 'none'} />
               </button>
@@ -125,7 +127,7 @@ export const ProductDetail: React.FC = () => {
             <div className={styles.trustItem}>
               <Truck size={20} />
               <div>
-                <strong>Delivery Options</strong>
+                <strong>{t('productdetail.deliveryOptions')}</strong>
                 <p>{product.isSameDay ? 'Eligible for Same-Day delivery if ordered before 2 PM.' : 'Standard 2-day delivery available.'}</p>
               </div>
             </div>
@@ -133,7 +135,7 @@ export const ProductDetail: React.FC = () => {
               <ShieldCheck size={20} />
               <div>
                 <strong>7-Day Freshness</strong>
-                <p>Guaranteed to stay beautiful and fresh for a full week.</p>
+                <p>{t('productdetail.guaranteedToStayBeautifulAndFreshForAFullWeek')}</p>
               </div>
             </div>
           </div>
@@ -143,7 +145,7 @@ export const ProductDetail: React.FC = () => {
       {/* Related Products */}
       {relatedProducts.length > 0 && (
         <div className={styles.relatedSection}>
-          <h2>You might also like</h2>
+          <h2>{t('productdetail.youMightAlsoLike')}</h2>
           <div className={styles.relatedGrid}>
             {relatedProducts.map(p => (
               <Card key={p.id} className={styles.relatedCard} onClick={() => navigate(`/product/${p.id}`)}>

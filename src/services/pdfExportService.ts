@@ -1025,3 +1025,56 @@ export function exportTrialBalancePDF(result: any, periodName: string, options?:
   addFooter(doc, options);
   doc.save(`BloomPro_Trial_Balance_${new Date().toISOString().split('T')[0]}.pdf`);
 }
+
+export function exportDeliveriesPDF(deliveries: any[], options?: ExportOptions) {
+  const doc = new jsPDF();
+  const locale = options?.locale || 'en-US';
+  const currency = options?.currencyCode || 'USD';
+
+  addHeader(doc, 'Delivery Dispatch Manifest Report', `Date: ${new Date().toLocaleDateString()}`, options);
+
+  // Compute metrics
+  const total = deliveries.length;
+  const totalRevenue = deliveries.reduce((acc, d) => acc + (d.financials?.customerChargeFinal || 0), 0);
+  const totalCost = deliveries.reduce((acc, d) => acc + (d.financials?.providerCostFinal || 0), 0);
+  const margin = totalRevenue - totalCost;
+
+  const tableY = addSummaryCards(doc, [
+    { label: 'Total Deliveries', value: total.toString() },
+    { label: 'Delivery Revenue', value: getFormattedCurrency(totalRevenue, currency, locale) },
+    { label: 'Provider Cost', value: getFormattedCurrency(totalCost, currency, locale) },
+    { label: 'Net Margin', value: getFormattedCurrency(margin, currency, locale) },
+  ], 52);
+
+  const rows = deliveries.map((d: any) => [
+    d.id.substring(0, 8).toUpperCase(),
+    new Date(d.audit?.createdAt || Date.now()).toLocaleDateString(),
+    d.dropoff?.recipientName || '—',
+    d.dropoff?.addressLine1 || '—',
+    d.provider ? d.provider.toUpperCase() : 'MANUAL',
+    d.status.toUpperCase(),
+    getFormattedCurrency(d.financials?.providerCostFinal || 0, currency, locale),
+    getFormattedCurrency(d.financials?.customerChargeFinal || 0, currency, locale),
+    getFormattedCurrency(d.financials?.marginFinal || 0, currency, locale),
+  ]);
+
+  doc.autoTable({
+    startY: tableY + 2,
+    head: [['ID', 'Date', 'Recipient', 'Address', 'Provider', 'Status', 'Cost', 'Charge', 'Margin']],
+    body: rows,
+    headStyles: { fillColor: SAGE, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
+    bodyStyles: { fontSize: 8 },
+    alternateRowStyles: { fillColor: [253, 251, 247] },
+    margin: { left: 14, right: 14 },
+    columnStyles: {
+      0: { fontStyle: 'bold', font: 'courier' },
+      6: { halign: 'right' },
+      7: { halign: 'right' },
+      8: { halign: 'right' }
+    },
+  });
+
+  addFooter(doc, options);
+  doc.save(`BloomPro_Delivery_Manifest_${new Date().toISOString().split('T')[0]}.pdf`);
+}
+

@@ -50,7 +50,7 @@ export const StorefrontLayout: React.FC = () => {
             <button 
               className={styles.iconBtn} 
               onClick={() => setIsMobileMenuOpen(true)}
-              aria-label="Open menu"
+              aria-label={t('layout.openMenu')}
             >
               <Menu size={24} />
             </button>
@@ -70,7 +70,7 @@ export const StorefrontLayout: React.FC = () => {
             <button 
               className={styles.cartBtn} 
               onClick={toggleDrawer}
-              aria-label="Open cart"
+              aria-label={t('layout.openCart')}
             >
               <ShoppingBag size={20} />
               {getTotalItems() > 0 && (
