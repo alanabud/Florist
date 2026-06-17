@@ -55,22 +55,24 @@ export const TrackOrder: React.FC = () => {
       if (docSnap.exists()) {
         setTrackingData(docSnap.data() as TrackingData);
       } else {
-        setError("No order matches this Order Number and Sender Email combination. Please check your credentials.");
+        setError(t('trackorder.noOrderMatch'));
       }
     } catch (err) {
       console.error("Tracking lookup failed:", err);
-      setError("An error occurred while fetching tracking details. Please try again.");
+      setError(t('trackorder.fetchError'));
     } finally {
       setIsLoading(false);
     }
   };
 
+
+
   const trackingSteps = [
-    { key: 'placed', label: 'Placed', desc: 'Order received and confirmed' },
-    { key: 'preparing', label: 'In Design', desc: 'Florists are selecting and arranging stems' },
-    { key: 'ready', label: 'Ready', desc: 'Bouquet completed and quality checked' },
-    { key: 'out_for_delivery', label: 'In Transit', desc: 'Assigned to courier route' },
-    { key: 'delivered', label: 'Delivered', desc: 'Successfully hand-delivered to recipient' }
+    { key: 'placed', label: t('trackorder.stepPlacedLabel'), desc: t('trackorder.stepPlacedDesc') },
+    { key: 'preparing', label: t('trackorder.stepInDesignLabel'), desc: t('trackorder.stepInDesignDesc') },
+    { key: 'ready', label: t('trackorder.stepReadyLabel'), desc: t('trackorder.stepReadyDesc') },
+    { key: 'out_for_delivery', label: t('trackorder.stepInTransitLabel'), desc: t('trackorder.stepInTransitDesc') },
+    { key: 'delivered', label: t('trackorder.stepDeliveredLabel'), desc: t('trackorder.stepDeliveredDesc') }
   ];
 
   const getStepIndex = (status: string) => {
@@ -85,7 +87,7 @@ export const TrackOrder: React.FC = () => {
         <div className={styles.intro}>
           <h1 className={styles.pageTitle}>{t('trackorder.trackYourOrder')}</h1>
           <p className={styles.pageSubtitle}>
-            Enter your order details below to view delivery progress, dispatch schedules, and arrangements status.
+            {t('trackorder.trackingDesc')}
           </p>
         </div>
 
@@ -94,10 +96,10 @@ export const TrackOrder: React.FC = () => {
           <Card className={styles.formCard}>
             <form onSubmit={handleTrack}>
               <div className={styles.formGroup}>
-                <label className={styles.label}>Order Number *</label>
+                <label className={styles.label}>{t('trackorder.orderNumberLabel')}</label>
                 <input 
                   type="text" 
-                  placeholder="e.g. BLM-12345" 
+                  placeholder={t('trackorder.orderNumberPlaceholder')} 
                   value={orderNumber} 
                   onChange={(e) => setOrderNumber(e.target.value)} 
                   className={styles.input}
@@ -105,10 +107,10 @@ export const TrackOrder: React.FC = () => {
                 />
               </div>
               <div className={styles.formGroup}>
-                <label className={styles.label}>Sender's Email Address *</label>
+                <label className={styles.label}>{t('trackorder.senderEmailLabel')}</label>
                 <input 
                   type="email" 
-                  placeholder="e.g. customer@example.com" 
+                  placeholder={t('trackorder.senderEmailPlaceholder')} 
                   value={email} 
                   onChange={(e) => setEmail(e.target.value)} 
                   className={styles.input}
@@ -124,7 +126,7 @@ export const TrackOrder: React.FC = () => {
                 isLoading={isLoading}
                 style={{ background: 'linear-gradient(135deg, #4A6B50, #6C8271)', border: 'none', padding: '0.8rem' }}
               >
-                <Search size={16} style={{ marginRight: '0.35rem' }} /> Track Order
+                <Search size={16} style={{ marginRight: '0.35rem' }} /> {t('trackorder.trackOrderBtn')}
               </Button>
             </form>
           </Card>
@@ -146,8 +148,8 @@ export const TrackOrder: React.FC = () => {
                 <div className={styles.metaItem}>
                   <MapPin size={18} className={styles.metaIcon} />
                   <div>
-                    <h4>Destination</h4>
-                    <p>{trackingData.recipientFirstName}'s residence — {trackingData.city}, {trackingData.state}</p>
+                    <h4>{t('trackorder.destination')}</h4>
+                    <p>{t('orderconfirmation.recipientHome').replace('{name}', trackingData.recipientFirstName)} — {trackingData.city}, {trackingData.state}</p>
                   </div>
                 </div>
                 <div className={styles.metaItem}>
@@ -160,7 +162,7 @@ export const TrackOrder: React.FC = () => {
               </div>
 
               <div className={styles.itemsSummaryBlock}>
-                <h4>Arrangements</h4>
+                <h4>{t('trackorder.arrangements')}</h4>
                 <p>{trackingData.itemsSummary}</p>
               </div>
 
@@ -198,7 +200,7 @@ export const TrackOrder: React.FC = () => {
 
               <div className={styles.resultActions}>
                 <Button variant="ghost" onClick={() => navigate('/shop')} style={{ color: '#4A6B50', fontSize: '0.875rem' }}>
-                  Return to Store <ArrowRight size={14} style={{ marginLeft: '0.25rem' }} />
+                  {t('trackorder.returnToStore')} <ArrowRight size={14} style={{ marginLeft: '0.25rem' }} />
                 </Button>
               </div>
             </Card>

@@ -16,6 +16,14 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
+if (import.meta.env.DEV) {
+  console.log("[Firebase Config Dev Diagnostic]", {
+    projectId: firebaseConfig.projectId,
+    authDomain: firebaseConfig.authDomain,
+    hostname: typeof window !== "undefined" ? window.location.hostname : "node"
+  });
+}
+
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);

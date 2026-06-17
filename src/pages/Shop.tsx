@@ -41,14 +41,14 @@ export const Shop: React.FC = () => {
       imageUrl: product.imageUrl,
       isCustom: false
     });
-    addToast(`${product.name} added to cart!`);
+    addToast(t('common.addedToCart').replace('{name}', product.name));
   };
 
   const handleToggleWishlist = (e: React.MouseEvent, productId: string) => {
     e.stopPropagation();
     toggleItem(productId);
     const w = isInWishlist(productId);
-    addToast(w ? 'Removed from wishlist' : 'Added to wishlist');
+    addToast(w ? t('productdetail.removedFromWishlist') : t('productdetail.addedToWishlist'));
   };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -116,7 +116,7 @@ export const Shop: React.FC = () => {
     <div className={styles.shopContainer}>
       <div className={styles.shopHeader}>
         <div className={styles.headerContent}>
-          <h1>{searchQueryParam ? `Results for "${searchQueryParam}"` : occasionFilter !== 'all' ? occasionFilter : 'All Arrangements'}</h1>
+          <h1>{searchQueryParam ? t('shop.resultsFor').replace('{query}', searchQueryParam) : occasionFilter !== 'all' ? occasionFilter : t('shop.allArrangements')}</h1>
           <p>{t('shop.handcraftedWithLoveAndDeliveredFreshToYourDoor')}</p>
         </div>
       </div>
@@ -127,7 +127,7 @@ export const Shop: React.FC = () => {
             className={styles.mobileFiltersBtn}
             onClick={() => setIsMobileFiltersOpen(true)}
           >
-            <SlidersHorizontal size={18} /> Filters
+            <SlidersHorizontal size={18} /> {t('shop.filters')}
           </button>
 
           <form className={styles.searchForm} onSubmit={handleSearchSubmit}>
@@ -135,7 +135,7 @@ export const Shop: React.FC = () => {
             <input 
               key={searchQueryParam}
               type="text" 
-              placeholder="Search products..." 
+              placeholder={t('shop.searchProductsPlaceholder')} 
               defaultValue={searchQueryParam}
               onChange={(e) => setSearchInput(e.target.value)}
               className={styles.searchInput}
@@ -143,18 +143,18 @@ export const Shop: React.FC = () => {
           </form>
 
           <div className={styles.resultsCount}>
-            Showing {filteredProducts.length} results
+            {t('shop.showingResultsCount').replace('{count}', filteredProducts.length.toString())}
           </div>
           <div className={styles.sortWrapper}>
-            <span className={styles.sortLabel}>Sort by:</span>
+            <span className={styles.sortLabel}>{t('shop.sortBy')}</span>
             <select 
               value={activeSort} 
               onChange={(e) => setActiveSort(e.target.value as SortOption)}
               className={styles.sortSelect}
             >
-              <option value="popular">Popularity</option>
-              <option value="price-low">Price: Low to High</option>
-              <option value="price-high">Price: High to Low</option>
+              <option value="popular">{t('shop.sortPopularity')}</option>
+              <option value="price-low">{t('shop.sortPriceLow')}</option>
+              <option value="price-high">{t('shop.sortPriceHigh')}</option>
               <option value="newest">{t('shop.newestArrivals')}</option>
             </select>
           </div>
@@ -164,21 +164,21 @@ export const Shop: React.FC = () => {
           {/* Sidebar Filters */}
           <aside className={`${styles.sidebar} ${isMobileFiltersOpen ? styles.sidebarOpen : ''}`}>
             <div className={styles.sidebarHeader}>
-              <h3>Filters</h3>
+              <h3>{t('shop.filters')}</h3>
               <button className={styles.closeFilters} onClick={() => setIsMobileFiltersOpen(false)}>
                 <X size={20} />
               </button>
             </div>
             
             <div className={styles.filterSection}>
-              <h4>Occasion</h4>
+              <h4>{t('shop.occasion')}</h4>
               <ul className={styles.filterList}>
                 <li>
                   <button 
                     className={`${styles.filterBtn} ${occasionFilter === 'all' ? styles.activeFilter : ''}`}
                     onClick={() => handleOccasionClick('all')}
                   >
-                    All Occasions
+                    {t('shop.allOccasions')}
                   </button>
                 </li>
                 {OCCASIONS.map(occ => (
@@ -202,7 +202,7 @@ export const Shop: React.FC = () => {
                     className={`${styles.filterBtn} ${selectedColor === 'all' ? styles.activeFilter : ''}`}
                     onClick={() => setSelectedColor('all')}
                   >
-                    All Colors
+                    {t('shop.allColors')}
                   </button>
                 </li>
                 {allColors.map(color => (
@@ -219,14 +219,14 @@ export const Shop: React.FC = () => {
             </div>
 
             <div className={styles.filterSection}>
-              <h4>Delivery</h4>
+              <h4>{t('shop.delivery')}</h4>
               <ul className={styles.filterList}>
                 <li>
                   <button 
                     className={`${styles.filterBtn} ${deliveryFilter === 'all' ? styles.activeFilter : ''}`}
                     onClick={() => { searchParams.delete('delivery'); setSearchParams(searchParams); }}
                   >
-                    All Options
+                    {t('shop.allOptions')}
                   </button>
                 </li>
                 <li>
@@ -234,7 +234,7 @@ export const Shop: React.FC = () => {
                     className={`${styles.filterBtn} ${deliveryFilter === 'sameday' ? styles.activeFilter : ''}`}
                     onClick={() => { searchParams.set('delivery', 'sameday'); setSearchParams(searchParams); }}
                   >
-                    Same-Day Delivery
+                    {t('shop.sameDayDelivery')}
                   </button>
                 </li>
               </ul>
@@ -256,7 +256,7 @@ export const Shop: React.FC = () => {
                   setSelectedColor('all'); 
                   setSearchInput('');
                 }}>
-                  Clear All Filters
+                  {t('shop.clearAllFilters')}
                 </Button>
               </div>
             ) : (

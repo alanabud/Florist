@@ -26,7 +26,7 @@ export const CartDrawer: React.FC = () => {
             <h3>{t('storefront.cartEmpty')}</h3>
             <p>{t('ui.looksLikeYouHaventAddedAnyBeautifulArrangementsYet')}</p>
             <Button onClick={closeDrawer} className={styles.emptyBtn}>
-              Continue Shopping
+              {t('cart.continueShopping')}
             </Button>
           </div>
         ) : (
@@ -39,7 +39,7 @@ export const CartDrawer: React.FC = () => {
                     <div className={styles.itemHeader}>
                       <h4 className={styles.itemName}>
                         {item.name}
-                        {item.isCustom && <span className={styles.customBadge}>Custom</span>}
+                        {item.isCustom && <span className={styles.customBadge}>{t('ui.custom')}</span>}
                       </h4>
                       <button 
                         onClick={() => removeItem(item.id)}
@@ -72,12 +72,12 @@ export const CartDrawer: React.FC = () => {
             
             <div className={styles.footer}>
               <div className={styles.summaryRow}>
-                <span>Subtotal</span>
+                <span>{t('cart.subtotal')}</span>
                 <span className={styles.subtotalValue}>${getSubtotal().toFixed(2)}</span>
               </div>
               <p className={styles.deliveryNote}>{t('ui.taxesAndDeliveryCalculatedAtCheckout')}</p>
               <Button fullWidth size="lg" onClick={handleCheckout}>
-                Proceed to Checkout
+                {t('cart.proceedToCheckout')}
               </Button>
             </div>
           </>

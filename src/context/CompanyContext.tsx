@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { 
-  collection, doc, getDoc, getDocs, setDoc, query, where, collectionGroup, serverTimestamp 
+  collection, doc, getDoc, getDocs, setDoc, updateDoc, query, where, collectionGroup, serverTimestamp 
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuthStore } from '../store/authStore';
@@ -345,9 +345,18 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
         // Apply regional default language if no user override exists
         const userMember = currentMemberships.find(m => m.companyId === companyId);
-        const preferredLang = userMember?.languagePreference || sData.defaultLanguage;
+        const localLang = localStorage.getItem('bloompro-lang');
+        const preferredLang = userMember?.languagePreference || localLang || sData.defaultLanguage;
         if (preferredLang) {
           setLanguage(preferredLang as any);
+          
+          // Sync to Firestore user profile if logged in and has different preference
+          if (user?.uid && userMember && userMember.languagePreference !== preferredLang) {
+            const memberRef = doc(db, 'companies', companyId, 'members', user.uid);
+            updateDoc(memberRef, { languagePreference: preferredLang }).catch((err: unknown) => {
+              console.error('Failed to sync language preference on load:', err);
+            });
+          }
         }
       }
     } catch (e) {

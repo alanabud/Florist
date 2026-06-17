@@ -68,13 +68,13 @@ export const TrackDelivery: React.FC = () => {
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column', padding: '2rem', background: '#FDFCFA', textAlign: 'center' }}>
         <ShieldAlert size={64} style={{ color: '#EF4444', marginBottom: '1.5rem' }} />
         <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.75rem', fontWeight: 600, color: '#2C302E', margin: '0 0 0.5rem 0' }}>
-          Tracking Expired or Invalid
+          {t('delivery.tracking.trackingExpiredOrInvalid')}
         </h2>
         <p style={{ color: '#6b7280', fontSize: '0.95rem', maxWidth: '400px', lineHeight: 1.6, marginBottom: '1.5rem' }}>
           {error}
         </p>
         <Link to="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: '#4A6B50', fontWeight: 600, textDecoration: 'none' }}>
-          <ArrowLeft size={16} /> Return to Storefront
+          <ArrowLeft size={16} /> {t('orderconfirmation.returnToStorefront')}
         </Link>
       </div>
     );
@@ -126,7 +126,7 @@ export const TrackDelivery: React.FC = () => {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '1.5rem' }}>
             <div>
               <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#8a8f8c', fontWeight: 700, letterSpacing: '0.05em' }}>
-                Order Number
+                {t('orders.orderId')}
               </span>
               <div style={{ fontSize: '1.125rem', fontWeight: 700, color: '#2C302E', marginTop: '0.25rem', fontFamily: 'monospace' }}>
                 #{trackingData.orderDisplayNumber}
@@ -137,7 +137,7 @@ export const TrackDelivery: React.FC = () => {
                 {t('delivery.tracking.destination')}
               </span>
               <div style={{ fontSize: '1rem', fontWeight: 600, color: '#2C302E', marginTop: '0.25rem' }}>
-                Recipient: {trackingData.recipientFirstName}
+                {t('delivery.tracking.recipient')}: {trackingData.recipientFirstName}
               </div>
             </div>
           </div>
@@ -150,10 +150,10 @@ export const TrackDelivery: React.FC = () => {
                 {t('delivery.tracking.carrier')}
               </span>
               <div style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#2C302E', marginTop: '0.25rem' }}>
-                {trackingData.courierFirstName || 'Assigned Courier'}
+                {trackingData.courierFirstName || t('delivery.tracking.assignedCourier')}
               </div>
               <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.125rem' }}>
-                {t('delivery.tracking.vehicle')}: {trackingData.courierVehicleLabel || 'Car'}
+                {t('delivery.tracking.vehicle')}: {trackingData.courierVehicleLabel || t('delivery.tracking.car')}
               </div>
             </div>
             <div>
@@ -161,7 +161,7 @@ export const TrackDelivery: React.FC = () => {
                 {t('delivery.tracking.eta')}
               </span>
               <div style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#4A6B50', marginTop: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                <Clock size={16} /> {trackingData.etaWindowEnd ? new Date(trackingData.etaWindowEnd).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Flexible ETA'}
+                <Clock size={16} /> {trackingData.etaWindowEnd ? new Date(trackingData.etaWindowEnd).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : t('delivery.tracking.flexibleEta')}
               </div>
             </div>
           </div>
@@ -215,14 +215,14 @@ export const TrackDelivery: React.FC = () => {
         {trackingData.trackingUrl && trackingData.trackingUrl !== `/track-delivery/${publicTrackingToken}` && (
           <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
             <a href={trackingData.trackingUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: '#4A6B50', fontWeight: 600, textDecoration: 'underline' }}>
-              <Truck size={16} /> Link to Courier Live Map Route
+              <Truck size={16} /> {t('delivery.tracking.liveMapRoute')}
             </a>
           </div>
         )}
 
         <div style={{ textAlign: 'center', marginTop: '3rem' }}>
           <p style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
-            BloomPro Studio Logistics. Secure recipient proxy token verified.
+            {t('delivery.tracking.footerMessage')}
           </p>
         </div>
 

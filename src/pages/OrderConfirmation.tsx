@@ -67,13 +67,13 @@ export const OrderConfirmation: React.FC = () => {
       <div className={styles.errorContainer}>
         <div className={styles.errorIcon}>✕</div>
         <h2>{t('orderconfirmation.confirmationNotFound')}</h2>
-        <p>{t('orderconfirmation.weCouldntRetrieveConfirmationDetailsForThisIdentifierIfYouJustPlace')}d an order, please check your email or verify in the tracking console.</p>
+        <p>{t('orderconfirmation.notFoundDetailedDesc')}</p>
         <div className={styles.errorActions}>
           <Button onClick={() => navigate('/')} style={{ background: 'linear-gradient(135deg, #4A6B50, #6C8271)', border: 'none' }}>
-            Return to Storefront
+            {t('orderconfirmation.returnToStorefront')}
           </Button>
           <Button variant="outline" onClick={() => navigate('/track-order')} style={{ border: '1px solid #D5D1C8', color: '#2C302E' }}>
-            Go to Track Order
+            {t('orderconfirmation.goToTrackOrder')}
           </Button>
         </div>
       </div>
@@ -89,7 +89,7 @@ export const OrderConfirmation: React.FC = () => {
             <span className={styles.thanks}>{t('orderconfirmation.thankYou')}</span>
             <h1 className={styles.pageTitle}>{t('orderconfirmation.yourOrderIsConfirmed')}</h1>
             <p className={styles.subtitle}>
-              We have received your request. Our floral designers will begin handcrafting your arrangements soon.
+              {t('orderconfirmation.orderConfirmedMessage')}
             </p>
           </div>
 
@@ -104,7 +104,7 @@ export const OrderConfirmation: React.FC = () => {
               <MapPin size={20} className={styles.detailIcon} />
               <div>
                 <h3>{t('orderconfirmation.deliveryResidence')}</h3>
-                <p>{order.recipientFirstName}'s home</p>
+                <p>{t('orderconfirmation.recipientHome').replace('{name}', order.recipientFirstName)}</p>
                 <p>{order.city}, {order.state}</p>
               </div>
             </div>
@@ -127,7 +127,7 @@ export const OrderConfirmation: React.FC = () => {
           </div>
 
           <div className={styles.emailNotice}>
-            <p>A detailed receipt and invoice have been dispatched to your email address.</p>
+            <p>{t('orderconfirmation.emailNotice')}</p>
           </div>
 
           <div className={styles.actions}>
@@ -136,7 +136,7 @@ export const OrderConfirmation: React.FC = () => {
               onClick={() => navigate(`/track-order?order=${order.orderNumber}`)}
               style={{ background: 'linear-gradient(135deg, #4A6B50, #6C8271)', border: 'none', color: '#FFF' }}
             >
-              Track Live Status <ArrowRight size={16} style={{ marginLeft: '0.5rem' }} />
+              {t('orderconfirmation.trackLiveStatus')} <ArrowRight size={16} style={{ marginLeft: '0.5rem' }} />
             </Button>
             <Button 
               variant="outline" 
@@ -144,7 +144,7 @@ export const OrderConfirmation: React.FC = () => {
               onClick={() => navigate('/shop')}
               style={{ border: '1px solid #D5D1C8', color: '#2C302E' }}
             >
-              Back to Catalog
+              {t('orderconfirmation.backToCatalog')}
             </Button>
           </div>
         </Card>

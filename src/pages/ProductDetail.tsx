@@ -46,12 +46,12 @@ export const ProductDetail: React.FC = () => {
       imageUrl: product.imageUrl,
       isCustom: false
     });
-    addToast(`${quantity}x ${product.name} added to cart!`);
+    addToast(t('common.addedToCart').replace('{name}', `${quantity}x ${product.name}`));
   };
 
   const handleToggleWishlist = () => {
     toggleItem(product.id);
-    addToast(isWished ? 'Removed from wishlist' : 'Added to wishlist');
+    addToast(isWished ? t('productdetail.removedFromWishlist') : t('productdetail.addedToWishlist'));
   };
 
   const relatedProducts = products.filter(p => p.category === product.category && p.id !== product.id).slice(0, 3);
@@ -59,7 +59,7 @@ export const ProductDetail: React.FC = () => {
   return (
     <div className={styles.container}>
       <button className={styles.backBtn} onClick={() => navigate('/shop')}>
-        <ChevronLeft size={20} /> Back to Catalog
+        <ChevronLeft size={20} /> {t('productdetail.backToCatalog')}
       </button>
 
       <div className={styles.grid}>
@@ -95,20 +95,20 @@ export const ProductDetail: React.FC = () => {
 
           <div className={styles.priceRow}>
             <span className={styles.price}>${product.price.toFixed(2)}</span>
-            {product.isSameDay && <span className={styles.badge}>Same-Day Delivery</span>}
+            {product.isSameDay && <span className={styles.badge}>{t('productdetail.sameDayDelivery')}</span>}
           </div>
 
           <p className={styles.description}>{product.description}</p>
 
           <div className={styles.metaData}>
             <div className={styles.metaItem}>
-              <strong>Occasions:</strong> {product.occasions.join(', ')}
+              <strong>{t('productdetail.occasionsLabel')}</strong> {product.occasions.join(', ')}
             </div>
             <div className={styles.metaItem}>
-              <strong>Color Palette:</strong> {product.colors.join(', ')}
+              <strong>{t('productdetail.colorPaletteLabel')}</strong> {product.colors.join(', ')}
             </div>
             <div className={styles.metaItem}>
-              <strong>Tags:</strong> {product.tags.map(t => `#${t}`).join(' ')}
+              <strong>{t('productdetail.tagsLabel')}</strong> {product.tags.map(t => `#${t}`).join(' ')}
             </div>
           </div>
 
@@ -119,7 +119,7 @@ export const ProductDetail: React.FC = () => {
               <button onClick={() => setQuantity(quantity + 1)}>+</button>
             </div>
             <Button size="lg" className={styles.addBtn} onClick={handleAddToCart} disabled={!product.inStock}>
-              {product.inStock ? 'Add to Cart' : 'Out of Stock'}
+              {product.inStock ? t('productdetail.addToCart') : t('productdetail.outOfStock')}
             </Button>
           </div>
 
@@ -128,13 +128,13 @@ export const ProductDetail: React.FC = () => {
               <Truck size={20} />
               <div>
                 <strong>{t('productdetail.deliveryOptions')}</strong>
-                <p>{product.isSameDay ? 'Eligible for Same-Day delivery if ordered before 2 PM.' : 'Standard 2-day delivery available.'}</p>
+                <p>{product.isSameDay ? t('productdetail.sameDayEligible') : t('productdetail.standardDelivery')}</p>
               </div>
             </div>
             <div className={styles.trustItem}>
               <ShieldCheck size={20} />
               <div>
-                <strong>7-Day Freshness</strong>
+                <strong>{t('productdetail.sevenDayFreshness')}</strong>
                 <p>{t('productdetail.guaranteedToStayBeautifulAndFreshForAFullWeek')}</p>
               </div>
             </div>

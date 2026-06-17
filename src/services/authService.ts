@@ -16,25 +16,33 @@ const microsoftProvider = new OAuthProvider('microsoft.com');
 
 export const getFriendlyErrorMessage = (error: unknown) => {
   const code = (error as { code?: string })?.code || '';
+  const message = (error as { message?: string })?.message || '';
+
   if (code === 'auth/popup-blocked') {
     return 'Popup was blocked. Please allow popups for this site and try again.';
   }
   if (code === 'auth/popup-closed-by-user') {
-    return 'Sign-in popup was closed before completion.';
+    return 'Sign-in popup was closed before completion. If you saw a Google "Error 400", please verify the authorized domains and web client ID in Google Cloud and Firebase Consoles.';
   }
   if (code === 'auth/account-exists-with-different-credential') {
     return 'An account already exists with the same email address but different sign-in credentials.';
   }
   if (code === 'auth/unauthorized-domain') {
-    return 'This domain is not authorized for Firebase Authentication.';
+    return 'This domain is not authorized for Firebase Authentication. Please check your Authorized Domains list in Firebase Console under Authentication -> Settings.';
   }
   if (code === 'auth/operation-not-allowed') {
-    return 'This sign-in provider is disabled. Please check your Firebase Console.';
+    return 'This sign-in provider is disabled. Please enable Google/Microsoft sign-in under Authentication -> Sign-in method in Firebase Console.';
   }
   if (code === 'auth/network-request-failed') {
     return 'Network error. Please check your internet connection.';
   }
-  return (error as { message?: string })?.message || 'An unexpected error occurred during sign-in.';
+  if (code === 'auth/configuration-not-found' || message.includes('configuration-not-found')) {
+    return 'Authentication configuration not found. Please verify your Firebase project setup and API keys.';
+  }
+  if (message.includes('auth/invalid-oauth-client-id') || code === 'auth/invalid-oauth-client-id') {
+    return 'Invalid OAuth client ID configured. Please ensure the client ID matches your production domain registration in Google Cloud Console.';
+  }
+  return message || 'An unexpected error occurred during sign-in.';
 };
 
 export const signInWithGoogle = async () => {
@@ -43,7 +51,15 @@ export const signInWithGoogle = async () => {
     await syncUserProfile(result.user);
     return result.user;
   } catch (error: unknown) {
-    throw new Error('Unable to sign in with Google.', { cause: error });
+    console.error("[Google Sign-In Error details]", {
+      error,
+      code: (error as any)?.code,
+      message: (error as any)?.message,
+      envAuthDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+      envProjectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    });
+    const friendly = getFriendlyErrorMessage(error);
+    throw new Error(friendly, { cause: error });
   }
 };
 
@@ -53,7 +69,15 @@ export const signInWithMicrosoft = async () => {
     await syncUserProfile(result.user);
     return result.user;
   } catch (error: unknown) {
-    throw new Error('Unable to sign in with Microsoft.', { cause: error });
+    console.error("[Microsoft Sign-In Error details]", {
+      error,
+      code: (error as any)?.code,
+      message: (error as any)?.message,
+      envAuthDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+      envProjectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    });
+    const friendly = getFriendlyErrorMessage(error);
+    throw new Error(friendly, { cause: error });
   }
 };
 

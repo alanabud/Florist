@@ -126,7 +126,7 @@ export const Checkout: React.FC = () => {
         <div className={styles.headerContent}>
           <h1 onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>BloomPro</h1>
           <div className={styles.secureText}>
-            <Lock size={16} /> Secure Checkout
+            <Lock size={16} /> {t('checkout.secureCheckout')}
           </div>
         </div>
       </div>
@@ -135,13 +135,13 @@ export const Checkout: React.FC = () => {
         <div className={styles.mainContent}>
           {/* Breadcrumbs */}
           <div className={styles.breadcrumbs}>
-            <span className={step >= 1 ? styles.activeStep : ''}>1. Recipient</span>
+            <span className={step >= 1 ? styles.activeStep : ''}>{t('checkout.stepRecipient')}</span>
             <ChevronRight size={16} />
-            <span className={step >= 2 ? styles.activeStep : ''}>2. Delivery</span>
+            <span className={step >= 2 ? styles.activeStep : ''}>{t('checkout.stepDelivery')}</span>
             <ChevronRight size={16} />
-            <span className={step >= 3 ? styles.activeStep : ''}>3. Details</span>
+            <span className={step >= 3 ? styles.activeStep : ''}>{t('checkout.stepDetails')}</span>
             <ChevronRight size={16} />
-            <span className={step >= 4 ? styles.activeStep : ''}>4. Payment</span>
+            <span className={step >= 4 ? styles.activeStep : ''}>{t('checkout.stepPayment')}</span>
           </div>
 
           <Card className={styles.formCard}>
@@ -153,11 +153,11 @@ export const Checkout: React.FC = () => {
                   <h2>{t('checkout.whoIsThisFor')}</h2>
                   <div className={styles.formGrid}>
                     <div className={styles.formGroup}>
-                      <label>Recipient's Full Name</label>
+                      <label>{t('checkout.recipientFullName')}</label>
                       <input required name="recipientName" value={formData.recipientName} onChange={handleInputChange} />
                     </div>
                     <div className={styles.formGroup}>
-                      <label>Recipient's Phone Number</label>
+                      <label>{t('checkout.recipientPhone')}</label>
                       <input required name="recipientPhone" type="tel" value={formData.recipientPhone} onChange={handleInputChange} />
                     </div>
                     <div className={styles.formGroup} style={{ gridColumn: '1 / -1' }}>
@@ -165,11 +165,11 @@ export const Checkout: React.FC = () => {
                       <input required name="recipientAddress" value={formData.recipientAddress} onChange={handleInputChange} />
                     </div>
                     <div className={styles.formGroup}>
-                      <label>City</label>
+                      <label>{t('checkout.city')}</label>
                       <input required name="recipientCity" value={formData.recipientCity} onChange={handleInputChange} />
                     </div>
                     <div className={styles.formGroup}>
-                      <label>State</label>
+                      <label>{t('checkout.state')}</label>
                       <select required name="recipientState" value={formData.recipientState} onChange={handleInputChange}>
                         <option value="">{t('checkout.selectState')}</option>
                         {Object.keys(STATE_TAX_RATES).filter(k => k !== 'DEFAULT').map(state => (
@@ -178,7 +178,7 @@ export const Checkout: React.FC = () => {
                       </select>
                     </div>
                     <div className={styles.formGroup}>
-                      <label>ZIP Code</label>
+                      <label>{t('checkout.zipCode')}</label>
                       <input required name="recipientZip" value={formData.recipientZip} onChange={handleInputChange} />
                     </div>
                   </div>
@@ -200,7 +200,7 @@ export const Checkout: React.FC = () => {
                         onChange={handleInputChange} 
                       />
                       <div className={styles.radioContent}>
-                        <strong>Standard Delivery ($9.99)</strong>
+                        <strong>{t('checkout.standardDeliveryPrice')}</strong>
                         <p>{t('checkout.arrivesOnYourSelectedDate')}</p>
                       </div>
                     </label>
@@ -213,8 +213,8 @@ export const Checkout: React.FC = () => {
                         onChange={handleInputChange} 
                       />
                       <div className={styles.radioContent}>
-                        <strong>Same-Day Delivery ($19.99)</strong>
-                        <p>Delivered today before 6 PM</p>
+                        <strong>{t('checkout.sameDayDeliveryPrice')}</strong>
+                        <p>{t('checkout.deliveredTodayLimit')}</p>
                       </div>
                     </label>
                     <label className={styles.radioLabel}>
@@ -226,7 +226,7 @@ export const Checkout: React.FC = () => {
                         onChange={handleInputChange} 
                       />
                       <div className={styles.radioContent}>
-                        <strong>In-Store Pickup (Free)</strong>
+                        <strong>{t('checkout.inStorePickupFree')}</strong>
                         <p>{t('checkout.collectFromOurDowntownStudio')}</p>
                       </div>
                     </label>
@@ -238,7 +238,7 @@ export const Checkout: React.FC = () => {
                   </div>
 
                   <div className={styles.btnRow}>
-                    <Button type="button" variant="ghost" onClick={prevStep}>Back</Button>
+                    <Button type="button" variant="ghost" onClick={prevStep}>{t('checkout.back')}</Button>
                     <Button type="button" onClick={nextStep}>{t('checkout.continueToDetails')}</Button>
                   </div>
                 </div>
@@ -254,22 +254,22 @@ export const Checkout: React.FC = () => {
                       <input required name="senderName" value={formData.senderName} onChange={handleInputChange} />
                     </div>
                     <div className={styles.formGroup}>
-                      <label>Your Email Address (for receipt)</label>
+                      <label>{t('checkout.emailForReceipt')}</label>
                       <input required type="email" name="senderEmail" value={formData.senderEmail} onChange={handleInputChange} />
                     </div>
                     <div className={styles.formGroup} style={{ gridColumn: '1 / -1' }}>
-                      <label>Card Message (Optional)</label>
+                      <label>{t('checkout.cardMessageOptional')}</label>
                       <textarea 
                         name="cardMessage" 
                         rows={4} 
-                        placeholder="Write a heartfelt note..."
+                        placeholder={t('checkout.cardMessagePlaceholder')}
                         value={formData.cardMessage} 
                         onChange={handleInputChange} 
                       />
                     </div>
                   </div>
                   <div className={styles.btnRow}>
-                    <Button type="button" variant="ghost" onClick={prevStep}>Back</Button>
+                    <Button type="button" variant="ghost" onClick={prevStep}>{t('checkout.back')}</Button>
                     <Button type="button" onClick={nextStep}>{t('checkout.continueToPayment')}</Button>
                   </div>
                 </div>
@@ -278,7 +278,7 @@ export const Checkout: React.FC = () => {
               {/* Step 4: Payment Mock UI */}
               {step === 4 && (
                 <div className={styles.stepContent}>
-                  <h2>Payment</h2>
+                  <h2>{t('checkout.payment')}</h2>
                   <div className={styles.paymentMock}>
                     <div className={styles.formGroup} style={{ gridColumn: '1 / -1' }}>
                       <label>{t('checkout.cardNumber')}</label>
@@ -289,14 +289,14 @@ export const Checkout: React.FC = () => {
                       <input required name="expiry" placeholder="MM/YY" value={formData.expiry} onChange={handleInputChange} />
                     </div>
                     <div className={styles.formGroup}>
-                      <label>CVC</label>
+                      <label>{t('checkout.cvc')}</label>
                       <input required name="cvc" placeholder="123" value={formData.cvc} onChange={handleInputChange} />
                     </div>
                   </div>
                   <div className={styles.btnRow}>
-                    <Button type="button" variant="ghost" onClick={prevStep}>Back</Button>
+                    <Button type="button" variant="ghost" onClick={prevStep}>{t('checkout.back')}</Button>
                     <Button type="submit" size="lg" className={styles.submitBtn}>
-                      Pay ${total.toFixed(2)}
+                      {t('checkout.payAmount').replace('{amount}', total.toFixed(2))}
                     </Button>
                   </div>
                 </div>
@@ -315,7 +315,7 @@ export const Checkout: React.FC = () => {
                   <img src={item.imageUrl} alt={item.name} className={styles.itemImage} />
                   <div className={styles.itemInfo}>
                     <h4>{item.name}</h4>
-                    <span className={styles.itemQty}>Qty: {item.quantity}</span>
+                    <span className={styles.itemQty}>{t('checkout.qty')}: {item.quantity}</span>
                   </div>
                   <span className={styles.itemPrice}>${(item.price * item.quantity).toFixed(2)}</span>
                 </div>
@@ -324,19 +324,19 @@ export const Checkout: React.FC = () => {
 
             <div className={styles.costBreakdown}>
               <div className={styles.costRow}>
-                <span>Subtotal</span>
+                <span>{t('checkout.subtotal')}</span>
                 <span>${subtotal.toFixed(2)}</span>
               </div>
               <div className={styles.costRow}>
-                <span>Delivery</span>
+                <span>{t('checkout.delivery')}</span>
                 <span>${deliveryFee.toFixed(2)}</span>
               </div>
               <div className={styles.costRow}>
-                <span>Taxes (Estimated)</span>
+                <span>{t('checkout.taxesEstimated')}</span>
                 <span>${taxes.toFixed(2)}</span>
               </div>
               <div className={styles.totalRow}>
-                <span>Total</span>
+                <span>{t('checkout.total')}</span>
                 <span>${total.toFixed(2)}</span>
               </div>
             </div>

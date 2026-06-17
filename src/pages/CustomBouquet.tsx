@@ -42,14 +42,14 @@ export const CustomBouquet: React.FC = () => {
   const handleAddToCart = () => {
     addItem({
       productId: 'custom-bouquet',
-      name: `Custom ${state.size} Bouquet`,
+      name: `${t('ui.custom')} ${state.size} Bouquet`,
       price: state.budget,
       quantity: 1,
       imageUrl: 'https://images.unsplash.com/photo-1561181286-d3fee7d55364?q=80&w=800&auto=format&fit=crop',
       isCustom: true,
       customDetails: state
     });
-    addToast('Custom bouquet added to cart!');
+    addToast(t('common.addedToCart').replace('{name}', t('landing.hero.customBouquet')));
     reset();
     navigate('/cart'); // will open drawer or go to shop
   };
@@ -69,7 +69,7 @@ export const CustomBouquet: React.FC = () => {
     <div className={styles.container}>
       <div className={styles.header}>
         <h1>{t('custombouquet.designYourCustomBouquet')}</h1>
-        <p>Work with our artisans to create a one-of-a-kind arrangement.</p>
+        <p>{t('custombouquet.artisanDesc')}</p>
       </div>
 
       <div className={styles.progressContainer}>
@@ -78,7 +78,7 @@ export const CustomBouquet: React.FC = () => {
             <div className={styles.stepCircle}>
               {index < currentStepIndex ? <Check size={14} /> : index + 1}
             </div>
-            <span className={styles.stepTitle}>{step.title}</span>
+            <span className={styles.stepTitle}>{t(`custombouquet.step${step.id.charAt(0).toUpperCase() + step.id.slice(1)}`)}</span>
             {index < STEPS.length - 1 && <div className={styles.stepLine} />}
           </div>
         ))}
@@ -87,17 +87,20 @@ export const CustomBouquet: React.FC = () => {
       <div className={styles.wizardContent}>
         {currentStepIndex === 0 && (
           <div className={styles.stepPane}>
-            <h2>What's the occasion?</h2>
+            <h2>{t('custombouquet.whatsOccasion')}</h2>
             <div className={styles.grid}>
-              {['Birthday', 'Anniversary', 'Sympathy', 'Wedding', 'Romance', 'Just Because'].map(occ => (
-                <Card 
-                  key={occ}
-                  className={`${styles.optionCard} ${state.occasion === occ ? styles.selected : ''}`}
-                  onClick={() => updateField('occasion', occ)}
-                >
-                  {occ}
-                </Card>
-              ))}
+              {['Birthday', 'Anniversary', 'Sympathy', 'Wedding', 'Romance', 'Just Because'].map(occ => {
+                const occKey = occ.toLowerCase().replace(' ', '');
+                return (
+                  <Card 
+                    key={occ}
+                    className={`${styles.optionCard} ${state.occasion === occ ? styles.selected : ''}`}
+                    onClick={() => updateField('occasion', occ)}
+                  >
+                    {t(`custombouquet.${occKey}`)}
+                  </Card>
+                );
+              })}
             </div>
           </div>
         )}
@@ -107,12 +110,12 @@ export const CustomBouquet: React.FC = () => {
             <h2>{t('custombouquet.chooseAColorPalette')}</h2>
             <div className={styles.grid}>
               {[
-                { name: 'Soft Blush & Cream', color: 'linear-gradient(to right, #fdf5f5, #fdfbf7)' },
-                { name: 'Classic Whites & Greens', color: 'linear-gradient(to right, #ffffff, #eef2ec)' },
-                { name: 'Warm Champagne & Peach', color: 'linear-gradient(to right, #f1e5d1, #f9ecec)' },
-                { name: 'Deep Romance Reds', color: 'linear-gradient(to right, #8b0000, #dfc4c4)' },
-                { name: 'Vibrant & Colorful', color: 'linear-gradient(to right, #eab308, #e57373)' },
-                { name: 'Florist\'s Choice', color: 'linear-gradient(45deg, #fdf5f5, #eef2ec, #f1e5d1)' }
+                { name: 'Soft Blush & Cream', color: 'linear-gradient(to right, #fdf5f5, #fdfbf7)', key: 'softBlush' },
+                { name: 'Classic Whites & Greens', color: 'linear-gradient(to right, #ffffff, #eef2ec)', key: 'classicWhites' },
+                { name: 'Warm Champagne & Peach', color: 'linear-gradient(to right, #f1e5d1, #f9ecec)', key: 'warmChampagne' },
+                { name: 'Deep Romance Reds', color: 'linear-gradient(to right, #8b0000, #dfc4c4)', key: 'deepReds' },
+                { name: 'Vibrant & Colorful', color: 'linear-gradient(to right, #eab308, #e57373)', key: 'vibrantColor' },
+                { name: 'Florist\'s Choice', color: 'linear-gradient(45deg, #fdf5f5, #eef2ec, #f1e5d1)', key: 'floristChoice' }
               ].map(palette => (
                 <Card 
                   key={palette.name}
@@ -120,7 +123,7 @@ export const CustomBouquet: React.FC = () => {
                   onClick={() => updateField('colorPalette', palette.name)}
                 >
                   <div className={styles.colorSwatch} style={{ background: palette.color }}></div>
-                  {palette.name}
+                  {t(`custombouquet.${palette.key}`)}
                 </Card>
               ))}
             </div>
@@ -133,6 +136,7 @@ export const CustomBouquet: React.FC = () => {
             <p className={styles.helperText}>{t('custombouquet.selectAllThatApplyOrLetUsChooseTheBestSeasonalBlooms')}</p>
             <div className={styles.grid}>
               {['Roses', 'Peonies', 'Lilies', 'Orchids', 'Hydrangeas', 'Tulips', 'Ranunculus', 'Eucalyptus'].map(flower => {
+                const flowerKey = flower.toLowerCase();
                 const isSelected = state.flowers.includes(flower);
                 return (
                   <Card 
@@ -146,7 +150,7 @@ export const CustomBouquet: React.FC = () => {
                       }
                     }}
                   >
-                    {flower}
+                    {t(`custombouquet.${flowerKey}`)}
                   </Card>
                 );
               })}
@@ -159,9 +163,9 @@ export const CustomBouquet: React.FC = () => {
             <h2>{t('custombouquet.selectSizeAndBudget')}</h2>
             <div className={styles.grid3}>
               {([
-                { size: 'Standard', price: 75, desc: 'A beautiful, modest arrangement perfect for a desk or side table.' },
-                { size: 'Deluxe', price: 125, desc: 'A fuller arrangement with premium blooms. Our most popular choice.' },
-                { size: 'Premium', price: 200, desc: 'A show-stopping, luxurious arrangement with our finest seasonal flowers.' }
+                { size: 'Standard', price: 75, desc: t('custombouquet.sizeStandardDesc') },
+                { size: 'Deluxe', price: 125, desc: t('custombouquet.sizeDeluxeDesc') },
+                { size: 'Premium', price: 200, desc: t('custombouquet.sizePremiumDesc') }
               ] as const).map(opt => (
                 <Card 
                   key={opt.size}
@@ -198,13 +202,13 @@ export const CustomBouquet: React.FC = () => {
 
         {currentStepIndex === 5 && (
           <div className={styles.stepPane}>
-            <h2>Add a gift message (Optional)</h2>
+            <h2>{t('custombouquet.addGiftMessageOptional')}</h2>
             <div className={styles.inputGroup}>
               <label>{t('custombouquet.messageToRecipient')}</label>
               <textarea 
                 className={styles.textarea}
                 rows={4}
-                placeholder="Write your heartfelt message here..."
+                placeholder={t('custombouquet.writeHeartfeltMessagePlaceholder')}
                 value={state.message}
                 onChange={(e) => updateField('message', e.target.value)}
               />
@@ -217,28 +221,34 @@ export const CustomBouquet: React.FC = () => {
             <h2>{t('custombouquet.reviewYourCustomBouquet')}</h2>
             <Card className={styles.reviewCard}>
               <div className={styles.reviewRow}>
-                <span>Occasion:</span>
-                <strong>{state.occasion}</strong>
+                <span>{t('custombouquet.occasionLabel')}</span>
+                <strong>{state.occasion ? t(`custombouquet.${state.occasion.toLowerCase().replace(' ', '')}`) : ''}</strong>
               </div>
               <div className={styles.reviewRow}>
-                <span>Color Palette:</span>
-                <strong>{state.colorPalette}</strong>
+                <span>{t('custombouquet.paletteLabel')}</span>
+                <strong>{state.colorPalette ? t(`custombouquet.${
+                  state.colorPalette.includes('Blush') ? 'softBlush' :
+                  state.colorPalette.includes('Whites') ? 'classicWhites' :
+                  state.colorPalette.includes('Champagne') ? 'warmChampagne' :
+                  state.colorPalette.includes('Reds') ? 'deepReds' :
+                  state.colorPalette.includes('Vibrant') ? 'vibrantColor' : 'floristChoice'
+                }`) : ''}</strong>
               </div>
               <div className={styles.reviewRow}>
-                <span>Flowers:</span>
-                <strong>{state.flowers.join(', ') || 'Florist Choice'}</strong>
+                <span>{t('custombouquet.flowersLabel')}</span>
+                <strong>{state.flowers.map(f => t(`custombouquet.${f.toLowerCase()}`)).join(', ') || t('custombouquet.floristChoice')}</strong>
               </div>
               <div className={styles.reviewRow}>
-                <span>Size:</span>
+                <span>{t('custombouquet.sizeLabel')}</span>
                 <strong>{state.size} (${state.budget})</strong>
               </div>
               <div className={styles.reviewRow}>
-                <span>Delivery Date:</span>
+                <span>{t('custombouquet.deliveryDateLabel')}</span>
                 <strong>{state.deliveryDate}</strong>
               </div>
               {state.message && (
                 <div className={styles.reviewRowMessage}>
-                  <span>Message:</span>
+                  <span>{t('custombouquet.messageLabel')}</span>
                   <p>"{state.message}"</p>
                 </div>
               )}
@@ -253,16 +263,16 @@ export const CustomBouquet: React.FC = () => {
           onClick={handleBack} 
           disabled={currentStepIndex === 0}
         >
-          <ChevronLeft size={16} /> Back
+          <ChevronLeft size={16} /> {t('custombouquet.back')}
         </Button>
         
         {currentStepIndex < STEPS.length - 1 ? (
           <Button onClick={handleNext} disabled={isNextDisabled()}>
-            Next Step <ChevronRight size={16} />
+            {t('custombouquet.nextStep')} <ChevronRight size={16} />
           </Button>
         ) : (
           <Button size="lg" onClick={handleAddToCart}>
-            Add to Cart - ${state.budget}
+            {t('custombouquet.addToCartWithPrice').replace('{price}', state.budget.toString())}
           </Button>
         )}
       </div>

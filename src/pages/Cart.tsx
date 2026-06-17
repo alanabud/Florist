@@ -33,7 +33,7 @@ export const Cart: React.FC = () => {
         <h2>{t('cart.yourFlowerCartIsEmpty')}</h2>
         <p>{t('cart.exploreOurSeasonalCurationsAndArtisanArrangementsToSayItBeautifully')}</p>
         <Button onClick={() => navigate('/shop')} style={{ background: 'linear-gradient(135deg, #4A6B50, #6C8271)', border: 'none' }}>
-          Browse Shop
+          {t('cart.browseShop')}
         </Button>
       </div>
     );
@@ -44,7 +44,7 @@ export const Cart: React.FC = () => {
       <div className={styles.container}>
         <div className={styles.header}>
           <button className={styles.backBtn} onClick={() => navigate('/shop')}>
-            <ArrowLeft size={16} /> Continue Shopping
+            <ArrowLeft size={16} /> {t('cart.continueShopping')}
           </button>
           <h1 className={styles.title}>{t('cart.yourShoppingCart')}</h1>
         </div>
@@ -61,7 +61,7 @@ export const Cart: React.FC = () => {
                       {item.isCustom && <span className={styles.customBadge}>{t('landing.hero.customBouquet')}</span>}
                     </div>
                     <div className={styles.itemPricing}>
-                      <span className={styles.unitPrice}>${item.price.toFixed(2)} each</span>
+                      <span className={styles.unitPrice}>${item.price.toFixed(2)} {t('cart.each')}</span>
                       <span className={styles.lineTotal}>${(item.price * item.quantity).toFixed(2)}</span>
                     </div>
                     
@@ -84,7 +84,7 @@ export const Cart: React.FC = () => {
                       </div>
 
                       <button className={styles.removeBtn} onClick={() => removeItem(item.id)}>
-                        <Trash2 size={16} /> Remove
+                        <Trash2 size={16} /> {t('cart.remove')}
                       </button>
                     </div>
                   </div>
@@ -99,15 +99,15 @@ export const Cart: React.FC = () => {
               
               <div className={styles.summaryRows}>
                 <div className={styles.summaryRow}>
-                  <span>Subtotal</span>
+                  <span>{t('cart.subtotal')}</span>
                   <span>${subtotal.toFixed(2)}</span>
                 </div>
                 <div className={styles.summaryRow}>
-                  <span>Standard Delivery (Est.)</span>
+                  <span>{t('cart.standardDeliveryEst')}</span>
                   <span>${deliveryEstimate.toFixed(2)}</span>
                 </div>
                 <div className={styles.summaryRow}>
-                  <span>Sales Tax (Est.)</span>
+                  <span>{t('cart.salesTaxEst')}</span>
                   <span>${taxEstimate.toFixed(2)}</span>
                 </div>
                 <div className={`${styles.summaryRow} ${styles.totalRow}`}>
@@ -117,7 +117,7 @@ export const Cart: React.FC = () => {
               </div>
 
               <div className={styles.checkoutNotice}>
-                <p>❀ Free card message and signature packaging included on checkout.</p>
+                <p>{t('cart.checkoutNotice')}</p>
               </div>
 
               <Button 
@@ -126,7 +126,7 @@ export const Cart: React.FC = () => {
                 onClick={() => navigate('/checkout')}
                 style={{ background: 'linear-gradient(135deg, #4A6B50, #6C8271)', border: 'none', color: '#FFF', padding: '0.85rem' }}
               >
-                Proceed to Guest Checkout
+                {t('cart.proceedToGuestCheckout')}
               </Button>
             </Card>
           </aside>
