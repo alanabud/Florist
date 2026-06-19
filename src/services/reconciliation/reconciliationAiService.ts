@@ -13,7 +13,7 @@ export function generateAiRunInsights(
   const criticalCount = exceptions.filter(e => e.severity === 'critical').length;
   const blockingCount = exceptions.filter(e => e.severity === 'blocking').length;
 
-  let summary = '';
+  let summary: string;
   let aiRiskScore = 100 - healthScore; // simple mapping
   aiRiskScore = Math.max(0, Math.min(100, aiRiskScore));
 
@@ -56,10 +56,10 @@ export interface AiExceptionExplanation {
 export function generateExceptionSuggestedFix(
   e: ReconciliationException
 ): AiExceptionExplanation {
-  let aiExplanation = '';
-  let aiSuggestedFix = '';
-  let likelyCause = '';
-  let recommendedAction = '';
+  let aiExplanation: string;
+  let aiSuggestedFix: string;
+  let likelyCause: string;
+  let recommendedAction: string;
   let proposedLines: AdjustmentJournalLine[] = [];
 
   const variance = e.varianceAmount || 0;
@@ -126,7 +126,7 @@ export function generateExceptionSuggestedFix(
       }
       break;
 
-    case 'cogs':
+    case 'cogs': {
       likelyCause = "Deliveries completed without invoking COGS calculation webhooks.";
       recommendedAction = "Approve and post the suggested COGS adjustment entry for this order.";
       aiExplanation = "Possible root cause: The order was successfully delivered to the customer, but the Cost of Goods Sold journal entry was not created.";
@@ -138,6 +138,7 @@ export function generateExceptionSuggestedFix(
         { accountId: '1300', accountCode: '1300', accountName: 'Inventory', debit: 0, credit: cogsEst, memo: `Record COGS for Order #${e.sourceDocumentId?.substring(0, 8).toUpperCase()}` }
       ];
       break;
+    }
 
     case 'payments':
       likelyCause = "Customer payments marked as posted in checkout but missing Cash/AR journal entries.";

@@ -9,14 +9,14 @@ interface ExceptionDrawerProps {
   exception: ReconciliationException | null;
   onClose: () => void;
   onUpdateStatus: (id: string, status: 'resolved' | 'ignored', note: string) => Promise<void>;
-  onPostAdjustment: (adjustment: ReconciliationAdjustment) => Promise<void>;
+  onSubmitForApproval: (adjustment: ReconciliationAdjustment) => Promise<void>;
 }
 
 export const ReconciliationExceptionDrawer: React.FC<ExceptionDrawerProps> = ({
   exception,
   onClose,
   onUpdateStatus,
-  onPostAdjustment
+  onSubmitForApproval
 }) => {
   const { t, formatCurrency } = useI18n();
   const [resolutionNote, setResolutionNote] = useState('');
@@ -235,8 +235,8 @@ export const ReconciliationExceptionDrawer: React.FC<ExceptionDrawerProps> = ({
             </p>
             <ReconciliationAdjustmentDraft
               adjustment={draftAdjustment}
-              onPost={async (adj) => {
-                await onPostAdjustment(adj);
+              onSubmitForApproval={async (adj) => {
+                await onSubmitForApproval(adj);
                 onClose();
               }}
             />

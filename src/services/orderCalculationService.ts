@@ -64,7 +64,11 @@ export function calculateOrderTotals(order: {
     estimatedCost = order.estimatedCost !== undefined ? order.estimatedCost : subtotal * 0.35;
   }
 
-  const orderDiscount = order.discount !== undefined ? order.discount : 0;
+  // Only apply order-level discount when there are no line items (line items already
+  // account for their own per-line discounts, so adding order.discount would double-count).
+  const orderDiscount = (order.lineItems && order.lineItems.length > 0)
+    ? 0
+    : (order.discount !== undefined ? order.discount : 0);
   const totalDiscount = lineDiscountSum + orderDiscount;
   const netSubtotal = Math.max(0, subtotal - totalDiscount);
 

@@ -120,5 +120,15 @@ export const QUICK_ACTIONS: QuickAction[] = [
     type: 'route',
     target: '/',
     group: 'Business'
+  },
+  {
+    id: 'aiReconciliation',
+    label: 'AI Reconciliation',
+    icon: 'Scale',
+    description: 'Run AI-powered financial reconciliation and compliance checks',
+    shortcut: '⌥ R',
+    type: 'route',
+    target: '/admin/reconciliation',
+    group: 'Business'
   }
 ];

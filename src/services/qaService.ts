@@ -1,6 +1,8 @@
 import { useAdminStore } from '../store/adminStore';
 import { useFinanceStore } from '../store/financeStore';
 import { calculateOrderTotals } from './orderCalculationService';
+import { generateExceptionSuggestedFix } from './reconciliation/reconciliationAiService';
+import type { ReconciliationException, ExceptionModule } from './reconciliation/reconciliationTypes';
 import { collection, addDoc, serverTimestamp, getDocs, query, orderBy, limit } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
@@ -42,7 +44,7 @@ function toDate(value: unknown): Date | null {
 }
 
 export const runAutomatedQAChecks = async (): Promise<QAResult[]> => {
-  const { orders, inventory } = useAdminStore.getState();
+  const { orders, inventory, payments = [] } = useAdminStore.getState();
   const { journalEntries } = useFinanceStore.getState();
   
   const results: QAResult[] = [];
@@ -241,6 +243,199 @@ export const runAutomatedQAChecks = async (): Promise<QAResult[]> => {
     details: fulfillmentAlignPassed
       ? 'All delivered orders are marked as fulfilled.'
       : `Found ${fulfillmentInconsistencies.length} delivered orders that are not marked as fulfilled in inventory.`
+  });
+
+  // ─── RECONCILIATION QA CHECKS (11-13) ───
+
+  // 11. Reconciliation Engine Smoke Test
+  // Verify GL journal entries are balanced and no negative inventory exists (deterministic, sandbox-safe)
+  let glSmokePass = true;
+  let glSmokeDetails: string;
+  try {
+    // Check all journal entries have balanced lines
+    let unbalancedCount = 0;
+    for (const je of journalEntries) {
+      const debits = je.lines.reduce((s: number, l: any) => s + (l.debit || 0), 0);
+      const credits = je.lines.reduce((s: number, l: any) => s + (l.credit || 0), 0);
+      if (Math.abs(debits - credits) > 0.01) {
+        unbalancedCount++;
+      }
+    }
+
+    // Check no negative inventory
+    const negativeItems = inventory.filter(i => i.quantity < 0);
+
+    if (unbalancedCount > 0 || negativeItems.length > 0) {
+      glSmokePass = false;
+      glSmokeDetails = `Found ${unbalancedCount} unbalanced journal entries and ${negativeItems.length} negative inventory items.`;
+    } else {
+      glSmokeDetails = `All ${journalEntries.length} journal entries are balanced and no negative inventory detected. Reconciliation engine inputs are clean.`;
+    }
+  } catch (err) {
+    glSmokePass = false;
+    glSmokeDetails = `Reconciliation engine smoke test threw an error: ${String(err)}`;
+  }
+
+  results.push({
+    id: 'recon-engine-smoke',
+    label: 'Reconciliation Engine Smoke Test',
+    category: 'system',
+    passed: glSmokePass,
+    expected: '0 unbalanced entries, 0 negative inventory',
+    actual: glSmokePass ? '0 unbalanced entries, 0 negative inventory' : glSmokeDetails,
+    details: glSmokeDetails
+  });
+
+  // 12. AI Explanation Coverage Test
+  // Verify generateExceptionSuggestedFix returns non-empty fields for every exception module type
+  const testModules: ExceptionModule[] = ['gl', 'ar', 'ap', 'inventory', 'cogs', 'payments', 'sales_tax', 'irs_tax_readiness'];
+  let aiCoveragePass = true;
+  const aiMissingModules: string[] = [];
+
+  for (const mod of testModules) {
+    const testException: ReconciliationException = {
+      companyId: 'TEST',
+      reconciliationRunId: 'TEST',
+      module: mod,
+      severity: 'warning',
+      title: mod === 'gl' ? 'Unbalanced Entry' : `Test ${mod}`,
+      description: `Test exception for module ${mod}`,
+      varianceAmount: 100,
+      status: 'open',
+      createdAt: new Date().toISOString()
+    };
+
+    const explanation = generateExceptionSuggestedFix(testException);
+    if (!explanation.aiExplanation || !explanation.likelyCause || !explanation.recommendedAction) {
+      aiCoveragePass = false;
+      aiMissingModules.push(mod);
+    }
+  }
+
+  results.push({
+    id: 'recon-ai-coverage',
+    label: 'AI Explanation Coverage Test',
+    category: 'system',
+    passed: aiCoveragePass,
+    expected: `${testModules.length}/${testModules.length} modules covered`,
+    actual: aiCoveragePass
+      ? `${testModules.length}/${testModules.length} modules covered`
+      : `${testModules.length - aiMissingModules.length}/${testModules.length} modules covered (missing: ${aiMissingModules.join(', ')})`,
+    details: aiCoveragePass
+      ? `All ${testModules.length} exception module types return complete AI explanations (likelyCause, aiExplanation, recommendedAction).`
+      : `Missing AI explanation coverage for: ${aiMissingModules.join(', ')}.`
+  });
+
+  // 13. Adjustment Journal Line Balance Test
+  // Verify all AI-proposed journal corrections have balanced debits/credits
+  let adjBalancePass = true;
+  const adjUnbalancedModules: string[] = [];
+  const modulesWithLines: ExceptionModule[] = ['ar', 'ap', 'inventory', 'cogs', 'payments', 'sales_tax'];
+
+  for (const mod of modulesWithLines) {
+    const testException: ReconciliationException = {
+      companyId: 'TEST',
+      reconciliationRunId: 'TEST',
+      module: mod,
+      severity: 'critical',
+      title: `Test ${mod}`,
+      description: `Test adjustment for module ${mod}`,
+      varianceAmount: 250.00,
+      sourceDocumentId: 'test-doc-12345678',
+      status: 'open',
+      createdAt: new Date().toISOString()
+    };
+
+    const fix = generateExceptionSuggestedFix(testException);
+    if (fix.proposedLines && fix.proposedLines.length > 0) {
+      const totalDebits = fix.proposedLines.reduce((s, l) => s + l.debit, 0);
+      const totalCredits = fix.proposedLines.reduce((s, l) => s + l.credit, 0);
+      if (Math.abs(totalDebits - totalCredits) > 0.01) {
+        adjBalancePass = false;
+        adjUnbalancedModules.push(mod);
+      }
+    }
+  }
+
+  results.push({
+    id: 'recon-adj-balance',
+    label: 'Adjustment Journal Line Balance Test',
+    category: 'system',
+    passed: adjBalancePass,
+    expected: '0 unbalanced proposed corrections',
+    actual: adjBalancePass
+      ? '0 unbalanced proposed corrections'
+      : `${adjUnbalancedModules.length} unbalanced (${adjUnbalancedModules.join(', ')})`,
+    details: adjBalancePass
+      ? `All AI-proposed journal corrections have balanced debit/credit totals across ${modulesWithLines.length} module types.`
+      : `Unbalanced proposed corrections found in: ${adjUnbalancedModules.join(', ')}.`
+  });
+
+  // 14. Unposted Customer Payments Check
+  const companyId = localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
+  const activePayments = payments.filter(p => 
+    p.companyId === companyId &&
+    p.customerId &&
+    p.customerId.trim() !== '' &&
+    p.status === 'posted' &&
+    p.glPostingStatus !== 'reversed'
+  );
+
+  const unpostedCustomerPayments = activePayments.filter(
+    p => p.glPostingStatus !== 'posted'
+  );
+  const unpostedPaymentsPassed = unpostedCustomerPayments.length === 0;
+  results.push({
+    id: 'unposted-payments',
+    label: 'Unposted Customer Payments Verification',
+    category: 'finance',
+    passed: unpostedPaymentsPassed,
+    expected: '0 unposted payments',
+    actual: `${unpostedCustomerPayments.length} unposted payments`,
+    details: unpostedPaymentsPassed
+      ? 'All posted customer payments have been successfully posted to the General Ledger.'
+      : `Found ${unpostedCustomerPayments.length} customer payments marked as posted in AR/Subledger but missing General Ledger posting.`
+  });
+
+  // 15. Duplicate Payment Signature Check
+  const sortedActivePayments = [...activePayments].sort(
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+  );
+  
+  const duplicatesList: string[] = [];
+  for (let i = 0; i < sortedActivePayments.length; i++) {
+    for (let j = i + 1; j < sortedActivePayments.length; j++) {
+      const p1 = sortedActivePayments[i];
+      const p2 = sortedActivePayments[j];
+      
+      if (
+        p1.customerId === p2.customerId &&
+        p1.amount === p2.amount &&
+        p1.paymentMethod === p2.paymentMethod
+      ) {
+        const diff = Math.abs(new Date(p1.createdAt).getTime() - new Date(p2.createdAt).getTime());
+        if (diff < 5 * 60 * 1000) {
+          // If referenceNumber is present on both and they differ, they are not duplicates
+          if (p1.referenceNumber && p2.referenceNumber && p1.referenceNumber !== p2.referenceNumber) {
+            continue;
+          }
+          duplicatesList.push(`Payment #${p1.paymentNumber} and Payment #${p2.paymentNumber} ($${p1.amount.toFixed(2)})`);
+        }
+      }
+    }
+  }
+
+  const duplicateCheckPassed = duplicatesList.length === 0;
+  results.push({
+    id: 'duplicate-payments',
+    label: 'Duplicate Payment Signature Check',
+    category: 'finance',
+    passed: duplicateCheckPassed,
+    expected: '0 duplicate signatures',
+    actual: `${duplicatesList.length} duplicate signatures`,
+    details: duplicateCheckPassed
+      ? 'No potential duplicate customer payments detected within 5-minute transaction buckets.'
+      : `Found ${duplicatesList.length} duplicate payment signatures: ${duplicatesList.join(', ')}.`
   });
 
   return results;

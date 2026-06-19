@@ -208,7 +208,6 @@ export function exportReconciliationPDF(
     docPdf.setFont('helvetica', 'italic');
     docPdf.setFontSize(10);
     docPdf.text("No discrepancies or exceptions found for this run period. Ledger is fully reconciled.", 14, nextY);
-    nextY += 10;
   } else {
     const exceptionHeaders = [langLabels.module, langLabels.severity, langLabels.title, langLabels.variance, langLabels.statusCol];
     const exceptionRows = exceptions.map(e => [
@@ -247,7 +246,6 @@ export function exportReconciliationPDF(
       docPdf.setTextColor(44, 48, 46);
       const splitAiText = docPdf.splitTextToSize(run.aiSummary, 182);
       docPdf.text(splitAiText, 14, nextY);
-      nextY += (splitAiText.length * 5) + 6;
     }
   }
 

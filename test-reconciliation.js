@@ -234,7 +234,77 @@ function simulateTaxReadiness(companyId, taxYear, vendors, payments) {
 }
 
 // ---------------------------------------------------------------------
-// 5. Cross-Company Rejection Helper Simulation
+// 5. Cash & Payments Reconciliation Logic Simulation
+// ---------------------------------------------------------------------
+function simulateReconcileCash(companyId, glCashBalance, payments) {
+  const exceptions = [];
+
+  const subledgerCashTotal = payments
+    .filter(p => p.companyId === companyId && p.status === 'posted')
+    .reduce((sum, p) => sum + (p.amount || 0), 0);
+
+  const variance = Math.abs(glCashBalance - subledgerCashTotal);
+  if (variance > 0.05) {
+    exceptions.push({
+      companyId,
+      module: 'payments',
+      severity: 'critical',
+      title: 'Cash Subledger to GL Mismatch',
+      varianceAmount: variance,
+      status: 'open'
+    });
+  }
+
+  // Check if there are payment records with glPostingStatus !== 'posted' (unposted payments)
+  const unpostedPayments = payments.filter(p => p.companyId === companyId && p.status === 'posted' && p.glPostingStatus !== 'posted');
+  for (const p of unpostedPayments) {
+    exceptions.push({
+      companyId,
+      module: 'payments',
+      severity: 'warning',
+      title: 'Unposted Customer Payment',
+      description: `Payment Record #${p.paymentNumber} of $${p.amount.toFixed(2)} from Customer "${p.customerName}" is marked as posted in AR, but has not been posted to the General Ledger.`,
+      status: 'open'
+    });
+  }
+
+  // Check for duplicate payments (same amount, customer, paymentMethod, status === 'posted')
+  const sortedPayments = [...payments]
+    .filter(p => p.companyId === companyId && p.status === 'posted')
+    .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  for (let i = 0; i < sortedPayments.length; i++) {
+    for (let j = i + 1; j < sortedPayments.length; j++) {
+      const p1 = sortedPayments[i];
+      const p2 = sortedPayments[j];
+
+      if (
+        p1.customerId === p2.customerId &&
+        p1.amount === p2.amount &&
+        p1.paymentMethod === p2.paymentMethod
+      ) {
+        // Check if created within 5 minutes (300,000 ms)
+        const diff = Math.abs(new Date(p1.createdAt).getTime() - new Date(p2.createdAt).getTime());
+        if (diff < 5 * 60 * 1000) {
+          exceptions.push({
+            companyId,
+            module: 'payments',
+            severity: 'warning',
+            title: 'Duplicate Payment Signature Detected',
+            description: `Potential duplicate payment detected: Payment #${p1.paymentNumber} and Payment #${p2.paymentNumber} both have an amount of $${p1.amount.toFixed(2)} and were created within 5 minutes of each other.`,
+            status: 'open'
+          });
+        }
+      }
+    }
+  }
+
+  const cashReconciled = exceptions.filter(e => e.module === 'payments' && e.severity === 'critical').length === 0;
+
+  return { cashReconciled, subledgerCashTotal, exceptions };
+}
+
+// ---------------------------------------------------------------------
+// 6. Cross-Company Rejection Helper Simulation
 // ---------------------------------------------------------------------
 function assertCompanyIsolation(user, action, targetCompanyId) {
   if (user.companyId !== targetCompanyId) {
@@ -417,6 +487,40 @@ async function runTests() {
   } catch (err) {
     assert(err.message.includes('Cross-company access rejected'), `Cross-company access correctly rejected: ${err.message}`);
   }
+
+  console.log();
+
+  // -------------------------------------------------------------------
+  // SCENARIO 6: Cash & Payments Reconciliation
+  // -------------------------------------------------------------------
+  console.log('--- SCENARIO 6: Cash & Payments Reconciliation ---');
+
+  const scenario6Payments = [
+    { id: 'p-1', companyId: 'COMP-A', paymentNumber: 'PMT-001', customerName: 'Alice', customerId: 'c-1', amount: 500, paymentMethod: 'credit_card', status: 'posted', glPostingStatus: 'posted', createdAt: '2026-06-19T12:00:00Z' },
+    { id: 'p-2', companyId: 'COMP-A', paymentNumber: 'PMT-002', customerName: 'Bob', customerId: 'c-2', amount: 300, paymentMethod: 'check', status: 'posted', glPostingStatus: 'unposted', createdAt: '2026-06-19T12:10:00Z' }
+  ];
+
+  // 1. Positive scenario: Cash matches subledger
+  const cashRes1 = simulateReconcileCash('COMP-A', 500, [scenario6Payments[0]]);
+  assert(cashRes1.cashReconciled === true, 'Cash reconciles successfully when subledger matches GL');
+  assert(cashRes1.exceptions.length === 0, 'No exceptions generated for matching cash subledger');
+
+  // 2. Negative variance scenario: Cash mismatch
+  const cashRes2 = simulateReconcileCash('COMP-A', 450, [scenario6Payments[0]]);
+  assert(cashRes2.cashReconciled === false, 'Cash subledger mismatch triggers exception');
+  assert(cashRes2.exceptions.some(e => e.title === 'Cash Subledger to GL Mismatch'), 'Mismatch exception generated successfully');
+
+  // 3. Unposted customer payment check
+  const cashRes3 = simulateReconcileCash('COMP-A', 800, scenario6Payments);
+  assert(cashRes3.exceptions.some(e => e.title === 'Unposted Customer Payment'), 'Unposted payment exception generated successfully');
+
+  // 4. Duplicate payment signature detection check
+  const duplicatePayments = [
+    { id: 'dp-1', companyId: 'COMP-A', paymentNumber: 'PMT-100', customerName: 'Charlie', customerId: 'c-3', amount: 150, paymentMethod: 'cash', status: 'posted', glPostingStatus: 'posted', createdAt: '2026-06-19T12:00:00Z' },
+    { id: 'dp-2', companyId: 'COMP-A', paymentNumber: 'PMT-101', customerName: 'Charlie', customerId: 'c-3', amount: 150, paymentMethod: 'cash', status: 'posted', glPostingStatus: 'posted', createdAt: '2026-06-19T12:02:00Z' }
+  ];
+  const cashRes4 = simulateReconcileCash('COMP-A', 300, duplicatePayments);
+  assert(cashRes4.exceptions.some(e => e.title === 'Duplicate Payment Signature Detected'), 'Duplicate payment signature check triggers exception');
 
   console.log();
 

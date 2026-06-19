@@ -108,7 +108,7 @@ export type AdjustmentType =
   | 'write_off' 
   | 'reversal';
 
-export type AdjustmentStatus = 'draft' | 'pending_approval' | 'approved' | 'rejected' | 'posted';
+export type AdjustmentStatus = 'draft' | 'pending_approval' | 'approved' | 'rejected' | 'posted' | 'voided';
 
 export interface AdjustmentJournalLine {
   accountId: string;
@@ -129,20 +129,38 @@ export interface ReconciliationAdjustment {
   status: AdjustmentStatus;
   riskLevel: 'low' | 'medium' | 'high' | 'critical';
   sourceExceptionIds: string[];
+  sourceRunId?: string;
 
   reason: string;
   aiGenerated: boolean;
 
   proposedJournalLines?: AdjustmentJournalLine[];
 
+  // Submission audit trail
+  submittedBy?: string;
+  submittedAt?: any;
+
+  // Approval audit trail
   createdBy: string;
   approvedBy?: string;
-  postedJournalId?: string;
+  approvalDecision?: 'approved' | 'rejected';
   approvalNotes?: string;
+  approvedAt?: any;
+  rejectedBy?: string;
+  rejectedAt?: any;
+  rejectionReason?: string;
+
+  // Posting audit trail
+  postedJournalId?: string;
+  postedBy?: string;
+  postedAt?: any;
+
+  // Voiding
+  voidedBy?: string;
+  voidedAt?: any;
+  voidReason?: string;
 
   createdAt: any;
-  approvedAt?: any;
-  postedAt?: any;
 }
 
 export type TaxReadinessStatus = 'draft' | 'in_review' | 'ready_for_accountant' | 'missing_information' | 'closed';

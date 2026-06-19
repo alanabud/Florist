@@ -21,7 +21,7 @@ import {
 export const QA: React.FC = () => {
   const { t } = useI18n();
   const { selectedCompanyId } = useCompany();
-  const { resetToDemo, orders, fetchOrders } = useAdminStore();
+  const { resetToDemo, orders, fetchOrders, fetchPayments } = useAdminStore();
   const { fetchJournalEntries, journalEntries } = useFinanceStore();
   const { role, user } = useAuthStore();
   const addToast = useToastStore(s => s.addToast);
@@ -45,6 +45,22 @@ export const QA: React.FC = () => {
     try {
       await fetchJournalEntries();
       await fetchOrders();
+      if (fetchPayments) {
+        await fetchPayments();
+      }
+
+      // Auto-seed ledger if fresh demo environment (orders exist but no journal entries)
+      const currentOrders = useAdminStore.getState().orders;
+      const currentJE = useFinanceStore.getState().journalEntries;
+      if (currentOrders.length > 0 && currentJE.length === 0) {
+        try {
+          await seedJournalEntriesFromDemoOrders();
+          await fetchJournalEntries();
+        } catch (seedErr) {
+          console.warn("Auto-seed ledger skipped:", seedErr);
+        }
+      }
+
       const results = await runAutomatedQAChecks();
       setQaResults(results);
       
@@ -75,6 +91,9 @@ export const QA: React.FC = () => {
     if (isReadOnly) return;
     setIsLoading(true);
     try {
+      if (fetchPayments) {
+        await fetchPayments();
+      }
       const results = await runAutomatedQAChecks();
       setQaResults(results);
       

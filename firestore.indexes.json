@@ -83,6 +83,30 @@
         { "fieldPath": "companyId", "order": "ASCENDING" },
         { "fieldPath": "name", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "closedPeriods",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "companyId", "order": "ASCENDING" },
+        { "fieldPath": "periodEndDate", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "reconciliationRuns",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "companyId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "reconciliationAdjustments",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "reconciliationRunId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

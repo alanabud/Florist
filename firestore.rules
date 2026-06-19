@@ -399,10 +399,21 @@ service cloud.firestore {
 
     match /reconciliationAdjustments/{adjustmentId} {
       allow read: if canReadCompanyDoc();
-      allow create: if canCreateCompanyDoc() && (getCompanyMember(request.resource.data.companyId).role in ["owner", "admin", "accountant"]);
-      allow update: if canUpdateCompanyDoc() && (getCompanyMember(request.resource.data.companyId).role in ["owner", "admin", "accountant"]) && (
-        resource.data.status in ['draft', 'pending_approval']
-      );
+      allow create: if canCreateCompanyDoc()
+        && isCompanyStaff(request.resource.data.companyId)
+        && request.resource.data.status == 'pending_approval'
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.proposedJournalLines is list
+        && request.resource.data.proposedJournalLines.size() >= 2;
+      allow update: if canUpdateCompanyDoc()
+        && (getCompanyMember(resource.data.companyId).role in ["owner", "admin", "accountant"])
+        && (
+          // Transitions
+          (resource.data.status == 'pending_approval' && request.resource.data.status == 'posted')
+          || (resource.data.status == 'pending_approval' && request.resource.data.status == 'rejected')
+          || (resource.data.status in ['draft', 'pending_approval'] && request.resource.data.status == resource.data.status)
+        )
+        && (resource.data.status != 'posted' && resource.data.status != 'rejected');
       allow delete: if canDeleteCompanyDoc() && resource.data.status == 'draft';
     }
 
@@ -410,6 +421,20 @@ service cloud.firestore {
       allow read: if canReadCompanyDoc();
       allow create, update: if canCreateCompanyDoc() && (getCompanyMember(request.resource.data.companyId).role in ["owner", "admin", "accountant"]);
       allow delete: if canDeleteCompanyDoc();
+    }
+
+    // CLOSED PERIODS (Period locking after reconciliation approval)
+    match /closedPeriods/{periodId} {
+      allow read: if canReadCompanyDoc();
+      allow create: if canCreateCompanyDoc() && (getCompanyMember(request.resource.data.companyId).role in ["owner", "admin", "accountant"]);
+      allow update, delete: if false; // Immutable once created
+    }
+
+    // AUDIT EVIDENCE PACKETS (Immutable compliance snapshots)
+    match /auditEvidencePackets/{packetId} {
+      allow read: if canReadCompanyDoc();
+      allow create: if canCreateCompanyDoc() && (getCompanyMember(request.resource.data.companyId).role in ["owner", "admin", "accountant"]);
+      allow update, delete: if false; // Immutable
     }
 
     // ──────────────────────────────────────────────

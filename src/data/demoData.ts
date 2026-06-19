@@ -41,6 +41,7 @@ const generateRecentOrders = () => {
       customerId: `c${Math.floor(Math.random() * 5) + 1}`,
       customerName: DEMO_CUSTOMERS[Math.floor(Math.random() * 5)].name,
       status: status,
+      fulfillmentStatus: status === 'delivered' ? 'fulfilled' : 'unfulfilled',
       total: total,
       subtotal: subtotal,
       deliveryFee: deliveryFee,
