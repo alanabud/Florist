@@ -159,6 +159,11 @@ service cloud.firestore {
       }
     }
 
+    // Collection Group rule for members to allow users to query their own memberships
+    match /{path=**}/members/{memberUserId} {
+      allow read: if isSignedIn() && request.auth.uid == memberUserId;
+    }
+
     // ──────────────────────────────────────────────
     // BUSINESS COLLECTIONS (Company scoped)
     // ──────────────────────────────────────────────
