@@ -16,6 +16,21 @@ export async function createReconciliationRun(
   periodEnd: string,
   createdBy: string
 ): Promise<string> {
+  // Input Validation
+  if (!companyId || companyId.trim() === '') {
+    throw new Error('Validation failed: Missing company context.');
+  }
+  if (!periodStart || !periodEnd) {
+    throw new Error('Validation failed: Start date and End date are required.');
+  }
+  if (periodStart > periodEnd) {
+    throw new Error('Validation failed: Start date must be on or before End date.');
+  }
+  const todayStr = new Date().toISOString().split('T')[0];
+  if (periodEnd > todayStr) {
+    throw new Error('Validation failed: Audit end date cannot be in the future.');
+  }
+
   // 1. Create run document in running state
   const runNumber = `REC-${Date.now().toString().substring(6)}`;
   
@@ -172,10 +187,18 @@ export async function createReconciliationRun(
 
   } catch (error: any) {
     console.error("Failed executing reconciliation run:", error);
+    const msg = error instanceof Error ? error.message : 'Unknown reconciliation failure';
+    const failureReason = msg.slice(0, 1000);
     await updateDoc(doc(db, 'reconciliationRuns', runId), {
       status: 'failed',
+      failureReason,
       completedAt: new Date().toISOString()
     });
+    try {
+      error.runId = runId;
+    } catch {
+      // In case error is read-only
+    }
     throw error;
   }
 

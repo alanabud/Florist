@@ -41,6 +41,7 @@ export interface ReconciliationRun {
 
   aiSummary?: string;
   aiRiskScore?: number; // 0 to 100
+  failureReason?: string;
 
   createdBy: string;
   approvedBy?: string;

@@ -26,7 +26,7 @@ import { ReconciliationExceptionDrawer } from '../components/reconciliation/Reco
 import { ReconciliationAiSummaryPanel } from '../components/reconciliation/ReconciliationAiSummaryPanel';
 import { CloseReadinessChecklist } from '../components/reconciliation/CloseReadinessChecklist';
 import { TaxReadinessPanel } from '../components/reconciliation/TaxReadinessPanel';
-import { AlertCircle, Scale, Lock, FileArchive, Check, X, Clock, ShieldAlert, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, Scale, Lock, FileArchive, Check, X, Clock, ShieldAlert, CheckCircle2, RefreshCw } from 'lucide-react';
 
 export const ReconciliationCenter: React.FC = () => {
   const { t, formatCurrency } = useI18n();
@@ -143,26 +143,51 @@ export const ReconciliationCenter: React.FC = () => {
 
   const handleTriggerRun = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedCompanyId) return;
+    if (!selectedCompanyId) {
+      addToast('No company context selected.', 'error');
+      return;
+    }
+
+    // Date range validation
+    if (!newStart || !newEnd) {
+      addToast('Start date and End date are required.', 'error');
+      return;
+    }
+    if (newStart > newEnd) {
+      addToast('Start date must be on or before End date.', 'error');
+      return;
+    }
+    const todayStr = new Date().toISOString().split('T')[0];
+    if (newEnd > todayStr) {
+      addToast('Audit end date cannot be in the future.', 'error');
+      return;
+    }
+
     setLoading(true);
-    setShowRunModal(false);
+    let runId: string | null = null;
     try {
-      addToast(t('reconciliation.toast.triggering'), 'info');
+      addToast(t('reconciliation.toast.triggering') || 'Triggering new audit run...', 'info');
       const actorName = user?.displayName || user?.email || 'System';
-      const runId = await createReconciliationRun(
+      runId = await createReconciliationRun(
         selectedCompanyId,
         newRunType,
         newStart,
         newEnd,
         actorName
       );
-      addToast(t('reconciliation.toast.completed'), 'success');
-      setSelectedRunId(runId);
-      await fetchRuns();
+      addToast(t('reconciliation.toast.completed') || 'Audit run completed successfully.', 'success');
+      setShowRunModal(false);
     } catch (err: any) {
       console.error(err);
-      addToast(err.message || t('reconciliation.toast.failed'), 'error');
+      addToast(err.message || t('reconciliation.toast.failed') || 'Failed to trigger audit run.', 'error');
+      if (err.runId) {
+        runId = err.runId;
+      }
     } finally {
+      await fetchRuns();
+      if (runId) {
+        setSelectedRunId(runId);
+      }
       setLoading(false);
     }
   };
@@ -480,6 +505,23 @@ export const ReconciliationCenter: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', color: '#2C302E' }}>
+      {loading && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(255,255,255,0.7)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1200,
+          flexDirection: 'column',
+          gap: '1rem'
+        }}>
+          <RefreshCw size={48} style={{ color: '#6C8271', animation: 'spin 1.5s linear infinite' }} />
+          <div style={{ fontWeight: 600, color: '#2C302E' }}>Executing Reconciliation Audit Scan...</div>
+          <div style={{ fontSize: '0.8125rem', color: '#6b7280' }}>Verifying sub-ledger alignments and checking compliance metrics.</div>
+        </div>
+      )}
       
       {/* Title block */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -564,7 +606,28 @@ export const ReconciliationCenter: React.FC = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           
           {selectedRun ? (
-            <>
+            selectedRun.status === 'running' ? (
+              <div style={{ textAlign: 'center', padding: '4rem 0', color: '#8a8f8c', background: '#FFFFFF', border: '1px solid #E8EAE6', borderRadius: '16px' }}>
+                <RefreshCw size={36} style={{ marginBottom: '0.5rem', color: '#D97706', animation: 'spin 2s linear infinite' }} />
+                <h3>Reconciliation Scan Running</h3>
+                <p style={{ fontSize: '0.875rem' }}>We are verifying the General Ledger, AR, AP, Inventory, Cash, and Tax compliance details. This may take a few moments.</p>
+              </div>
+            ) : selectedRun.status === 'failed' ? (
+              <div style={{ textAlign: 'center', padding: '4rem 0', color: '#8a8f8c', background: '#FFFFFF', border: '1px solid #FCA5A5', borderRadius: '16px' }}>
+                <ShieldAlert size={36} style={{ marginBottom: '0.5rem', color: '#EF4444' }} />
+                <h3 style={{ color: '#B91C1C' }}>Reconciliation Audit Scan Failed</h3>
+                <p style={{ fontSize: '0.875rem', color: '#991B1B' }}>An error occurred while executing the reconciliation audit checks.</p>
+                {selectedRun.failureReason && (
+                  <div style={{ marginTop: '1rem' }}>
+                    <p style={{ fontSize: '0.8125rem', color: '#6b7280', marginBottom: '0.25rem' }}>Failure Reason:</p>
+                    <p style={{ fontSize: '0.825rem', color: '#B91C1C', fontFamily: 'monospace', padding: '0.75rem', background: '#FEF2F2', display: 'inline-block', borderRadius: '8px', border: '1px solid #FEE2E2', maxWidth: '90%', wordBreak: 'break-all' }}>
+                      {selectedRun.failureReason}
+                    </p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
               {/* Tab Navigation */}
               <div style={{
                 display: 'flex',
@@ -710,7 +773,7 @@ export const ReconciliationCenter: React.FC = () => {
                 <TaxReadinessPanel runId={selectedRun.id || null} />
               )}
             </>
-          ) : (
+          )) : (
             <div style={{ textAlign: 'center', padding: '4rem 0', color: '#8a8f8c', background: '#FFFFFF', border: '1px solid #E8EAE6', borderRadius: '16px' }}>
               <AlertCircle size={36} style={{ marginBottom: '0.5rem', color: '#6C8271' }} />
               <p>{t('reconciliation.noActiveRun')}</p>

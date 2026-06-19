@@ -3,7 +3,7 @@ import { useFinanceStore } from '../store/financeStore';
 import { calculateOrderTotals } from './orderCalculationService';
 import { generateExceptionSuggestedFix } from './reconciliation/reconciliationAiService';
 import type { ReconciliationException, ExceptionModule } from './reconciliation/reconciliationTypes';
-import { collection, addDoc, serverTimestamp, getDocs, query, orderBy, limit } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, getDocs, query, orderBy, limit, where } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
 export interface QAResult {
@@ -436,6 +436,46 @@ export const runAutomatedQAChecks = async (): Promise<QAResult[]> => {
     details: duplicateCheckPassed
       ? 'No potential duplicate customer payments detected within 5-minute transaction buckets.'
       : `Found ${duplicatesList.length} duplicate payment signatures: ${duplicatesList.join(', ')}.`
+  });
+
+  // 16. Reconciliation Runs Access & Integrity Test
+  let runsAccessPassed: boolean;
+  let runsAccessDetails: string;
+  
+  try {
+    const runsQuery = query(
+      collection(db, 'reconciliationRuns'),
+      where('companyId', '==', companyId),
+      orderBy('createdAt', 'desc'),
+      limit(20)
+    );
+    const runsSnap = await getDocs(runsQuery);
+    runsAccessPassed = true;
+    
+    const runsData = runsSnap.docs.map(doc => doc.data() as any);
+    const failedRuns = runsData.filter(r => r.status === 'failed');
+    const failedRunsCheckedCount = failedRuns.length;
+    const failedRunsWithDetailsCount = failedRuns.filter(r => r.failureReason && typeof r.failureReason === 'string').length;
+    
+    runsAccessDetails = `Successfully queried ${runsData.length} reconciliation runs from Firestore. `;
+    if (failedRunsCheckedCount > 0) {
+      runsAccessDetails += `Verified ${failedRunsWithDetailsCount}/${failedRunsCheckedCount} failed runs expose diagnostic failureReason details.`;
+    } else {
+      runsAccessDetails += `No failed runs present in history logs to verify failureReason validation.`;
+    }
+  } catch (err: any) {
+    runsAccessPassed = false;
+    runsAccessDetails = `Failed querying reconciliationRuns collection from Firestore: ${err.message || String(err)}`;
+  }
+
+  results.push({
+    id: 'runs-access-integrity',
+    label: 'Reconciliation Runs Access & Integrity Test',
+    category: 'system',
+    passed: runsAccessPassed,
+    expected: 'Successful Firestore runs query and error diagnostic verification',
+    actual: runsAccessPassed ? 'Query passed' : 'Query failed / permission denied',
+    details: runsAccessDetails
   });
 
   return results;

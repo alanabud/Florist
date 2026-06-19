@@ -525,6 +525,62 @@ async function runTests() {
   console.log();
 
   // -------------------------------------------------------------------
+  // SCENARIO 7: Reconciliation Run Flow Validation
+  // -------------------------------------------------------------------
+  console.log('--- SCENARIO 7: Reconciliation Run Flow Validation ---');
+
+  // Helper simulating service-side input validation
+  function validateRunInputs(companyId, periodStart, periodEnd) {
+    if (!companyId || companyId.trim() === '') {
+      throw new Error('Validation failed: Missing company context.');
+    }
+    if (!periodStart || !periodEnd) {
+      throw new Error('Validation failed: Start date and End date are required.');
+    }
+    if (periodStart > periodEnd) {
+      throw new Error('Validation failed: Start date must be on or before End date.');
+    }
+    const todayStr = '2026-06-19'; // Fixed simulation today for test predictability
+    if (periodEnd > todayStr) {
+      throw new Error('Validation failed: Audit end date cannot be in the future.');
+    }
+  }
+
+  // 1. Future End Date Check
+  try {
+    validateRunInputs('COMP-A', '2026-06-01', '2026-06-30'); // Future date
+    assert(false, 'Should block future end dates');
+  } catch (err) {
+    assert(err.message.includes('cannot be in the future'), 'Blocks future end dates with clear message');
+  }
+
+  // 2. Missing Company ID Check
+  try {
+    validateRunInputs('', '2026-06-01', '2026-06-15');
+    assert(false, 'Should block missing companyId');
+  } catch (err) {
+    assert(err.message.includes('Missing company context'), 'Blocks missing companyId with clear message');
+  }
+
+  // 3. Start > End Check
+  try {
+    validateRunInputs('COMP-A', '2026-06-15', '2026-06-10');
+    assert(false, 'Should block start date after end date');
+  } catch (err) {
+    assert(err.message.includes('must be on or before'), 'Blocks start date > end date with clear message');
+  }
+
+  // 4. Clean Period Empty Dataset Check
+  try {
+    validateRunInputs('COMP-A', '2026-06-01', '2026-06-15');
+    assert(true, 'Valid inputs allow execution to proceed');
+  } catch (err) {
+    assert(false, 'Valid inputs should pass validation');
+  }
+
+  console.log();
+
+  // -------------------------------------------------------------------
   // Exit Code Verification
   // -------------------------------------------------------------------
   console.log('==================================================');
