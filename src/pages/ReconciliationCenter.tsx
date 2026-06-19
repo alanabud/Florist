@@ -30,7 +30,7 @@ import { AlertCircle, Scale, Lock, FileArchive, Check, X, Clock, ShieldAlert, Ch
 
 export const ReconciliationCenter: React.FC = () => {
   const { t, formatCurrency } = useI18n();
-  const { selectedCompanyId, memberships } = useCompany();
+  const { selectedCompanyId, selectedCompany, memberships } = useCompany();
   const { user } = useAuthStore();
   const addToast = useToastStore((s) => s.addToast);
 
@@ -143,7 +143,24 @@ export const ReconciliationCenter: React.FC = () => {
 
   const handleTriggerRun = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("[ReconciliationCenter Dev Diagnostic] Start Scan Triggered", {
+      authUid: user?.uid,
+      userRole: userRole,
+      memberships,
+      selectedCompany,
+      selectedCompanyId,
+      newRunType,
+      newStart,
+      newEnd
+    });
+
     if (!selectedCompanyId) {
+      console.error('Missing company context for reconciliation run', {
+        user,
+        selectedCompany,
+        selectedCompanyId,
+        memberships
+      });
       addToast('No company context selected.', 'error');
       return;
     }
@@ -815,10 +832,27 @@ export const ReconciliationCenter: React.FC = () => {
             boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)'
           }}>
             <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: '#2C302E' }}>
-              {t('reconciliation.modal.title')}
+              {t('reconciliation.modal.title') || 'Configure Audit Parameters'}
             </h3>
 
             <form onSubmit={handleTriggerRun} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{
+                background: selectedCompanyId ? '#F0FDF4' : '#FEF2F2',
+                border: `1px solid ${selectedCompanyId ? '#BBF7D0' : '#FECACA'}`,
+                borderRadius: '8px',
+                padding: '0.65rem 0.75rem',
+                fontSize: '0.8125rem',
+                color: selectedCompanyId ? '#166534' : '#991B1B'
+              }}>
+                <div style={{ fontWeight: 600 }}>Active Company Context:</div>
+                <div style={{ marginTop: '0.15rem' }}>
+                  {selectedCompany ? selectedCompany.displayName : 'None selected'}
+                </div>
+                <div style={{ fontSize: '0.6875rem', color: '#6b7280', marginTop: '0.15rem', fontFamily: 'monospace' }}>
+                  ID: {selectedCompanyId || 'MISSING_CONTEXT'}
+                </div>
+              </div>
+
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                 <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#374151' }}>{t('reconciliation.modal.runType')}</label>
                 <select
@@ -884,13 +918,16 @@ export const ReconciliationCenter: React.FC = () => {
                 </button>
                 <button
                   type="submit"
+                  disabled={!selectedCompanyId || loading}
                   style={{
                     flex: 1, padding: '0.5rem', borderRadius: '8px',
-                    background: '#6C8271', color: '#FFFFFF', border: 'none',
-                    fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer'
+                    background: selectedCompanyId ? '#6C8271' : '#D1D5DB',
+                    color: '#FFFFFF', border: 'none',
+                    fontSize: '0.875rem', fontWeight: 600,
+                    cursor: selectedCompanyId ? 'pointer' : 'not-allowed'
                   }}
                 >
-                  {t('reconciliation.modal.startScan')}
+                  {t('reconciliation.modal.startScan') || 'Start Scan'}
                 </button>
               </div>
             </form>

@@ -149,7 +149,13 @@ service cloud.firestore {
 
       match /members/{memberUserId} {
         allow read: if isActiveCompanyMember(companyId);
-        allow create: if isCompanyAdmin(companyId);
+        allow create: if isCompanyAdmin(companyId) || (
+          isSignedIn() && 
+          request.auth.uid == memberUserId && (
+            companyId in ["DEFAULT_COMPANY", "rose-sage", "orchid-lane"] ||
+            get(/databases/$(database)/documents/companies/$(companyId)).data.createdBy == request.auth.uid
+          )
+        );
         allow update: if isCompanyAdmin(companyId) || (
           isSignedIn() && 
           request.auth.uid == memberUserId && 

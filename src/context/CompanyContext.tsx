@@ -316,6 +316,13 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
         activeCompanyId = list[0]?.companyId || 'DEFAULT_COMPANY';
       }
 
+      console.log("[CompanyContext Dev Diagnostic]", {
+        authUid: user?.uid,
+        userRole: globalRole,
+        companiesLoaded: comps.map(c => c.id),
+        activeCompanyId
+      });
+
       await loadCompanyData(activeCompanyId, list);
     } catch (err) {
       console.error("Failed to load company memberships context:", err);
@@ -337,6 +344,12 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (compSnap.exists() && settingsSnap.exists()) {
         const cData = { id: compSnap.id, ...compSnap.data() } as Company;
         const sData = settingsSnap.data() as CompanySettings;
+
+        console.log("[CompanyContext loadCompanyData Diagnostic]", {
+          selectedCompanyId: companyId,
+          selectedCompany: cData.id,
+          companySettings: sData ? 'loaded' : 'missing'
+        });
 
         setSelectedCompanyId(companyId);
         setSelectedCompany(cData);
@@ -450,6 +463,14 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
   useEffect(() => {
     refreshContext();
   }, [user]);
+
+  useEffect(() => {
+    if (!selectedCompanyId && companiesList.length === 1) {
+      const singleCompanyId = companiesList[0].id;
+      console.log("[CompanyContext Auto-Select Diagnostic] Auto-selecting single company:", singleCompanyId);
+      loadCompanyData(singleCompanyId, memberships);
+    }
+  }, [companiesList, selectedCompanyId, memberships]);
 
   return (
     <CompanyContext.Provider value={{
