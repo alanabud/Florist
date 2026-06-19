@@ -161,7 +161,10 @@ service cloud.firestore {
 
     // Collection Group rule for members to allow users to query their own memberships
     match /{path=**}/members/{memberUserId} {
-      allow read: if isSignedIn() && request.auth.uid == memberUserId;
+      allow read: if isSignedIn() && (
+        resource.data.userId == request.auth.uid ||
+        memberUserId == request.auth.uid
+      );
     }
 
     // ──────────────────────────────────────────────
