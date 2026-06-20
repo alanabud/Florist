@@ -57,12 +57,14 @@ export const nlNL = {
     "shopFlowers": "Bloemen Winkel",
     "occasions": "Gelegenheden",
     "weddingsEvents": "Bruiloften & Evenementen",
+    "plants": "Planten",
     "trackOrder": "Bestelling Volgen",
     "staffLogin": "Medewerkers Inloggen",
     "cartTitle": "Winkelwagen",
     "cartEmpty": "Je winkelwagen is leeg",
     "checkout": "Afrekenen",
-    "total": "Totaal"
+    "total": "Totaal",
+    "announcement": "Bezorging op dezelfde dag in geselecteerde steden. Bestel voor 14:00 uur."
   },
   "landing": {
     "hero": {
@@ -75,8 +77,11 @@ export const nlNL = {
     },
     "trust": {
       "sameDay": "Dezelfde dag bezorgd",
+      "sameDaySub": "in geselecteerde steden",
       "handcrafted": "Handgemaakt",
-      "freshness": "7 Dagen Versheid"
+      "handcraftedSub": "door lokale bloemisten",
+      "freshness": "7 Dagen Versheid",
+      "freshnessSub": "garantie"
     },
     "search": {
       "title": "Vind het perfecte bloemstuk",

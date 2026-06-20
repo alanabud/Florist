@@ -57,12 +57,14 @@ export const frFR = {
     "shopFlowers": "Boutique",
     "occasions": "Occasions",
     "weddingsEvents": "Mariages & Événements",
+    "plants": "Plantes",
     "trackOrder": "Suivi de Commande",
     "staffLogin": "Connexion Employé",
     "cartTitle": "Votre Panier",
     "cartEmpty": "Votre panier est vide",
     "checkout": "Commander",
-    "total": "Total"
+    "total": "Total",
+    "announcement": "Livraison le jour même dans certaines villes. Commandez avant 14h."
   },
   "landing": {
     "hero": {
@@ -75,8 +77,11 @@ export const frFR = {
     },
     "trust": {
       "sameDay": "Livraison le jour même",
+      "sameDaySub": "dans certaines villes",
       "handcrafted": "Fait main",
-      "freshness": "Fraîcheur de 7 jours"
+      "handcraftedSub": "par des fleuristes locaux",
+      "freshness": "Fraîcheur de 7 jours",
+      "freshnessSub": "garantie"
     },
     "search": {
       "title": "Trouvez l'arrangement parfait",

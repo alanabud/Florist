@@ -57,12 +57,14 @@ export const enUS = {
     shopFlowers: "Shop Flowers",
     occasions: "Occasions",
     weddingsEvents: "Weddings & Events",
+    plants: "Plants",
     trackOrder: "Track Order",
     staffLogin: "Staff Login",
     cartTitle: "Your Cart",
     cartEmpty: "Your cart is empty",
     checkout: "Checkout",
-    total: "Total"
+    total: "Total",
+    announcement: "Same-day delivery in select cities. Order by 2PM."
   },
   landing: {
     hero: {
@@ -75,8 +77,11 @@ export const enUS = {
     },
     trust: {
       sameDay: "Same-day delivery",
+      sameDaySub: "in select cities",
       handcrafted: "Handcrafted",
-      freshness: "7-Day Freshness"
+      handcraftedSub: "by local florists",
+      freshness: "7-Day Freshness",
+      freshnessSub: "guarantee"
     },
     search: {
       title: "Find the perfect arrangement",

@@ -2,13 +2,20 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
-import { ArrowRight, Star, Clock, Heart, ShieldCheck, Search, Truck, Camera, Leaf } from 'lucide-react';
+import { ArrowRight, Star, Heart, ShieldCheck, Search, Truck, Camera, Leaf } from 'lucide-react';
 import { OCCASIONS, type Product } from '../data/products';
 import { useAdminStore } from '../store/adminStore';
 import { useCartStore } from '../store/cartStore';
 import { useToastStore } from '../store/toastStore';
 import { useI18n } from '../i18n/I18nProvider';
 import styles from './Home.module.css';
+
+// Local licensed floral photography
+import heroRoseBouquet from '../assets/storefront/hero-rose-bouquet.jpg';
+import pinkRoses from '../assets/flowers/pink_roses.jpg';
+import mixedPastel from '../assets/flowers/mixed_pastel.jpg';
+import redRoses from '../assets/flowers/red_roses.jpg';
+import whiteRoses from '../assets/flowers/white_roses.jpg';
 
 export const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -19,7 +26,6 @@ export const Home: React.FC = () => {
   const { t, formatCurrency } = useI18n();
 
   const bestSellers = products.filter(p => p.isBestSeller).slice(0, 4);
-  const featured = products.filter(p => !p.isBestSeller).slice(0, 3);
   const sameDay = products.filter(p => p.isSameDay).slice(0, 3);
 
   const handleAddToCart = (e: React.MouseEvent, product: Product) => {
@@ -50,41 +56,58 @@ export const Home: React.FC = () => {
           <div className={styles.heroContent}>
             <div className={styles.badge}>{t('landing.hero.badge')}</div>
             <h1 className={styles.heroTitle}>{t('landing.hero.title')}</h1>
+            <div className={styles.heroDivider}></div>
             <p className={styles.heroSubtitle}>
               {t('landing.hero.subtitle')}
             </p>
             <div className={styles.heroActions}>
-              <Button size="lg" onClick={() => navigate('/shop')}>
-                {t('landing.hero.shopCollection')}
-              </Button>
-              <Button size="lg" variant="outline" onClick={() => navigate('/custom')}>
-                {t('landing.hero.customBouquet')}
-              </Button>
+              <button className={styles.primaryBtn} onClick={() => navigate('/shop')}>
+                {t('landing.hero.shopCollection')} <span className={styles.arrowInline}>→</span>
+              </button>
+              <button className={styles.secondaryBtn} onClick={() => navigate('/custom')}>
+                {t('landing.hero.customBouquet')} <span className={styles.flowerInline}>❁</span>
+              </button>
             </div>
             
             <div className={styles.trustIndicators}>
               <div className={styles.trustItem}>
-                <Clock size={16} /> {t('landing.trust.sameDay')}
+                <div className={styles.trustIconContainer}>
+                  <Truck size={24} strokeWidth={1.5} />
+                </div>
+                <div className={styles.trustText}>
+                  <span className={styles.trustTitle}>{t('landing.trust.sameDay')}</span>
+                  <span className={styles.trustDesc}>{t('landing.trust.sameDaySub')}</span>
+                </div>
               </div>
+              
               <div className={styles.trustItem}>
-                <Heart size={16} /> {t('landing.trust.handcrafted')}
+                <div className={styles.trustIconContainer}>
+                  <Heart size={24} strokeWidth={1.5} />
+                </div>
+                <div className={styles.trustText}>
+                  <span className={styles.trustTitle}>{t('landing.trust.handcrafted')}</span>
+                  <span className={styles.trustDesc}>{t('landing.trust.handcraftedSub')}</span>
+                </div>
               </div>
+              
               <div className={styles.trustItem}>
-                <ShieldCheck size={16} /> {t('landing.trust.freshness')}
+                <div className={styles.trustIconContainer}>
+                  <ShieldCheck size={24} strokeWidth={1.5} />
+                </div>
+                <div className={styles.trustText}>
+                  <span className={styles.trustTitle}>{t('landing.trust.freshness')}</span>
+                  <span className={styles.trustDesc}>{t('landing.trust.freshnessSub')}</span>
+                </div>
               </div>
             </div>
           </div>
           <div className={styles.heroVisual}>
             <img 
-              src="https://images.unsplash.com/photo-1561181286-d3fee7d55364?q=80&w=1000&auto=format&fit=crop" 
-              alt="Premium floral arrangement"
+              src={heroRoseBouquet} 
+              alt="Premium fresh rose bouquet on table"
               className={styles.heroImage}
               loading="eager"
             />
-            <div className={styles.visualCard}>
-              <Star size={16} fill="var(--color-warning)" color="var(--color-warning)" />
-              <p>{t('landing.hero.curated')}</p>
-            </div>
           </div>
         </div>
       </section>
@@ -135,30 +158,41 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* 4. Featured Arrangements */}
-      <section className={styles.featuredSection}>
-        <div className={styles.sectionHeader}>
-          <h2 className={styles.sectionTitle}>{t('landing.featured.title')}</h2>
-          <Button variant="ghost" onClick={() => navigate('/shop')}>
-            {t('landing.featured.shopAll')} <ArrowRight size={16} />
-          </Button>
+      {/* 4. Most Loved Collections Section */}
+      <section className={styles.collectionsSection}>
+        <div className={styles.collectionsHeader}>
+          <span className={styles.collectionsSubtitle}>FRESH PICKS</span>
+          <h2 className={styles.collectionsTitle}>Our Most Loved Collections</h2>
+          <p className={styles.collectionsDesc}>Curated arrangements for every moment that matters.</p>
         </div>
-        <div className={styles.productGrid}>
-          {featured.map(product => (
-            <Card key={product.id} className={styles.productCard} onClick={() => navigate(`/product/${product.id}`)}>
-              <div className={styles.productImageWrapper}>
-                <img src={product.imageUrl} alt={product.name} loading="lazy" className={styles.productImage} />
-                <div className={styles.quickActions}>
-                  <Button size="sm" onClick={(e) => handleAddToCart(e, product)}>{t('landing.featured.addToCart')}</Button>
-                </div>
+        
+        <div className={styles.carouselContainer}>
+          <div className={styles.collectionsGrid}>
+            <div className={styles.collectionCard} onClick={() => navigate('/shop?category=Roses')}>
+              <div className={styles.collectionImageWrapper}>
+                <img src={pinkRoses} alt="Delicate pink rose arrangement" className={styles.collectionImage} />
               </div>
-              <div className={styles.productInfo}>
-                <span className={styles.productCategory}>{product.category}</span>
-                <h3 className={styles.productName}>{product.name}</h3>
-                <span className={styles.productPrice}>{formatCurrency(product.price)}</span>
+            </div>
+            <div className={styles.collectionCard} onClick={() => navigate('/shop?category=Seasonal')}>
+              <div className={styles.collectionImageWrapper}>
+                <img src={mixedPastel} alt="Mixed pastel garden roses" className={styles.collectionImage} />
               </div>
-            </Card>
-          ))}
+            </div>
+            <div className={styles.collectionCard} onClick={() => navigate('/shop?category=Romance')}>
+              <div className={styles.collectionImageWrapper}>
+                <img src={redRoses} alt="Crimson red rose bouquet" className={styles.collectionImage} />
+              </div>
+            </div>
+            <div className={styles.collectionCard} onClick={() => navigate('/shop?category=Wedding')}>
+              <div className={styles.collectionImageWrapper}>
+                <img src={whiteRoses} alt="Elegant white roses and hydrangea" className={styles.collectionImage} />
+              </div>
+            </div>
+          </div>
+          
+          <button className={styles.carouselArrow} onClick={() => navigate('/shop')} aria-label="View all collections">
+            <ArrowRight size={20} />
+          </button>
         </div>
       </section>
 

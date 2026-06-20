@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { ShoppingBag, User, Menu } from 'lucide-react';
+import { ShoppingBag, User, Menu, Search } from 'lucide-react';
 import { useCartStore } from '../../store/cartStore';
 import { CartDrawer } from '../ui/CartDrawer/CartDrawer';
 import { Drawer } from '../ui/Drawer';
@@ -34,16 +34,32 @@ export const StorefrontLayout: React.FC = () => {
 
   const renderNavLinks = () => (
     <>
-      <Link to="/" className={`${styles.navLink} ${isActive('/') ? styles.active : ''}`}>{t('storefront.home')}</Link>
-      <Link to="/shop" className={`${styles.navLink} ${isActive('/shop') ? styles.active : ''}`}>{t('storefront.shopFlowers')}</Link>
-      <Link to="/occasions" className={`${styles.navLink} ${isActive('/occasions') ? styles.active : ''}`}>{t('storefront.occasions')}</Link>
-      <Link to="/contact" className={`${styles.navLink} ${isActive('/contact') ? styles.active : ''}`}>{t('storefront.weddingsEvents')}</Link>
-      <Link to="/track-order" className={`${styles.navLink} ${isActive('/track-order') ? styles.active : ''}`}>{t('storefront.trackOrder')}</Link>
+      <Link to="/shop" className={`${styles.navLink} ${isActive('/shop') ? styles.active : ''}`}>
+        {t('storefront.shopFlowers')} <span className={styles.chevronInline}>˅</span>
+      </Link>
+      <Link to="/occasions" className={`${styles.navLink} ${isActive('/occasions') ? styles.active : ''}`}>
+        {t('storefront.occasions')} <span className={styles.chevronInline}>˅</span>
+      </Link>
+      <Link to="/contact" className={`${styles.navLink} ${isActive('/contact') ? styles.active : ''}`}>
+        {t('storefront.weddingsEvents')}
+      </Link>
+      <Link to="/shop?category=Plants" className={`${styles.navLink} ${isActive('/shop?category=Plants') ? styles.active : ''}`}>
+        {t('storefront.plants')}
+      </Link>
+      <Link to="/track-order" className={`${styles.navLink} ${isActive('/track-order') ? styles.active : ''}`}>
+        {t('storefront.trackOrder')}
+      </Link>
     </>
   );
 
   return (
     <div className={styles.layout}>
+      {/* Announcement Bar */}
+      <div className={styles.announcementBar}>
+        <span className={styles.announcementIcon}>❁</span>
+        <span>{t('storefront.announcement')}</span>
+      </div>
+
       <header className={`${styles.header} ${isScrolled ? styles.scrolled : ''}`}>
         <div className={styles.headerContainer}>
           <div className={styles.mobileLeft}>
@@ -66,23 +82,30 @@ export const StorefrontLayout: React.FC = () => {
           </nav>
  
           <div className={styles.actions}>
-            <LanguageSwitcher />
+            <div className={styles.headerLang}>
+              <LanguageSwitcher />
+            </div>
+            <button 
+              className={styles.iconBtnAction}
+              onClick={() => navigate('/shop')}
+              aria-label={t('common.search')}
+            >
+              <Search size={20} />
+            </button>
+            <button 
+              className={`${styles.iconBtnAction} ${styles.headerUser}`}
+              onClick={() => navigate('/admin/login')}
+              aria-label={t('storefront.staffLogin')}
+            >
+              <User size={20} />
+            </button>
             <button 
               className={styles.cartBtn} 
               onClick={toggleDrawer}
               aria-label={t('layout.openCart')}
             >
               <ShoppingBag size={20} />
-              {getTotalItems() > 0 && (
-                <span className={styles.cartBadge}>{getTotalItems()}</span>
-              )}
-            </button>
-            <button 
-              className={styles.loginBtn}
-              onClick={() => navigate('/admin/login')}
-            >
-              <User size={18} />
-              <span>{t('storefront.staffLogin')}</span>
+              <span className={styles.cartBadge}>{getTotalItems()}</span>
             </button>
           </div>
         </div>

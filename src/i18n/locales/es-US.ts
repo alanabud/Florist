@@ -57,12 +57,14 @@ export const esUS = {
     "shopFlowers": "Comprar Flores",
     "occasions": "Ocasiones",
     "weddingsEvents": "Bodas y Eventos",
+    "plants": "Plantas",
     "trackOrder": "Rastrear Pedido",
     "staffLogin": "Acceso Personal",
     "cartTitle": "Su Carrito",
     "cartEmpty": "Su carrito está vacío",
     "checkout": "Pagar",
-    "total": "Total"
+    "total": "Total",
+    "announcement": "Entrega el mismo día en ciudades seleccionadas. Ordene antes de las 2 p.m."
   },
   "landing": {
     "hero": {
@@ -75,8 +77,11 @@ export const esUS = {
     },
     "trust": {
       "sameDay": "Entrega el mismo día",
+      "sameDaySub": "en ciudades seleccionadas",
       "handcrafted": "Hecho a mano",
-      "freshness": "7 días de frescura"
+      "handcraftedSub": "por floristas locales",
+      "freshness": "7 días de frescura",
+      "freshnessSub": "garantizada"
     },
     "search": {
       "title": "Encuentre el arreglo perfecto",
