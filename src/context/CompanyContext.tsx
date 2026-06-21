@@ -280,22 +280,44 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
     try {
       await bootstrapCompanies();
 
-      // Query memberships from collectionGroup
-      const q = query(collectionGroup(db, 'members'), where('userId', '==', user.uid));
-      const snap = await getDocs(q);
-      
-      let list = snap.docs.map(d => d.data() as CompanyMember);
+      // ── Membership resolution: direct doc reads first ──
+      // Try direct reads for the three known demo companies before
+      // falling back to the heavier collectionGroup query.
+      const knownCompanies = ['DEFAULT_COMPANY', 'rose-sage', 'orchid-lane'];
+      let list: CompanyMember[] = [];
 
-      // If user has zero memberships, bootstrap default membership in all three companies
+      const directReads = await Promise.allSettled(
+        knownCompanies.map(cId =>
+          getDoc(doc(db, 'companies', cId, 'members', user.uid))
+        )
+      );
+
+      for (const result of directReads) {
+        if (result.status === 'fulfilled' && result.value.exists()) {
+          list.push(result.value.data() as CompanyMember);
+        }
+      }
+
+      // If no direct hits, try collectionGroup as a catch-all fallback
+      if (list.length === 0) {
+        try {
+          const q = query(collectionGroup(db, 'members'), where('userId', '==', user.uid));
+          const snap = await getDocs(q);
+          list = snap.docs.map(d => d.data() as CompanyMember);
+        } catch (cgErr) {
+          console.warn('[CompanyContext] collectionGroup fallback failed:', cgErr);
+        }
+      }
+
+      // If user still has zero memberships, bootstrap them into all demo companies
       if (list.length === 0) {
         const defaultRole = globalRole || 'staff';
         const userEmail = user.email || 'staff@example.com';
         const userDisplayName = user.displayName || userEmail.split('@')[0];
 
-        const companiesToJoin = ['DEFAULT_COMPANY', 'rose-sage', 'orchid-lane'];
         const newMemberships: CompanyMember[] = [];
 
-        for (const companyId of companiesToJoin) {
+        for (const companyId of knownCompanies) {
           const mRef = doc(db, 'companies', companyId, 'members', user.uid);
           
           // Map 'staff' global role to 'admin' for company-level permissions in demo

@@ -38,7 +38,10 @@ auth.onAuthStateChanged((user) => {
       if (docSnap.exists()) {
         store.setRole(docSnap.data().role || 'staff');
       } else {
-        store.setRole(null);
+        // Doc not yet created (first login, before syncUserProfile completes).
+        // Default to 'staff' to unblock CompanyContext bootstrap; the
+        // onSnapshot listener will update when the doc appears.
+        store.setRole('staff');
       }
       // Only set loading to false once we've attempted to get the role
       store.setLoading(false);

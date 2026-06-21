@@ -145,12 +145,13 @@ service cloud.firestore {
       allow delete: if isCompanyOwner(companyId);
 
       match /settings/{settingId} {
-        allow read: if isActiveCompanyMember(companyId);
+        allow read: if isActiveCompanyMember(companyId)
+          || (isSignedIn() && companyId in ["DEFAULT_COMPANY", "rose-sage", "orchid-lane"]);
         allow write: if isCompanyManager(companyId);
       }
 
       match /members/{memberUserId} {
-        allow read: if isActiveCompanyMember(companyId);
+        allow read: if (isSignedIn() && request.auth.uid == memberUserId) || isActiveCompanyMember(companyId);
         allow create: if isCompanyAdmin(companyId) || (
           isSignedIn() && 
           request.auth.uid == memberUserId && (
