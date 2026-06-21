@@ -28,6 +28,7 @@ import { AccountsReceivable } from './pages/AccountsReceivable';
 import { PurchasingConsole } from './pages/PurchasingConsole';
 import { ReconciliationCenter } from './pages/ReconciliationCenter';
 import { TrackDelivery } from './pages/TrackDelivery';
+import { CompanyGuard } from './components/common/CompanyGuard';
 import { ToastContainer } from './components/ui/Toast';
 import { useI18n } from './i18n/I18nProvider';
 
@@ -72,16 +73,16 @@ function App() {
             <Route path="orders" element={<Orders />} />
             <Route path="deliveries" element={<Deliveries />} />
             <Route path="products" element={<Products />} />
-            <Route path="inventory" element={<Inventory />} />
+            <Route path="inventory" element={<CompanyGuard><Inventory /></CompanyGuard>} />
             <Route path="customers" element={<Customers />} />
             <Route path="events" element={<Events />} />
             <Route path="subscriptions" element={<Subscriptions />} />
-            <Route path="finance" element={<FinanceAdmin />} />
-            <Route path="receivables" element={<AccountsReceivable />} />
-            <Route path="purchasing" element={<PurchasingConsole />} />
-            <Route path="reconciliation" element={<ReconciliationCenter />} />
-            <Route path="reports" element={<Reports />} />
-            <Route path="qa" element={<QA />} />
+            <Route path="finance" element={<CompanyGuard><FinanceAdmin /></CompanyGuard>} />
+            <Route path="receivables" element={<CompanyGuard><AccountsReceivable /></CompanyGuard>} />
+            <Route path="purchasing" element={<CompanyGuard><PurchasingConsole /></CompanyGuard>} />
+            <Route path="reconciliation" element={<CompanyGuard><ReconciliationCenter /></CompanyGuard>} />
+            <Route path="reports" element={<CompanyGuard><Reports /></CompanyGuard>} />
+            <Route path="qa" element={<CompanyGuard><QA /></CompanyGuard>} />
             <Route path="settings" element={<Settings />} />
           </Route>
         </Route>

@@ -77,6 +77,15 @@ interface CompanyContextType {
   can: (permission: string) => boolean;
   loading: boolean;
   refreshContext: () => Promise<void>;
+
+  // Expected implementation pattern
+  activeCompany: Company | null;
+  activeCompanyId: string | null;
+  companies: Company[];
+  isCompanyLoading: boolean;
+  companyContextError: Error | null;
+  setActiveCompany: (companyId: string) => Promise<void>;
+  refreshCompanyContext: () => Promise<void>;
 }
 
 const CompanyContext = createContext<CompanyContextType | undefined>(undefined);
@@ -124,6 +133,7 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [companiesList, setCompaniesList] = useState<Company[]>([]);
   const [companySettings, setCompanySettings] = useState<CompanySettings | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [companyContextError, setCompanyContextError] = useState<Error | null>(null);
 
   // 1. Bootstrap seed companies if they don't exist
   const bootstrapCompanies = async () => {
@@ -261,10 +271,12 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setSelectedCompany(null);
       setCompanySettings(null);
       setLoading(false);
+      setCompanyContextError(null);
       return;
     }
 
     setLoading(true);
+    setCompanyContextError(null);
     try {
       await bootstrapCompanies();
 
@@ -285,12 +297,18 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
         for (const companyId of companiesToJoin) {
           const mRef = doc(db, 'companies', companyId, 'members', user.uid);
+          
+          // Map 'staff' global role to 'admin' for company-level permissions in demo
+          const companyRole = companyId === 'DEFAULT_COMPANY' 
+            ? (defaultRole === 'staff' ? 'admin' : defaultRole) 
+            : (companyId === 'rose-sage' ? 'admin' : 'viewer');
+
           const memberObj: CompanyMember = {
             userId: user.uid,
             companyId,
             email: userEmail,
             displayName: userDisplayName,
-            role: companyId === 'DEFAULT_COMPANY' ? (defaultRole as any) : (companyId === 'rose-sage' ? 'admin' : 'viewer'),
+            role: companyRole as any,
             status: 'active',
             joinedAt: new Date().toISOString()
           };
@@ -306,13 +324,17 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const companyPromises = list.map(m => getDoc(doc(db, 'companies', m.companyId)));
       const companySnaps = await Promise.all(companyPromises);
       const comps = companySnaps
-        .filter(s => s.exists())
-        .map(s => ({ id: s.id, ...s.data() } as Company));
+         .filter(s => s.exists())
+         .map(s => ({ id: s.id, ...s.data() } as Company));
       setCompaniesList(comps);
 
       // Determine company to select
       let activeCompanyId = localStorage.getItem('bloompro-selected-company');
-      if (!activeCompanyId || !list.some(m => m.companyId === activeCompanyId)) {
+      if (activeCompanyId && !list.some(m => m.companyId === activeCompanyId)) {
+        localStorage.removeItem('bloompro-selected-company');
+        activeCompanyId = null;
+      }
+      if (!activeCompanyId) {
         activeCompanyId = list[0]?.companyId || 'DEFAULT_COMPANY';
       }
 
@@ -326,6 +348,7 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
       await loadCompanyData(activeCompanyId, list);
     } catch (err) {
       console.error("Failed to load company memberships context:", err);
+      setCompanyContextError(err instanceof Error ? err : new Error(String(err)));
     } finally {
       setLoading(false);
     }
@@ -482,12 +505,29 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
       switchCompany,
       can,
       loading,
-      refreshContext
+      refreshContext,
+
+      activeCompany: selectedCompany,
+      activeCompanyId: selectedCompanyId,
+      companies: companiesList,
+      isCompanyLoading: loading,
+      companyContextError,
+      setActiveCompany: switchCompany,
+      refreshCompanyContext: refreshContext
     }}>
       {children}
     </CompanyContext.Provider>
   );
 };
+
+export function isValidCompanyId(companyId?: string | null): companyId is string {
+  return Boolean(
+    companyId &&
+    companyId.trim() !== '' &&
+    companyId !== 'MISSING_CONTEXT' &&
+    companyId !== 'None selected'
+  );
+}
 
 export const useCompany = () => {
   const context = useContext(CompanyContext);

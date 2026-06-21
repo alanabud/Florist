@@ -12,6 +12,7 @@ interface RunListProps {
   onExportPDF: (run: ReconciliationRun) => void;
   onExportExcel: (run: ReconciliationRun) => void;
   loading: boolean;
+  disabled?: boolean;
 }
 
 export const ReconciliationRunList: React.FC<RunListProps> = ({
@@ -22,7 +23,8 @@ export const ReconciliationRunList: React.FC<RunListProps> = ({
   onApprove,
   onExportPDF,
   onExportExcel,
-  loading
+  loading,
+  disabled
 }) => {
   const { t } = useI18n();
 
@@ -60,22 +62,22 @@ export const ReconciliationRunList: React.FC<RunListProps> = ({
         </h3>
         <button
           onClick={onNewRun}
-          disabled={loading}
+          disabled={loading || disabled}
           type="button"
           style={{
             display: 'inline-flex',
             alignItems: 'center',
             gap: '0.5rem',
-            background: '#6C8271',
+            background: (loading || disabled) ? '#D1D5DB' : '#6C8271',
             color: '#FFFFFF',
             border: 'none',
             borderRadius: '8px',
             padding: '0.5rem 1rem',
             fontSize: '0.875rem',
             fontWeight: 500,
-            cursor: 'pointer',
+            cursor: (loading || disabled) ? 'not-allowed' : 'pointer',
             transition: 'background 0.2s',
-            opacity: loading ? 0.6 : 1
+            opacity: (loading || disabled) ? 0.6 : 1
           }}
         >
           <Play size={14} />

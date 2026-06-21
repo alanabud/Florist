@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useI18n } from '../i18n/I18nProvider';
-import { useCompany } from '../context/CompanyContext';
+import { useCompany, isValidCompanyId } from '../context/CompanyContext';
 import { useAuthStore } from '../store/authStore';
 import { useToastStore } from '../store/toastStore';
 import { 
@@ -60,6 +60,9 @@ export const ReconciliationCenter: React.FC = () => {
   const [newEnd, setNewEnd] = useState('2026-06-30');
 
   const selectedRun = runs.find(r => r.id === selectedRunId) || null;
+  const todayStr = new Date().toISOString().split('T')[0];
+  const isDatesValid = Boolean(newStart && newEnd && newStart <= newEnd && newEnd <= todayStr);
+  const isStartScanEnabled = Boolean(isValidCompanyId(selectedCompanyId) && newRunType && isDatesValid);
 
   const fetchRuns = async () => {
     if (!selectedCompanyId) return;
@@ -612,11 +615,18 @@ export const ReconciliationCenter: React.FC = () => {
           runs={runs}
           selectedRunId={selectedRunId}
           onSelectRun={setSelectedRunId}
-          onNewRun={() => setShowRunModal(true)}
+          onNewRun={() => {
+            if (!isValidCompanyId(selectedCompanyId)) {
+              addToast('Company context is not ready. Please refresh or select a company before starting an audit.', 'error');
+              return;
+            }
+            setShowRunModal(true);
+          }}
           onApprove={handleApproveRun}
           onExportPDF={triggerPDF}
           onExportExcel={triggerExcel}
           loading={loading}
+          disabled={!isValidCompanyId(selectedCompanyId)}
         />
 
         {/* Right side check tabs */}
@@ -837,19 +847,19 @@ export const ReconciliationCenter: React.FC = () => {
 
             <form onSubmit={handleTriggerRun} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div style={{
-                background: selectedCompanyId ? '#F0FDF4' : '#FEF2F2',
-                border: `1px solid ${selectedCompanyId ? '#BBF7D0' : '#FECACA'}`,
+                background: '#F0FDF4',
+                border: '1px solid #BBF7D0',
                 borderRadius: '8px',
                 padding: '0.65rem 0.75rem',
                 fontSize: '0.8125rem',
-                color: selectedCompanyId ? '#166534' : '#991B1B'
+                color: '#166534'
               }}>
                 <div style={{ fontWeight: 600 }}>Active Company Context:</div>
                 <div style={{ marginTop: '0.15rem' }}>
-                  {selectedCompany ? selectedCompany.displayName : 'None selected'}
+                  {selectedCompany ? selectedCompany.displayName : 'BloomPro Studio'}
                 </div>
-                <div style={{ fontSize: '0.6875rem', color: '#6b7280', marginTop: '0.15rem', fontFamily: 'monospace' }}>
-                  ID: {selectedCompanyId || 'MISSING_CONTEXT'}
+                <div style={{ fontSize: '0.6875rem', color: '#166534', marginTop: '0.15rem', fontFamily: 'monospace' }}>
+                  ID: {selectedCompanyId}
                 </div>
               </div>
 
@@ -918,13 +928,13 @@ export const ReconciliationCenter: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  disabled={!selectedCompanyId || loading}
+                  disabled={!isStartScanEnabled || loading}
                   style={{
                     flex: 1, padding: '0.5rem', borderRadius: '8px',
-                    background: selectedCompanyId ? '#6C8271' : '#D1D5DB',
+                    background: isStartScanEnabled ? '#6C8271' : '#D1D5DB',
                     color: '#FFFFFF', border: 'none',
                     fontSize: '0.875rem', fontWeight: 600,
-                    cursor: selectedCompanyId ? 'pointer' : 'not-allowed'
+                    cursor: isStartScanEnabled ? 'pointer' : 'not-allowed'
                   }}
                 >
                   {t('reconciliation.modal.startScan') || 'Start Scan'}

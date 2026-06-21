@@ -8,6 +8,7 @@ import { reconcileCash } from './cashReconciliationService';
 import { runTaxReadinessReview } from './taxReadinessService';
 import { generateAiRunInsights } from './reconciliationAiService';
 import type { ReconciliationRun, ReconciliationRunType } from './reconciliationTypes';
+import { isValidCompanyId } from '../../context/CompanyContext';
 
 export async function createReconciliationRun(
   companyId: string,
@@ -17,8 +18,8 @@ export async function createReconciliationRun(
   createdBy: string
 ): Promise<string> {
   // Input Validation
-  if (!companyId || companyId.trim() === '') {
-    throw new Error('Validation failed: Missing company context.');
+  if (!isValidCompanyId(companyId)) {
+    throw new Error('Cannot create reconciliation run without a valid company context.');
   }
   if (!periodStart || !periodEnd) {
     throw new Error('Validation failed: Start date and End date are required.');

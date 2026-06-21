@@ -137,7 +137,9 @@ service cloud.firestore {
     // COMPANIES (Core settings and members nested)
     // ──────────────────────────────────────────────
     match /companies/{companyId} {
-      allow read: if isActiveCompanyMember(companyId);
+      allow get: if isSignedIn()
+        && (companyId == 'DEFAULT_COMPANY' || isActiveCompanyMember(companyId));
+      allow list: if false;
       allow create: if isSignedIn(); // Bootstrapping companies is allowed for signed-in users
       allow update: if isCompanyAdmin(companyId);
       allow delete: if isCompanyOwner(companyId);
@@ -364,6 +366,13 @@ service cloud.firestore {
     // SYSTEM SEEDS
     match /systemSeeds/{seedId} {
       allow read, write: if isSignedIn();
+    }
+
+    // METADATA
+    match /_metadata/roles {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.ownerClaimed == true;
+      allow update: if isSignedIn() && resource.data.ownerClaimed == false && request.resource.data.ownerClaimed == true;
     }
 
     // CHART OF ACCOUNTS
