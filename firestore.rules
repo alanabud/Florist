@@ -134,6 +134,21 @@ service cloud.firestore {
     }
 
     // ──────────────────────────────────────────────
+    // METADATA (Role-claim tracking for first-user bootstrap)
+    // ──────────────────────────────────────────────
+    match /_metadata/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
+    }
+
+    // ──────────────────────────────────────────────
+    // SYSTEM SEEDS (Demo data idempotency flags)
+    // ──────────────────────────────────────────────
+    match /systemSeeds/{seedId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // ──────────────────────────────────────────────
     // COMPANIES (Core settings and members nested)
     // ──────────────────────────────────────────────
     match /companies/{companyId} {
@@ -147,7 +162,8 @@ service cloud.firestore {
       match /settings/{settingId} {
         allow read: if isActiveCompanyMember(companyId)
           || (isSignedIn() && companyId in ["DEFAULT_COMPANY", "rose-sage", "orchid-lane"]);
-        allow write: if isCompanyManager(companyId);
+        allow write: if isCompanyManager(companyId)
+          || (isSignedIn() && companyId in ["DEFAULT_COMPANY", "rose-sage", "orchid-lane"]);
       }
 
       match /members/{memberUserId} {
