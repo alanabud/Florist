@@ -21,6 +21,12 @@ dist-ssr/
 # Firebase cache
 .firebase/
 
+# Playwright (authenticated smoke) artifacts
+test-results/
+playwright-report/
+playwright/.cache/
+.auth/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

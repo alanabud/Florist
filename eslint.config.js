@@ -32,4 +32,14 @@ export default defineConfig([
       '@typescript-eslint/no-explicit-any': 'off',
     },
   },
+  {
+    // Node-context test tooling (Playwright smoke + its config).
+    files: ['tests/**/*.{ts,tsx}', 'playwright.config.ts'],
+    languageOptions: {
+      globals: globals.node,
+    },
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
 ])
