@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { 
   collection, doc, getDoc, getDocs, setDoc, updateDoc, query, where, collectionGroup, serverTimestamp 
 } from 'firebase/firestore';
@@ -138,6 +138,13 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [companySettings, setCompanySettings] = useState<CompanySettings | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [companyContextError, setCompanyContextError] = useState<Error | null>(null);
+
+  // Single-flight guard: Firebase Auth can emit several user objects while it
+  // settles on first login (token bootstrap), each re-triggering refreshContext.
+  // Every refreshContext run claims a monotonic id; only the latest run is
+  // allowed to mutate state or resolve `loading`, so stale async completions
+  // can never leave the context stuck on "Loading company context".
+  const runIdRef = useRef(0);
 
   // 1. Bootstrap seed companies if they don't exist
   const bootstrapCompanies = async () => {
@@ -301,8 +308,15 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const refreshContext = async () => {
+    // Claim this run. Any state mutation below is gated on still being the
+    // latest run, so an earlier, slower run can never clobber newer state or
+    // re-assert a stale loading flag.
+    const myRun = ++runIdRef.current;
+    const isCurrent = () => runIdRef.current === myRun;
+
     if (!user) {
       setMemberships([]);
+      setCompaniesList([]);
       setSelectedCompanyId(null);
       setSelectedCompany(null);
       setActiveMembership(null);
@@ -317,6 +331,7 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setCompanyContextError(null);
     try {
       await bootstrapCompanies();
+      if (!isCurrent()) return;
 
       // ── Membership resolution: direct doc reads first ──
       // Try direct reads for the three known demo companies before
@@ -329,6 +344,7 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
           getDoc(doc(db, 'companies', cId, 'members', user.uid))
         )
       );
+      if (!isCurrent()) return;
 
       for (const result of directReads) {
         if (result.status === 'fulfilled' && result.value.exists()) {
@@ -346,6 +362,7 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
         } catch (cgErr) {
           console.warn('[CompanyContext] collectionGroup fallback failed:', cgErr);
         }
+        if (!isCurrent()) return;
       }
 
       // No client-side membership provisioning. If the user has no active
@@ -362,8 +379,7 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setActiveMembership(null);
         setUserRole(null);
         setCompanySettings(null);
-        setLoading(false);
-        return;
+        return; // `finally` resolves loading for the current run
       }
 
       list = activeList;
@@ -372,6 +388,7 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
       // Fetch company objects for display names
       const companyPromises = list.map(m => getDoc(doc(db, 'companies', m.companyId)));
       const companySnaps = await Promise.all(companyPromises);
+      if (!isCurrent()) return;
       const comps = companySnaps
          .filter(s => s.exists())
          .map(s => ({ id: s.id, ...s.data() } as Company));
@@ -395,8 +412,9 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
         activeCompanyId
       });
 
-      await loadCompanyData(activeCompanyId, list);
+      await loadCompanyData(activeCompanyId, list, isCurrent);
     } catch (err) {
+      if (!isCurrent()) return;
       console.error("Failed to load company memberships context:", err);
       // Never crash the tree: null out all context and surface the error.
       setSelectedCompanyId(null);
@@ -406,14 +424,21 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setCompanySettings(null);
       setCompanyContextError(err instanceof Error ? err : new Error(String(err)));
     } finally {
-      setLoading(false);
+      // Only the latest run may resolve loading — a superseded run leaves the
+      // flag for its successor to settle.
+      if (isCurrent()) setLoading(false);
     }
   };
 
-  const loadCompanyData = async (companyId: string, currentMemberships: CompanyMember[]) => {
+  const loadCompanyData = async (
+    companyId: string,
+    currentMemberships: CompanyMember[],
+    shouldApply: () => boolean = () => true
+  ) => {
     try {
       const companyRef = doc(db, 'companies', companyId);
       const compSnap = await getDoc(companyRef);
+      if (!shouldApply()) return;
 
       // Company doc is required to activate; settings are best-effort and must
       // NOT block activation (a missing settings/profile doc previously caused
@@ -440,6 +465,7 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
       } catch (settingsErr) {
         console.warn(`[CompanyContext] settings/profile read failed for ${companyId}:`, settingsErr);
       }
+      if (!shouldApply()) return;
       setCompanySettings(sData);
 
       console.log("[CompanyContext loadCompanyData Diagnostic]", {
@@ -551,17 +577,16 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return rolePerms.includes(permission);
   };
 
+  // Re-run only when the authenticated identity actually changes. Depending on
+  // `user.uid` (a stable string) instead of the user object prevents Firebase's
+  // repeated user-object emissions during auth bootstrap from spawning competing
+  // refreshContext runs. The single-flight guard handles any that still overlap.
+  // refreshContext is intentionally keyed on uid only and drives context setup.
+  /* eslint-disable react-hooks/exhaustive-deps, react-hooks/set-state-in-effect */
   useEffect(() => {
     refreshContext();
-  }, [user]);
-
-  useEffect(() => {
-    if (!selectedCompanyId && companiesList.length === 1) {
-      const singleCompanyId = companiesList[0].id;
-      console.log("[CompanyContext Auto-Select Diagnostic] Auto-selecting single company:", singleCompanyId);
-      loadCompanyData(singleCompanyId, memberships);
-    }
-  }, [companiesList, selectedCompanyId, memberships]);
+  }, [user?.uid]);
+  /* eslint-enable react-hooks/exhaustive-deps, react-hooks/set-state-in-effect */
 
   return (
     <CompanyContext.Provider value={{
