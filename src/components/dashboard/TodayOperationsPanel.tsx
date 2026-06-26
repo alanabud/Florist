@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAdminStore } from '../../store/adminStore';
+import { useAdminStore, getOrderItemCount } from '../../store/adminStore';
 import { useToastStore } from '../../store/toastStore';
 import { Truck, Sparkles, Clock, CheckCircle2, ChevronRight, AlertCircle, Play } from 'lucide-react';
 import styles from './TodayOperationsPanel.module.css';
@@ -100,7 +100,7 @@ export const TodayOperationsPanel: React.FC = () => {
                     <div>
                       <h4 className={styles.cardTitle}>{order.customerName}</h4>
                       <p className={styles.cardMeta}>
-                        Order #{order.id.substring(0, 8).toUpperCase()} • {order.items} Items • ${order.total.toFixed(2)}
+                        Order #{order.id.substring(0, 8).toUpperCase()} • {getOrderItemCount(order.items)} Items • ${(order.total ?? 0).toFixed(2)}
                       </p>
                     </div>
                   </div>

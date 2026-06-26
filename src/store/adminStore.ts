@@ -64,6 +64,26 @@ export interface OrderLineItem {
   customDetails?: any;
 }
 
+// Storefront/checkout snapshot of a purchased line (distinct from the richer
+// admin OrderLineItem). This is the shape actually persisted on order docs.
+export interface OrderItemSnapshot {
+  productId?: string;
+  name?: string;
+  price?: number;
+  quantity?: number;
+  imageUrl?: string;
+  isCustom?: boolean;
+}
+
+// Orders persist `items` inconsistently: storefront/guest orders store an array
+// of line snapshots, while seeded demo orders store a plain count. Use
+// getOrderItemCount() to read a count safely from either shape.
+export function getOrderItemCount(items: unknown): number {
+  if (Array.isArray(items)) return items.length;
+  if (typeof items === 'number') return items;
+  return 0;
+}
+
 export interface Order {
   id: string;
   companyId: string;
@@ -71,7 +91,7 @@ export interface Order {
   customerName: string;
   status: OrderStatus;
   total: number;
-  items: number;
+  items: OrderItemSnapshot[] | number;
   createdAt: string;
   deliveryDate: string;
   driver?: string;
@@ -725,7 +745,7 @@ export const useAdminStore = create<AdminState>()(
                 recipientFirstName: order.customerName.split(' ')[0],
                 city: 'New York',
                 state: 'NY',
-                itemsSummary: `${order.items}x Floral Curation`,
+                itemsSummary: `${getOrderItemCount(order.items)}x Floral Curation`,
                 timeline: [
                   {
                     status: 'placed',

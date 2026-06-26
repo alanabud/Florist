@@ -96,7 +96,7 @@ export const CommandSummary: React.FC<CommandSummaryProps> = ({ onOpenModal }) =
       return total;
     }
 
-    const cashLines = entry.lines.filter(l => l.account === 'Cash');
+    const cashLines = (entry.lines || []).filter(l => l.account === 'Cash');
     const entryCashChange = cashLines.reduce((sum, l) => sum + l.debit - l.credit, 0);
     return total + entryCashChange;
   }, 0);

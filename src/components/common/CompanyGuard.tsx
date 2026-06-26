@@ -129,12 +129,14 @@ export const CompanyGuard: React.FC<{ children: React.ReactNode }> = ({ children
             <Building size={32} />
           </div>
           <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#2C302E', margin: 0 }}>
-            Active Company Context Required
+            {companies.length > 0 ? 'Active Company Context Required' : 'Company Access Required'}
           </h3>
           <p style={{ fontSize: '0.875rem', color: '#6b7280', lineHeight: '1.6', margin: 0 }}>
-            You must select an active company context before you can view or perform transactions in this module.
+            {companies.length > 0
+              ? 'You must select an active company context before you can view or perform transactions in this module.'
+              : 'No active company membership was found for your account. An owner or admin must grant you access before you can use the workspace.'}
           </p>
-          
+
           {companies.length > 0 ? (
             <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
               <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#4b5563', textAlign: 'left' }}>
@@ -164,8 +166,8 @@ export const CompanyGuard: React.FC<{ children: React.ReactNode }> = ({ children
             </div>
           ) : (
             <div style={{ marginTop: '0.5rem' }}>
-              <p style={{ fontSize: '0.8125rem', color: '#991B1B', fontWeight: 500 }}>
-                No registered company memberships found for your account.
+              <p style={{ fontSize: '0.8125rem', color: '#6b7280', fontWeight: 500 }}>
+                Once access has been granted, refresh to load your workspace.
               </p>
               <button
                 onClick={() => refreshCompanyContext()}

@@ -81,6 +81,8 @@ interface CompanyContextType {
   // Expected implementation pattern
   activeCompany: Company | null;
   activeCompanyId: string | null;
+  activeMembership: CompanyMember | null;
+  userRole: CompanyMember['role'] | null;
   companies: Company[];
   isCompanyLoading: boolean;
   companyContextError: Error | null;
@@ -124,11 +126,13 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
 };
 
 export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, role: globalRole } = useAuthStore();
+  const { user } = useAuthStore();
   const { setLanguage } = useI18n();
 
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+  const [activeMembership, setActiveMembership] = useState<CompanyMember | null>(null);
+  const [userRole, setUserRole] = useState<CompanyMember['role'] | null>(null);
   const [memberships, setMemberships] = useState<CompanyMember[]>([]);
   const [companiesList, setCompaniesList] = useState<Company[]>([]);
   const [companySettings, setCompanySettings] = useState<CompanySettings | null>(null);
@@ -262,6 +266,38 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
         });
       }
     }
+
+    // Self-heal: a DEFAULT_COMPANY doc can exist from a legacy/partial seed
+    // without its settings/profile child. Ensure it exists so the workspace
+    // can fully hydrate (demo-company settings writes are allowed by rules).
+    const defaultSettingsRef = doc(db, 'companies', 'DEFAULT_COMPANY', 'settings', 'profile');
+    const defaultSettingsSnap = await getDoc(defaultSettingsRef);
+    if (!defaultSettingsSnap.exists()) {
+      console.log('[CompanyContext] Healing missing DEFAULT_COMPANY settings/profile...');
+      await setDoc(defaultSettingsRef, {
+        companyId: 'DEFAULT_COMPANY',
+        defaultLanguage: 'en-US',
+        enabledLanguages: ['en-US', 'es-US', 'fr-FR', 'nl-NL'],
+        baseCurrencyCode: 'USD',
+        enabledCurrencies: ['USD', 'EUR'],
+        timezone: 'America/New_York',
+        dateFormat: 'MM/DD/YYYY',
+        timeFormat: '12h',
+        numberFormatLocale: 'en-US',
+        fiscalYearStartMonth: 1,
+        closePeriodPolicy: 'open',
+        invoicePrefix: 'INV-BPS',
+        orderPrefix: 'ORD-BPS',
+        purchaseOrderPrefix: 'PO-BPS',
+        paymentPrefix: 'PAY-BPS',
+        adjustmentPrefix: 'ADJ-BPS',
+        journalEntryPrefix: 'JE-BPS',
+        taxLabel: 'Sales Tax',
+        defaultTaxRate: 0.08875,
+        reportFooterText: 'BloomPro Studio Demo - Executive Ledger Copy',
+        createdAt: serverTimestamp()
+      });
+    }
   };
 
   const refreshContext = async () => {
@@ -269,6 +305,8 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setMemberships([]);
       setSelectedCompanyId(null);
       setSelectedCompany(null);
+      setActiveMembership(null);
+      setUserRole(null);
       setCompanySettings(null);
       setLoading(false);
       setCompanyContextError(null);
@@ -298,7 +336,8 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
       }
 
-      // If no direct hits, try collectionGroup as a catch-all fallback
+      // If no direct hits, try collectionGroup as a non-primary catch-all
+      // fallback only (covers memberships in non-demo companies).
       if (list.length === 0) {
         try {
           const q = query(collectionGroup(db, 'members'), where('userId', '==', user.uid));
@@ -309,37 +348,25 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
       }
 
-      // If user still has zero memberships, bootstrap them into all demo companies
-      if (list.length === 0) {
-        const defaultRole = globalRole || 'staff';
-        const userEmail = user.email || 'staff@example.com';
-        const userDisplayName = user.displayName || userEmail.split('@')[0];
-
-        const newMemberships: CompanyMember[] = [];
-
-        for (const companyId of knownCompanies) {
-          const mRef = doc(db, 'companies', companyId, 'members', user.uid);
-          
-          // Map 'staff' global role to 'admin' for company-level permissions in demo
-          const companyRole = companyId === 'DEFAULT_COMPANY' 
-            ? (defaultRole === 'staff' ? 'admin' : defaultRole) 
-            : (companyId === 'rose-sage' ? 'admin' : 'viewer');
-
-          const memberObj: CompanyMember = {
-            userId: user.uid,
-            companyId,
-            email: userEmail,
-            displayName: userDisplayName,
-            role: companyRole as any,
-            status: 'active',
-            joinedAt: new Date().toISOString()
-          };
-          await setDoc(mRef, memberObj);
-          newMemberships.push(memberObj);
-        }
-        list = newMemberships;
+      // No client-side membership provisioning. If the user has no active
+      // membership, surface a controlled "no active company membership"
+      // state instead of self-granting access. Memberships are provisioned
+      // out-of-band via scripts/bootstrap-default-company-user.js (Admin SDK).
+      const activeList = list.filter(m => m.status === 'active');
+      if (activeList.length === 0) {
+        console.warn('[CompanyContext] No active company membership found for', user.uid);
+        setMemberships([]);
+        setCompaniesList([]);
+        setSelectedCompanyId(null);
+        setSelectedCompany(null);
+        setActiveMembership(null);
+        setUserRole(null);
+        setCompanySettings(null);
+        setLoading(false);
+        return;
       }
 
+      list = activeList;
       setMemberships(list);
 
       // Fetch company objects for display names
@@ -360,9 +387,10 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
         activeCompanyId = list[0]?.companyId || 'DEFAULT_COMPANY';
       }
 
+      const activeRole = list.find(m => m.companyId === activeCompanyId)?.role ?? null;
       console.log("[CompanyContext Dev Diagnostic]", {
         authUid: user?.uid,
-        userRole: globalRole,
+        userRole: activeRole,
         companiesLoaded: comps.map(c => c.id),
         activeCompanyId
       });
@@ -370,6 +398,12 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
       await loadCompanyData(activeCompanyId, list);
     } catch (err) {
       console.error("Failed to load company memberships context:", err);
+      // Never crash the tree: null out all context and surface the error.
+      setSelectedCompanyId(null);
+      setSelectedCompany(null);
+      setActiveMembership(null);
+      setUserRole(null);
+      setCompanySettings(null);
       setCompanyContextError(err instanceof Error ? err : new Error(String(err)));
     } finally {
       setLoading(false);
@@ -379,42 +413,54 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const loadCompanyData = async (companyId: string, currentMemberships: CompanyMember[]) => {
     try {
       const companyRef = doc(db, 'companies', companyId);
-      const settingsRef = doc(db, 'companies', companyId, 'settings', 'profile');
+      const compSnap = await getDoc(companyRef);
 
-      const [compSnap, settingsSnap] = await Promise.all([
-        getDoc(companyRef),
-        getDoc(settingsRef)
-      ]);
+      // Company doc is required to activate; settings are best-effort and must
+      // NOT block activation (a missing settings/profile doc previously caused
+      // the company selector to silently no-op).
+      if (!compSnap.exists()) {
+        console.warn(`[CompanyContext] Cannot activate ${companyId}: company doc not found.`);
+        return;
+      }
 
-      if (compSnap.exists() && settingsSnap.exists()) {
-        const cData = { id: compSnap.id, ...compSnap.data() } as Company;
-        const sData = settingsSnap.data() as CompanySettings;
+      const cData = { id: compSnap.id, ...compSnap.data() } as Company;
+      const userMember = currentMemberships.find(m => m.companyId === companyId) || null;
 
-        console.log("[CompanyContext loadCompanyData Diagnostic]", {
-          selectedCompanyId: companyId,
-          selectedCompany: cData.id,
-          companySettings: sData ? 'loaded' : 'missing'
-        });
+      setSelectedCompanyId(companyId);
+      setSelectedCompany(cData);
+      setActiveMembership(userMember);
+      setUserRole(userMember?.role ?? null);
+      localStorage.setItem('bloompro-selected-company', companyId);
 
-        setSelectedCompanyId(companyId);
-        setSelectedCompany(cData);
-        setCompanySettings(sData);
-        localStorage.setItem('bloompro-selected-company', companyId);
+      // Best-effort settings read — never blocks activation.
+      let sData: CompanySettings | null = null;
+      try {
+        const settingsSnap = await getDoc(doc(db, 'companies', companyId, 'settings', 'profile'));
+        if (settingsSnap.exists()) sData = settingsSnap.data() as CompanySettings;
+      } catch (settingsErr) {
+        console.warn(`[CompanyContext] settings/profile read failed for ${companyId}:`, settingsErr);
+      }
+      setCompanySettings(sData);
 
-        // Apply regional default language if no user override exists
-        const userMember = currentMemberships.find(m => m.companyId === companyId);
-        const localLang = localStorage.getItem('bloompro-lang');
-        const preferredLang = userMember?.languagePreference || localLang || sData.defaultLanguage;
-        if (preferredLang) {
-          setLanguage(preferredLang as any);
-          
-          // Sync to Firestore user profile if logged in and has different preference
-          if (user?.uid && userMember && userMember.languagePreference !== preferredLang) {
-            const memberRef = doc(db, 'companies', companyId, 'members', user.uid);
-            updateDoc(memberRef, { languagePreference: preferredLang }).catch((err: unknown) => {
-              console.error('Failed to sync language preference on load:', err);
-            });
-          }
+      console.log("[CompanyContext loadCompanyData Diagnostic]", {
+        selectedCompanyId: companyId,
+        selectedCompany: cData.id,
+        userRole: userMember?.role ?? null,
+        companySettings: sData ? 'loaded' : 'missing'
+      });
+
+      // Apply regional default language if no user override exists
+      const localLang = localStorage.getItem('bloompro-lang');
+      const preferredLang = userMember?.languagePreference || localLang || sData?.defaultLanguage;
+      if (preferredLang) {
+        setLanguage(preferredLang as any);
+
+        // Sync to Firestore user profile if logged in and has different preference
+        if (user?.uid && userMember && userMember.languagePreference !== preferredLang) {
+          const memberRef = doc(db, 'companies', companyId, 'members', user.uid);
+          updateDoc(memberRef, { languagePreference: preferredLang }).catch((err: unknown) => {
+            console.error('Failed to sync language preference on load:', err);
+          });
         }
       }
     } catch (e) {
@@ -531,6 +577,8 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       activeCompany: selectedCompany,
       activeCompanyId: selectedCompanyId,
+      activeMembership,
+      userRole,
       companies: companiesList,
       isCompanyLoading: loading,
       companyContextError,

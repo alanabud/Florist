@@ -44,7 +44,7 @@ export const Dashboard: React.FC = () => {
   const { journalEntries, fetchJournalEntries } = useFinanceStore();
   const addToast = useToastStore(s => s.addToast);
   
-  const { selectedCompanyId, companySettings } = useCompany();
+  const { selectedCompanyId, companySettings, userRole } = useCompany();
   const { t, formatCurrency } = useI18n();
 
   // Protected loading state for restocking actions
@@ -53,11 +53,12 @@ export const Dashboard: React.FC = () => {
   const [isReconDrawerOpen, setIsReconDrawerOpen] = useState(false);
   const [reconActiveTab, setReconActiveTab] = useState<'cash' | 'revenue' | 'ar' | 'tax'>('cash');
 
-  // Fetch ledger entries and orders on mount
+  // Only run protected Firestore queries once company context + role resolve.
   useEffect(() => {
+    if (!selectedCompanyId || !userRole) return;
     fetchJournalEntries();
     fetchOrders();
-  }, [fetchJournalEntries, fetchOrders]);
+  }, [selectedCompanyId, userRole, fetchJournalEntries, fetchOrders]);
 
   // Today timezone-safe date matcher
   const today = new Date();
@@ -147,7 +148,7 @@ export const Dashboard: React.FC = () => {
       return total;
     }
 
-    const cashLines = entry.lines.filter(l => 
+    const cashLines = (entry.lines || []).filter(l =>
       (cashAcctId && (l as any).accountId === cashAcctId) || 
       l.account === 'Cash'
     );

@@ -167,17 +167,18 @@ service cloud.firestore {
       }
 
       match /members/{memberUserId} {
-        allow read: if (isSignedIn() && request.auth.uid == memberUserId) || isActiveCompanyMember(companyId);
-        allow create: if isCompanyAdmin(companyId) || (
-          isSignedIn() && 
-          request.auth.uid == memberUserId && (
-            companyId in ["DEFAULT_COMPANY", "rose-sage", "orchid-lane"] ||
-            get(/databases/$(database)/documents/companies/$(companyId)).data.createdBy == request.auth.uid
-          )
-        );
+        // A user may always GET their own membership doc (required for
+        // first-login bootstrap hydration). Owner/admin may GET any member.
+        allow get: if (isSignedIn() && request.auth.uid == memberUserId)
+          || isCompanyAdmin(companyId);
+        // Listing/managing the full member roster is restricted to owner/admin.
+        allow list: if isCompanyAdmin(companyId);
+        allow create: if isCompanyAdmin(companyId);
+        // Owner/admin may manage members; a user may only self-update their
+        // own language/branch preference (never role or status).
         allow update: if isCompanyAdmin(companyId) || (
-          isSignedIn() && 
-          request.auth.uid == memberUserId && 
+          isSignedIn() &&
+          request.auth.uid == memberUserId &&
           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['languagePreference', 'defaultBranchId'])
         );
         allow delete: if isCompanyOwner(companyId);

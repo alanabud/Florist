@@ -1,5 +1,5 @@
 import * as XLSX from 'xlsx-js-style';
-import { type Order, type InventoryItem, type Customer, type SubscriptionItem, type EventItem } from '../store/adminStore';
+import { getOrderItemCount, type Order, type InventoryItem, type Customer, type SubscriptionItem, type EventItem } from '../store/adminStore';
 import { type Product } from '../data/products';
 
 export type ReportRow = Array<string | number | boolean | null | undefined>;
@@ -517,7 +517,7 @@ export function exportOrdersExcel(orders: Order[], filename?: string, options?: 
   addSheet(wb, [
     [langLabels.orderId, langLabels.customer, 'Items', langLabels.status, langLabels.total, langLabels.paymentStatus, langLabels.dueDate, langLabels.createdDate],
     ...orders.map(o => [
-      o.id, o.customerName, (o.items !== undefined ? o.items : 1),
+      o.id, o.customerName, getOrderItemCount(o.items),
       (o.status || 'draft').replace('_', ' ').toUpperCase(), o.total,
       (o.paymentStatus || 'unpaid').toUpperCase(),
       getFormattedDate(o.dueDate || o.deliveryDate, locale),

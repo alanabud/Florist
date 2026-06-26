@@ -23,6 +23,11 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
     console.error('[ErrorBoundary] Unhandled error caught:', error, errorInfo);
   }
 
+  handleRetry = () => {
+    // True retry: clear the error state and re-render the subtree in place.
+    this.setState({ hasError: false, error: null });
+  };
+
   handleReset = () => {
     this.setState({ hasError: false, error: null });
     window.location.href = '/admin/login';
@@ -82,11 +87,13 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
               lineHeight: '1.6',
               margin: '0 0 1rem 0'
             }}>
-              The application encountered an unexpected error. This is usually temporary.
+              The application encountered an unexpected error. This is usually temporary —
+              try again, or return to login to start a fresh session.
             </p>
 
-            {this.state.error && (
-              <details style={{
+            {/* Development-only diagnostics: message + stack. Hidden in production. */}
+            {import.meta.env.DEV && this.state.error && (
+              <details open style={{
                 textAlign: 'left',
                 marginBottom: '1.25rem',
                 background: '#FEF2F2',
@@ -96,7 +103,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
                 color: '#991B1B'
               }}>
                 <summary style={{ cursor: 'pointer', fontWeight: 600 }}>
-                  Error Details
+                  Error Details (development only)
                 </summary>
                 <pre style={{
                   margin: '0.5rem 0 0',
@@ -107,28 +114,47 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
                   lineHeight: '1.5'
                 }}>
                   {this.state.error.message}
+                  {this.state.error.stack ? `\n\n${this.state.error.stack}` : ''}
                 </pre>
               </details>
             )}
 
-            <button
-              onClick={this.handleReset}
-              style={{
-                background: '#6C8271',
-                color: '#FFFFFF',
-                border: 'none',
-                borderRadius: '8px',
-                padding: '0.625rem 1.5rem',
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'background 0.2s'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.background = '#566957'}
-              onMouseLeave={(e) => e.currentTarget.style.background = '#6C8271'}
-            >
-              Return to Login
-            </button>
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button
+                onClick={this.handleRetry}
+                style={{
+                  background: '#6C8271',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '0.625rem 1.5rem',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'background 0.2s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#566957'}
+                onMouseLeave={(e) => e.currentTarget.style.background = '#6C8271'}
+              >
+                Try Again
+              </button>
+              <button
+                onClick={this.handleReset}
+                style={{
+                  background: '#FFFFFF',
+                  color: '#6C8271',
+                  border: '1px solid #6C8271',
+                  borderRadius: '8px',
+                  padding: '0.625rem 1.5rem',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'background 0.2s'
+                }}
+              >
+                Return to Login
+              </button>
+            </div>
           </div>
         </div>
       );

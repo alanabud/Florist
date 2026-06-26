@@ -122,7 +122,7 @@ export const ReconciliationDrawer: React.FC<ReconciliationDrawerProps> = ({
     if (entry.sourceType === 'inventory_restock') {
       return false;
     }
-    const cashLines = entry.lines.filter((l) => 
+    const cashLines = (entry.lines || []).filter((l) => 
       (cashAcctId && (l as any).accountId === cashAcctId) || 
       l.account === 'Cash'
     );
@@ -134,7 +134,7 @@ export const ReconciliationDrawer: React.FC<ReconciliationDrawerProps> = ({
   });
 
   const standaloneCashTotal = standaloneCashEntries.reduce((total, entry) => {
-    const cashLines = entry.lines.filter((l) => 
+    const cashLines = (entry.lines || []).filter((l) => 
       (cashAcctId && (l as any).accountId === cashAcctId) || 
       l.account === 'Cash'
     );
@@ -294,7 +294,7 @@ export const ReconciliationDrawer: React.FC<ReconciliationDrawerProps> = ({
                       </thead>
                       <tbody>
                         {standaloneCashEntries.map((entry) => {
-                          const cashLines = entry.lines.filter((l) => 
+                          const cashLines = (entry.lines || []).filter((l) => 
                             (cashAcctId && (l as any).accountId === cashAcctId) || 
                             l.account === 'Cash'
                           );

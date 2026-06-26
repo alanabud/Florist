@@ -105,7 +105,7 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
     const sr = get().chartOfAccounts.find(a => a.code === '4000');
     const dr = get().chartOfAccounts.find(a => a.code === '4100');
     return get().journalEntries.reduce((total, entry) => {
-      const revLines = entry.lines.filter(l => 
+      const revLines = (entry.lines || []).filter(l => 
         (sr && (l as any).accountId === sr.id) ||
         (dr && (l as any).accountId === dr.id) ||
         l.account === 'Sales Revenue' || l.account === 'Delivery Revenue'
@@ -117,7 +117,7 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
   getTotalTaxPayable: () => {
     const taxAcct = get().chartOfAccounts.find(a => a.code === '2100');
     return get().journalEntries.reduce((total, entry) => {
-      const taxLines = entry.lines.filter(l => 
+      const taxLines = (entry.lines || []).filter(l => 
         (taxAcct && (l as any).accountId === taxAcct.id) || 
         l.account === 'Sales Tax Payable'
       );
@@ -128,7 +128,7 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
   getTotalCash: () => {
     const cashAcct = get().chartOfAccounts.find(a => a.code === '1010');
     return get().journalEntries.reduce((total, entry) => {
-      const cashLines = entry.lines.filter(l => 
+      const cashLines = (entry.lines || []).filter(l => 
         (cashAcct && (l as any).accountId === cashAcct.id) || 
         l.account === 'Cash'
       );
@@ -139,7 +139,7 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
   getTotalAR: () => {
     const arAcct = get().chartOfAccounts.find(a => a.code === '1200');
     return get().journalEntries.reduce((total, entry) => {
-      const arLines = entry.lines.filter(l => 
+      const arLines = (entry.lines || []).filter(l => 
         (arAcct && (l as any).accountId === arAcct.id) || 
         l.account === 'Accounts Receivable'
       );
