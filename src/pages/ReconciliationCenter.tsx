@@ -19,6 +19,7 @@ import {
   exportReconciliationPDF, exportReconciliationExcel 
 } from '../services/reconciliation/reconciliationReportService';
 import { closePeriod, getClosedPeriods, type ClosedPeriod } from '../services/reconciliation/periodCloseService';
+import { getDefaultRunRange, getStartScanDisabledReason, toDateStr } from '../services/reconciliation/reconciliationRunForm';
 import { generateAuditEvidencePacket } from '../services/reconciliation/auditEvidenceService';
 import { ReconciliationRunList } from '../components/reconciliation/ReconciliationRunList';
 import { ReconciliationExceptionTable } from '../components/reconciliation/ReconciliationExceptionTable';
@@ -54,15 +55,26 @@ export const ReconciliationCenter: React.FC = () => {
   const [selectedCloseRunId, setSelectedCloseRunId] = useState<string | null>(null);
   const [selectedException, setSelectedException] = useState<ReconciliationException | null>(null);
 
-  // New run form state
+  // New run form state. Defaults are derived from today and never land in the
+  // future (which previously left "Start Scan" silently disabled).
   const [newRunType, setNewRunType] = useState<ReconciliationRunType>('month_end');
-  const [newStart, setNewStart] = useState('2026-06-01');
-  const [newEnd, setNewEnd] = useState('2026-06-30');
+  const initialRange = getDefaultRunRange('month_end');
+  const [newStart, setNewStart] = useState(initialRange.start);
+  const [newEnd, setNewEnd] = useState(initialRange.end);
 
   const selectedRun = runs.find(r => r.id === selectedRunId) || null;
-  const todayStr = new Date().toISOString().split('T')[0];
-  const isDatesValid = Boolean(newStart && newEnd && newStart <= newEnd && newEnd <= todayStr);
-  const isStartScanEnabled = Boolean(isValidCompanyId(selectedCompanyId) && newRunType && isDatesValid);
+  const todayStr = toDateStr(new Date());
+  // Single source of truth for the Start Scan blocked-reason (mirrors the
+  // service/submit validation). null => the form is valid and submittable.
+  const startScanDisabledReason = getStartScanDisabledReason({
+    hasCompany: isValidCompanyId(selectedCompanyId),
+    runType: newRunType,
+    start: newStart,
+    end: newEnd,
+    today: todayStr,
+    submitting: loading,
+  });
+  const isStartScanEnabled = startScanDisabledReason === null;
 
   const fetchRuns = async () => {
     if (!selectedCompanyId) return;
@@ -143,6 +155,14 @@ export const ReconciliationCenter: React.FC = () => {
     fetchExceptions();
     fetchAdjustments();
   }, [selectedRunId]);
+
+  // When the run type changes, suggest a sensible range whose end is never in
+  // the future, so the default selection can't disable Start Scan.
+  useEffect(() => {
+    const range = getDefaultRunRange(newRunType);
+    setNewStart(range.start);
+    setNewEnd(range.end);
+  }, [newRunType]);
 
   const handleTriggerRun = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -889,6 +909,7 @@ export const ReconciliationCenter: React.FC = () => {
                   <input
                     type="date"
                     value={newStart}
+                    max={newEnd || todayStr}
                     onChange={(e) => setNewStart(e.target.value)}
                     style={{
                       padding: '0.5rem',
@@ -903,6 +924,8 @@ export const ReconciliationCenter: React.FC = () => {
                   <input
                     type="date"
                     value={newEnd}
+                    min={newStart}
+                    max={todayStr}
                     onChange={(e) => setNewEnd(e.target.value)}
                     style={{
                       padding: '0.5rem',
@@ -913,6 +936,21 @@ export const ReconciliationCenter: React.FC = () => {
                   />
                 </div>
               </div>
+
+              {startScanDisabledReason && (
+                <div
+                  role="alert"
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '0.5rem',
+                    background: '#FEF3C7', border: '1px solid #FCD34D',
+                    color: '#92400E', borderRadius: '8px',
+                    padding: '0.5rem 0.75rem', fontSize: '0.8125rem', fontWeight: 500
+                  }}
+                >
+                  <AlertCircle size={15} style={{ flexShrink: 0 }} />
+                  <span>{startScanDisabledReason}</span>
+                </div>
+              )}
 
               <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
                 <button

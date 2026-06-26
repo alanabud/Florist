@@ -581,6 +581,69 @@ async function runTests() {
   console.log();
 
   // -------------------------------------------------------------------
+  // 6. Audit Modal: default date range + Start Scan validation
+  //    (mirrors src/services/reconciliation/reconciliationRunForm.ts)
+  // -------------------------------------------------------------------
+  console.log('--- Audit Modal Date Defaults & Validation ---');
+
+  const toDateStr = (d) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
+  const getDefaultRunRange = (runType, now) => {
+    const today = toDateStr(now);
+    const firstOfMonth = toDateStr(new Date(now.getFullYear(), now.getMonth(), 1));
+    switch (runType) {
+      case 'daily': return { start: today, end: today };
+      case 'weekly': {
+        const ws = new Date(now); ws.setDate(now.getDate() - 6);
+        return { start: toDateStr(ws), end: today };
+      }
+      default: return { start: firstOfMonth, end: today };
+    }
+  };
+  const getStartScanDisabledReason = (i) => {
+    if (!i.hasCompany) return 'Active company context is required.';
+    if (!i.runType) return 'Run type is required.';
+    if (!i.start || !i.end) return 'Start and end dates are required.';
+    if (i.start > i.end) return 'Start date must be on or before the end date.';
+    if (i.end > i.today) return 'End date cannot be in the future.';
+    if (i.submitting) return 'Audit is already being created.';
+    return null;
+  };
+
+  // Mid-month "today" — the exact scenario that was disabling the button.
+  const modalNow = new Date(2026, 5, 26); // 2026-06-26 (local)
+  const modalToday = toDateStr(modalNow);
+
+  for (const rt of ['month_end', 'weekly', 'daily', 'tax_readiness', 'historical_baseline']) {
+    const range = getDefaultRunRange(rt, modalNow);
+    assert(range.end <= modalToday, `Default end date for ${rt} is not in the future`);
+    assert(range.start <= range.end, `Default range for ${rt} has start <= end`);
+  }
+  assert(getDefaultRunRange('month_end', modalNow).start === '2026-06-01', 'month_end starts at first of current month');
+  assert(getDefaultRunRange('month_end', modalNow).end === modalToday, 'month_end ends today (open month), not a future month-end');
+
+  const validForm = { hasCompany: true, runType: 'month_end', start: '2026-06-01', end: modalToday, today: modalToday, submitting: false };
+  assert(getStartScanDisabledReason(validForm) === null, 'Valid active company + valid range enables Start Scan');
+  assert(getStartScanDisabledReason({ ...validForm, end: '2026-06-30' }) === 'End date cannot be in the future.', 'Future end date is blocked with a visible reason');
+  assert(getStartScanDisabledReason({ ...validForm, hasCompany: false }) === 'Active company context is required.', 'Missing company context shows the correct reason');
+  assert(getStartScanDisabledReason({ ...validForm, runType: '' }) === 'Run type is required.', 'Missing run type shows the correct reason');
+  assert(getStartScanDisabledReason({ ...validForm, start: '2026-06-27' }) === 'Start date must be on or before the end date.', 'Start after end shows the correct reason');
+  assert(getStartScanDisabledReason({ ...validForm, submitting: true }) === 'Audit is already being created.', 'In-flight submit shows the correct reason');
+
+  // The default range produced by the form must itself be submittable.
+  const defaultRange = getDefaultRunRange('month_end', modalNow);
+  assert(
+    getStartScanDisabledReason({ hasCompany: true, runType: 'month_end', start: defaultRange.start, end: defaultRange.end, today: modalToday, submitting: false }) === null,
+    'Default month_end range is immediately submittable (no silently-disabled button)'
+  );
+
+  console.log();
+
+  // -------------------------------------------------------------------
   // Exit Code Verification
   // -------------------------------------------------------------------
   console.log('==================================================');
