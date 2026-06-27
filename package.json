@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test-rules": "node test-rules-hardened.js",
-    "test-rules:xcompany": "firebase emulators:exec --only firestore \"node test-cross-company-rules.mjs\"",
+    "test-rules:xcompany": "node scripts/run-xcompany-rules.mjs",
     "test-cogs-adjustments": "node test-cogs-adjustments.js",
     "test-reconciliation": "node test-reconciliation.js",
     "smoke:auth": "playwright test",

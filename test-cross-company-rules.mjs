@@ -25,7 +25,12 @@
  */
 import { initializeTestEnvironment, assertSucceeds, assertFails } from '@firebase/rules-unit-testing';
 import { readFileSync } from 'node:fs';
-import { doc, getDoc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, deleteDoc, setLogLevel } from 'firebase/firestore';
+
+// Silence the client SDK's expected PERMISSION_DENIED console noise — every
+// assertFails() below triggers a denied write the SDK would otherwise log.
+// Assertions still work (only logging is muted, not the thrown errors).
+setLogLevel('silent');
 
 const COMPANY_A = 'company-a';
 const COMPANY_B = 'company-b';

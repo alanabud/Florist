@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { initializeApp } from 'firebase/app';
-import { 
-  getFirestore, doc, setDoc, getDoc, getDocs, collection, addDoc 
+import {
+  getFirestore, doc, setDoc, getDoc, getDocs, collection, addDoc, setLogLevel
 } from 'firebase/firestore';
 
 // 1. Read environment variables from .env
@@ -31,6 +31,9 @@ const firebaseConfig = {
 console.log('Initializing Firebase Client SDK...');
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+// Mute the SDK's expected PERMISSION_DENIED console echoes — every assertFails
+// case below intentionally triggers a denied operation. Assertions are unaffected.
+setLogLevel('silent');
 
 const rand = Math.floor(Math.random() * 90000) + 10000;
 const testOrderId = `QA_ORDER_RULES_TEST_${rand}`;
