@@ -43,9 +43,10 @@ production enforcement if abuse volume warrants it.
 ## 3. Local / dev behavior
 
 - Use the **App Check debug token** so `localhost` and CI work without solving
-  reCAPTCHA: set `self.FIREBASE_APPCHECK_DEBUG_TOKEN = true` (dev only) to print a
-  debug token on first load, then register that token in the Firebase console
-  (App Check → Apps → Manage debug tokens).
+  reCAPTCHA: set `VITE_FIREBASE_APPCHECK_DEBUG=true` (dev only) — `config.ts` then
+  sets `self.FIREBASE_APPCHECK_DEBUG_TOKEN = true` so a debug token prints on first
+  load; register that token in the Firebase console (App Check → Apps → Manage
+  debug tokens). This only activates when `VITE_FIREBASE_APPCHECK_SITE_KEY` is set.
 - Debug tokens are **per-developer / per-CI** and must be provided via local env
   or CI secrets — never hardcoded or committed.
 - `.env.example` carries only the **public site key placeholder**
@@ -103,8 +104,8 @@ headless/automation traffic). Before enforcing:
 
 | Step | Scope | State |
 |------|-------|-------|
-| **P1.6** | This document (planning) | ← current |
-| **P1.7** | Guarded `initializeAppCheck` integration (no-op without site key), `.env.example` wired, still **no enforcement** | next, optional |
+| **P1.6** | This document (planning) | done |
+| **P1.7** | Guarded `initializeAppCheck` integration (no-op without site key), `.env.example` wired, still **no enforcement** | ← current (done) |
 | Pilot | Deploy in monitoring mode, watch metrics | owner-approved |
 | Enforce | Per-product enforcement, Firestore first | owner-approved release |
 
