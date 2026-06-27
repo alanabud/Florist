@@ -51,6 +51,22 @@ firebase deploy --only firestore:rules,hosting --project florist-d5026
 - [ ] Rules compiled successfully
 - [ ] Hosting release complete; live URL serves the new build hash
 
+> **Firebase Storage deploy gate.** Storage rules are managed by `storage.rules`
+> and currently **deny all reads/writes** because the app has no active Storage
+> features. The `firebase deploy --only firestore:rules,hosting` command above
+> does **not** deploy Storage rules. Before any production release involving
+> Firebase Storage, confirm whether the live bucket rules have been deployed with:
+>
+> ```bash
+> firebase deploy --only storage --project florist-d5026
+> ```
+>
+> Until that deploy occurs, the live bucket may still be using its previous
+> rules — the managed deny-all in `storage.rules` is not yet in effect on the
+> live bucket.
+
+- [ ] If Storage is in scope for this release, `firebase deploy --only storage` has been run and the live bucket reflects `storage.rules`
+
 ## 5. Tag the release
 
 Only **after** the gate is green and smoke is confirmed:
