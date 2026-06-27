@@ -723,6 +723,10 @@ export const enUS = {
     recipientHome: "{name}'s home"
   },
   orders: {
+    statusUpdated: "Order {id} status updated to {status}",
+    statusUpdateFailed: "Couldn't update the order status.",
+    glPosted: "Order #{order} posted to the General Ledger.",
+    glPostFailed: "GL posting failed.",
     grossRevenue: "Gross Revenue",
     activeSalesSummary: "Active sales summary",
     designPipeline: "Design Pipeline",

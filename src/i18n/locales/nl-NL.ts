@@ -719,6 +719,10 @@ export const nlNL = {
     "recipientHome": "Huis van {name}"
   },
   "orders": {
+    "statusUpdated": "Status van bestelling {id} bijgewerkt naar {status}",
+    "statusUpdateFailed": "Kan de bestelstatus niet bijwerken.",
+    "glPosted": "Bestelling #{order} geboekt in het grootboek.",
+    "glPostFailed": "Boeking in grootboek mislukt.",
     "grossRevenue": "Gross Revenue",
     "activeSalesSummary": "Active sales summary",
     "designPipeline": "Design Pipeline",

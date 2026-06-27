@@ -719,6 +719,10 @@ export const esUS = {
     "recipientHome": "Hogar de {name}"
   },
   "orders": {
+    "statusUpdated": "Estado del pedido {id} actualizado a {status}",
+    "statusUpdateFailed": "No se pudo actualizar el estado del pedido.",
+    "glPosted": "Pedido n.º {order} contabilizado en el libro mayor.",
+    "glPostFailed": "Error al contabilizar en el libro mayor.",
     "grossRevenue": "Gross Revenue",
     "activeSalesSummary": "Active sales summary",
     "designPipeline": "Design Pipeline",

@@ -719,6 +719,10 @@ export const frFR = {
     "recipientHome": "Domicile de {name}"
   },
   "orders": {
+    "statusUpdated": "Statut de la commande {id} mis à jour : {status}",
+    "statusUpdateFailed": "Impossible de mettre à jour le statut de la commande.",
+    "glPosted": "Commande n° {order} comptabilisée au grand livre.",
+    "glPostFailed": "Échec de la comptabilisation au grand livre.",
     "grossRevenue": "Gross Revenue",
     "activeSalesSummary": "Active sales summary",
     "designPipeline": "Design Pipeline",

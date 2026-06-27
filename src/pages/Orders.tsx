@@ -93,7 +93,15 @@ export const Orders: React.FC = () => {
     const order = orders.find(o => o.id === id);
     const oldStatus = order ? order.status : null;
 
-    updateOrderStatus(id, newStatus);
+    // Await the mutation so feedback is truthful: only confirm + audit-log on
+    // success; surface the failure reason otherwise (updateOrderStatus throws
+    // on invalid transitions, e.g. delivering with an unpaid balance).
+    try {
+      await updateOrderStatus(id, newStatus);
+    } catch (e) {
+      addToast((e as Error)?.message || t('orders.statusUpdateFailed'), 'error');
+      return;
+    }
 
     await writeAuditLog({
       actor: 'Admin',
@@ -104,7 +112,7 @@ export const Orders: React.FC = () => {
       after: { status: newStatus }
     });
 
-    addToast(`Order ${id.substring(0, 8)} status updated to ${newStatus.replace('_', ' ')}`, 'success');
+    addToast(t('orders.statusUpdated', { id: id.substring(0, 8), status: newStatus.replace('_', ' ') }), 'success');
   };
 
   const handleExport = () => {
@@ -390,9 +398,9 @@ export const Orders: React.FC = () => {
                             onClick={async () => {
                               try {
                                 await postOrderFinancialsAction(order.id);
-                                addToast(`Order #${order.orderNumber || order.id.substring(0, 8).toUpperCase()} posted to General Ledger.`, 'success');
+                                addToast(t('orders.glPosted', { order: order.orderNumber || order.id.substring(0, 8).toUpperCase() }), 'success');
                               } catch (e: any) {
-                                addToast(e.message || 'GL Posting failed', 'error');
+                                addToast(e.message || t('orders.glPostFailed'), 'error');
                               }
                             }}
                             style={{ padding: '0.35rem 0.75rem', fontSize: '0.8125rem', border: '1px solid #4A6B50', borderRadius: '6px', background: '#F0F5F1', color: '#4A6B50', cursor: 'pointer', fontWeight: 600 }}
