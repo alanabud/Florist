@@ -129,7 +129,12 @@ export const ActivityTimeline: React.FC = () => {
     <div className={styles.panel}>
       <h3 className={styles.panelTitle}>{t('dashboard.recentActivity')}</h3>
       <div className={styles.timeline}>
-        {activities.map((activity, index) => (
+        {activities.length === 0 ? (
+          <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem', textAlign: 'center', padding: '1.5rem 0', margin: 0 }}>
+            {t('dashboard.noRecentActivity')}
+          </p>
+        ) : (
+          activities.map((activity, index) => (
           <div key={activity.id + index} className={styles.timelineItem}>
             <div className={styles.lineContainer}>
               <div className={styles.dot} style={{ backgroundColor: activity.color }}></div>
@@ -144,7 +149,8 @@ export const ActivityTimeline: React.FC = () => {
               <span className={styles.date}>{activity.date}</span>
             </div>
           </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );

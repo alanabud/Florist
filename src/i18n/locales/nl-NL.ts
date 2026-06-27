@@ -237,6 +237,7 @@ export const nlNL = {
     "needsCourier": "Needs Courier",
     "urgentDraft": "Urgent Draft",
     "recentActivity": "Recent Activity",
+    "noRecentActivity": "Nog geen recente activiteit.",
     "dailyBriefingOperationalWorkload": "Daily Briefing & Operational Workload",
     "unifiedConsoleForLiveBoutiqueLogisticsClientPipelinesAndTreasuryAudi": "Unified console for live boutique logistics, client pipelines, and treasury audi",
     "dailyGoalProgress": "Daily Goal Progress",
