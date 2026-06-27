@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useI18n } from '../../i18n/I18nProvider';
+import { buildInfo, buildLabel } from '../../config/buildInfo';
 import styles from './Sidebar.module.css';
 
 const navGroups = [
@@ -117,7 +118,7 @@ export const Sidebar: React.FC = () => {
 
       <div className={styles.sidebarFooter}>
         <div className={styles.footerAccent}></div>
-        <p className={styles.footerText}>BloomPro v2.1 — Premium Maintenance Revamp</p>
+        <p className={styles.footerText} title={buildInfo.builtAt}>BloomPro Studio · {buildLabel()}</p>
       </div>
     </aside>
   );

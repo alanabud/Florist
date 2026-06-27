@@ -27,6 +27,10 @@ playwright-report/
 playwright/.cache/
 .auth/
 
+# Local debug/scratch scripts (kept out of the release workflow)
+scratch/create-user.js
+scratch/debug-user.js
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
