@@ -14,6 +14,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 
 import { CommandSummary } from '../components/dashboard/CommandSummary';
 import { MetricCard } from '../components/dashboard/MetricCard';
+import { SkeletonCard } from '../components/ui/Skeleton';
 import { TodayOperationsPanel } from '../components/dashboard/TodayOperationsPanel';
 import { ActionRequiredPanel } from '../components/dashboard/ActionRequiredPanel';
 import { ActivityTimeline } from '../components/dashboard/ActivityTimeline';
@@ -40,12 +41,15 @@ function toDate(value: unknown): Date | null {
 
 export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { orders, inventory, setActiveModal, fetchOrders } = useAdminStore();
+  const { orders, inventory, setActiveModal, fetchOrders, ordersLoading } = useAdminStore();
   const { journalEntries, fetchJournalEntries } = useFinanceStore();
   const addToast = useToastStore(s => s.addToast);
   
   const { selectedCompanyId, companySettings, userRole } = useCompany();
   const { t, formatCurrency } = useI18n();
+
+  // Show KPI skeletons only during the very first data load (no orders yet).
+  const isInitialLoading = ordersLoading && orders.length === 0;
 
   // Protected loading state for restocking actions
   const [isRestockingSku, setIsRestockingSku] = useState<string | null>(null);
@@ -260,6 +264,11 @@ export const Dashboard: React.FC = () => {
       <div style={{ marginBottom: '1.5rem' }}></div>
 
       {/* Refactored KPI Grid */}
+      {isInitialLoading ? (
+        <div className={styles.kpiGrid}>
+          {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} lines={3} />)}
+        </div>
+      ) : (
       <div className={styles.kpiGrid}>
         <MetricCard
           title={t('dashboard.revenueToday')}
@@ -336,6 +345,7 @@ export const Dashboard: React.FC = () => {
           onClick={() => navigate('/admin/inventory?filter=low-stock')}
         />
       </div>
+      )}
 
       {/* Today's Priority Queue Table */}
       <div className={styles.priorityCard}>

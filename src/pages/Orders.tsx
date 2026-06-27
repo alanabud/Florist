@@ -8,6 +8,7 @@ import { exportOrdersPDF } from '../services/pdfExportService';
 import { exportOrdersExcel } from '../services/excelExportService';
 import { writeAuditLog } from '../services/auditService';
 import { EmptyState } from '../components/ui/EmptyState';
+import { SkeletonTableRows } from '../components/ui/Skeleton';
 import { useCompany } from '../context/CompanyContext';
 import { useI18n } from '../i18n/I18nProvider';
 import styles from '../components/layout/AdminList.module.css';
@@ -322,10 +323,8 @@ export const Orders: React.FC = () => {
 
         {/* Data Table */}
         {ordersLoading ? (
-          <div style={{ padding: '4rem', textAlign: 'center', color: '#6b7280' }}>
-            <div style={{ fontSize: '2rem', marginBottom: '1rem', animation: 'spin 2s linear infinite', display: 'inline-block' }}>❁</div>
-            <p style={{ fontFamily: 'var(--font-sans)', fontWeight: 500 }}>{t('orders.fetchingLiveFirestoreOrders')}</p>
-            <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
+          <div className={styles.tableWrapper}>
+            <SkeletonTableRows rows={6} cols={6} />
           </div>
         ) : filteredOrders.length === 0 ? (
           <EmptyState
