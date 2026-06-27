@@ -7,13 +7,14 @@ import { Download, Plus, Flower2, Package, AlertTriangle, TrendingUp, Sparkles }
 import { exportProductsPDF } from '../services/pdfExportService';
 import { exportProductsExcel } from '../services/excelExportService';
 import { EmptyState } from '../components/ui/EmptyState';
+import { SkeletonTableRows } from '../components/ui/Skeleton';
 import { useCompany } from '../context/CompanyContext';
 import { useI18n } from '../i18n/I18nProvider';
 import styles from '../components/layout/AdminList.module.css';
 
 export const Products: React.FC = () => {
   const { selectedCompany, companySettings } = useCompany();
-  const { products, setActiveModal } = useAdminStore();
+  const { products, setActiveModal, productsLoading } = useAdminStore();
   const [searchParams, setSearchParams] = useSearchParams();
   const addToast = useToastStore((state) => state.addToast);
   const { t, language } = useI18n();
@@ -294,7 +295,11 @@ export const Products: React.FC = () => {
         </div>
 
         {/* Product Data Table */}
-        {filteredProducts.length === 0 ? (
+        {productsLoading ? (
+          <div className={styles.tableWrapper}>
+            <SkeletonTableRows rows={6} cols={6} />
+          </div>
+        ) : filteredProducts.length === 0 ? (
           <EmptyState
             title={searchTerm ? "No matching products found." : "No product entries in this filter."}
             description={searchTerm ? `No item matches your search term "${searchTerm}".` : "Adjust your filters or add a new catalog product."}

@@ -7,13 +7,14 @@ import { Download, UserPlus, Users, Star, DollarSign, Activity, Mail } from 'luc
 import { exportCustomersPDF } from '../services/pdfExportService';
 import { exportCustomersExcel } from '../services/excelExportService';
 import { EmptyState } from '../components/ui/EmptyState';
+import { SkeletonTableRows } from '../components/ui/Skeleton';
 import { useCompany } from '../context/CompanyContext';
 import { useI18n } from '../i18n/I18nProvider';
 import styles from '../components/layout/AdminList.module.css';
 
 export const Customers: React.FC = () => {
   const { selectedCompany, companySettings } = useCompany();
-  const { customers, setActiveModal } = useAdminStore();
+  const { customers, setActiveModal, customersLoading } = useAdminStore();
   const [searchParams, setSearchParams] = useSearchParams();
   const addToast = useToastStore((state) => state.addToast);
   const { t, language } = useI18n();
@@ -278,7 +279,11 @@ export const Customers: React.FC = () => {
         </div>
 
         {/* Customer Data Table */}
-        {filteredCustomers.length === 0 ? (
+        {customersLoading ? (
+          <div className={styles.tableWrapper}>
+            <SkeletonTableRows rows={6} cols={6} />
+          </div>
+        ) : filteredCustomers.length === 0 ? (
           <EmptyState
             title={searchTerm ? "No matching clients found." : "No client profiles in this filter."}
             description={searchTerm ? `No customer dossier matches your search term "${searchTerm}".` : "Adjust your filters or register a new client profile."}

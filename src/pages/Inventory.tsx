@@ -10,13 +10,14 @@ import { postInventoryAdjustment } from '../services/inventoryAdjustmentService'
 import { exportInventoryPDF } from '../services/pdfExportService';
 import { exportInventoryExcel } from '../services/excelExportService';
 import { EmptyState } from '../components/ui/EmptyState';
+import { SkeletonTableRows } from '../components/ui/Skeleton';
 import { useCompany } from '../context/CompanyContext';
 import { useI18n } from '../i18n/I18nProvider';
 import styles from '../components/layout/AdminList.module.css';
 
 export const Inventory: React.FC = () => {
   const { selectedCompany, companySettings } = useCompany();
-  const { inventory, setActiveModal } = useAdminStore();
+  const { inventory, setActiveModal, inventoryLoading } = useAdminStore();
   const fetchJournalEntries = useFinanceStore(s => s.fetchJournalEntries);
   const [searchParams, setSearchParams] = useSearchParams();
   const addToast = useToastStore((state) => state.addToast);
@@ -343,7 +344,11 @@ export const Inventory: React.FC = () => {
         </div>
 
         {/* Inventory Data Table */}
-        {filteredInventory.length === 0 ? (
+        {inventoryLoading ? (
+          <div className={styles.tableWrapper}>
+            <SkeletonTableRows rows={6} cols={6} />
+          </div>
+        ) : filteredInventory.length === 0 ? (
           <EmptyState
             title={searchParam ? "No matching stock items found." : "No inventory records in this category."}
             description={searchParam ? `No items match your search term "${searchParam}".` : "Adjust your status filter or receive a new stock dispatch."}
