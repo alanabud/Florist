@@ -53,6 +53,9 @@ export const frFR = {
     "business": "Activité"
   },
   "storefront": {
+    "collectionsTitle": "Nos collections les plus aimées",
+    "collectionsSubtitle": "Des compositions soignées pour chaque moment qui compte.",
+    "collectionsViewAll": "Voir toutes les collections",
     "home": "Accueil",
     "shopFlowers": "Boutique",
     "occasions": "Occasions",
@@ -1004,6 +1007,18 @@ export const frFR = {
     "shopOccasion": "Acheter {name}"
   },
   "reconciliation": {
+    "scan": {
+      "executing": "Exécution de l'analyse d'audit de rapprochement...",
+      "runningTitle": "Analyse de rapprochement en cours",
+      "runningDesc": "Nous vérifions les détails du grand livre, des comptes clients, des comptes fournisseurs, des stocks, de la trésorerie et de la conformité fiscale. Cela peut prendre quelques instants.",
+      "failedTitle": "Échec de l'analyse d'audit de rapprochement",
+      "failedDesc": "Une erreur s'est produite lors de l'exécution des contrôles d'audit de rapprochement."
+    },
+    "closedPeriods": {
+      "periodEndDate": "Date de fin de période",
+      "closedBy": "Clôturé par",
+      "closedAt": "Clôturé le"
+    },
     "desc": "Audit des comptes du grand livre, analyse des écarts des sous-livres, vérifications des formulaires W-9 et préparation de la clôture mensuelle.",
     "noActiveRun": "Aucun audit actif sélectionné. Lancez ou sélectionnez un audit depuis le panneau des journaux.",
     "ai": {

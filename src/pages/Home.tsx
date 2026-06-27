@@ -162,8 +162,8 @@ export const Home: React.FC = () => {
       <section className={styles.collectionsSection}>
         <div className={styles.collectionsHeader}>
           <span className={styles.collectionsSubtitle}>FRESH PICKS</span>
-          <h2 className={styles.collectionsTitle}>Our Most Loved Collections</h2>
-          <p className={styles.collectionsDesc}>Curated arrangements for every moment that matters.</p>
+          <h2 className={styles.collectionsTitle}>{t('storefront.collectionsTitle')}</h2>
+          <p className={styles.collectionsDesc}>{t('storefront.collectionsSubtitle')}</p>
         </div>
         
         <div className={styles.carouselContainer}>
@@ -190,7 +190,7 @@ export const Home: React.FC = () => {
             </div>
           </div>
           
-          <button className={styles.carouselArrow} onClick={() => navigate('/shop')} aria-label="View all collections">
+          <button className={styles.carouselArrow} onClick={() => navigate('/shop')} aria-label={t('storefront.collectionsViewAll')}>
             <ArrowRight size={20} />
           </button>
         </div>

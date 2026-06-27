@@ -53,6 +53,9 @@ export const nlNL = {
     "business": "Bedrijf"
   },
   "storefront": {
+    "collectionsTitle": "Onze meest geliefde collecties",
+    "collectionsSubtitle": "Samengestelde arrangementen voor elk belangrijk moment.",
+    "collectionsViewAll": "Bekijk alle collecties",
     "home": "Home",
     "shopFlowers": "Bloemen Winkel",
     "occasions": "Gelegenheden",
@@ -1004,6 +1007,18 @@ export const nlNL = {
     "shopOccasion": "Shop {name}"
   },
   "reconciliation": {
+    "scan": {
+      "executing": "Reconciliatie-auditscan uitvoeren...",
+      "runningTitle": "Reconciliatiescan actief",
+      "runningDesc": "We verifiëren het grootboek, debiteuren, crediteuren, voorraad, kas en fiscale naleving. Dit kan even duren.",
+      "failedTitle": "Reconciliatie-auditscan mislukt",
+      "failedDesc": "Er is een fout opgetreden bij het uitvoeren van de reconciliatie-auditcontroles."
+    },
+    "closedPeriods": {
+      "periodEndDate": "Einddatum periode",
+      "closedBy": "Gesloten door",
+      "closedAt": "Gesloten op"
+    },
     "desc": "Controleren van grootboekrekeningen, subboek-afwijkingsanalyse, W-9-controles en afsluitingsparaatheid van de maand.",
     "noActiveRun": "Geen actieve auditrun geselecteerd. Start of selecteer een audit uit de paneellogboeken.",
     "ai": {

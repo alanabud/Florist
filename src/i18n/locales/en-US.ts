@@ -53,6 +53,9 @@ export const enUS = {
     business: "Business"
   },
   storefront: {
+    collectionsTitle: "Our Most Loved Collections",
+    collectionsSubtitle: "Curated arrangements for every moment that matters.",
+    collectionsViewAll: "View all collections",
     home: "Home",
     shopFlowers: "Shop Flowers",
     occasions: "Occasions",
@@ -1004,6 +1007,18 @@ export const enUS = {
     }
   },
   reconciliation: {
+    scan: {
+      executing: "Executing Reconciliation Audit Scan...",
+      runningTitle: "Reconciliation Scan Running",
+      runningDesc: "We are verifying the General Ledger, AR, AP, Inventory, Cash, and Tax compliance details. This may take a few moments.",
+      failedTitle: "Reconciliation Audit Scan Failed",
+      failedDesc: "An error occurred while executing the reconciliation audit checks."
+    },
+    closedPeriods: {
+      periodEndDate: "Period End Date",
+      closedBy: "Closed By",
+      closedAt: "Closed At"
+    },
     desc: "Auditing General Ledger accounts, sub-ledger variance analysis, W-9 checks, and month-end close readiness.",
     noActiveRun: "No active audit run selected. Trigger or select an audit from the panel logs.",
     ai: {

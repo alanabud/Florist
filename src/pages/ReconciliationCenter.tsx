@@ -558,7 +558,7 @@ export const ReconciliationCenter: React.FC = () => {
           gap: '1rem'
         }}>
           <RefreshCw size={48} style={{ color: '#6C8271', animation: 'spin 1.5s linear infinite' }} />
-          <div style={{ fontWeight: 600, color: '#2C302E' }}>Executing Reconciliation Audit Scan...</div>
+          <div style={{ fontWeight: 600, color: '#2C302E' }}>{t('reconciliation.scan.executing')}</div>
           <div style={{ fontSize: '0.8125rem', color: '#6b7280' }}>Verifying sub-ledger alignments and checking compliance metrics.</div>
         </div>
       )}
@@ -656,14 +656,14 @@ export const ReconciliationCenter: React.FC = () => {
             selectedRun.status === 'running' ? (
               <div style={{ textAlign: 'center', padding: '4rem 0', color: '#8a8f8c', background: '#FFFFFF', border: '1px solid #E8EAE6', borderRadius: '16px' }}>
                 <RefreshCw size={36} style={{ marginBottom: '0.5rem', color: '#D97706', animation: 'spin 2s linear infinite' }} />
-                <h3>Reconciliation Scan Running</h3>
-                <p style={{ fontSize: '0.875rem' }}>We are verifying the General Ledger, AR, AP, Inventory, Cash, and Tax compliance details. This may take a few moments.</p>
+                <h3>{t('reconciliation.scan.runningTitle')}</h3>
+                <p style={{ fontSize: '0.875rem' }}>{t('reconciliation.scan.runningDesc')}</p>
               </div>
             ) : selectedRun.status === 'failed' ? (
               <div style={{ textAlign: 'center', padding: '4rem 0', color: '#8a8f8c', background: '#FFFFFF', border: '1px solid #FCA5A5', borderRadius: '16px' }}>
                 <ShieldAlert size={36} style={{ marginBottom: '0.5rem', color: '#EF4444' }} />
-                <h3 style={{ color: '#B91C1C' }}>Reconciliation Audit Scan Failed</h3>
-                <p style={{ fontSize: '0.875rem', color: '#991B1B' }}>An error occurred while executing the reconciliation audit checks.</p>
+                <h3 style={{ color: '#B91C1C' }}>{t('reconciliation.scan.failedTitle')}</h3>
+                <p style={{ fontSize: '0.875rem', color: '#991B1B' }}>{t('reconciliation.scan.failedDesc')}</p>
                 {selectedRun.failureReason && (
                   <div style={{ marginTop: '1rem' }}>
                     <p style={{ fontSize: '0.8125rem', color: '#6b7280', marginBottom: '0.25rem' }}>Failure Reason:</p>
@@ -1427,9 +1427,9 @@ const PeriodCloseTabPanel: React.FC<PeriodCloseTabPanelProps> = ({
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8125rem', textAlign: 'left' }}>
               <thead>
                 <tr style={{ borderBottom: '2px solid #E8EAE6', color: '#8a8f8c', fontWeight: 600 }}>
-                  <th style={{ padding: '0.5rem' }}>Period End Date</th>
-                  <th style={{ padding: '0.5rem' }}>Closed By</th>
-                  <th style={{ padding: '0.5rem' }}>Closed At</th>
+                  <th style={{ padding: '0.5rem' }}>{t('reconciliation.closedPeriods.periodEndDate')}</th>
+                  <th style={{ padding: '0.5rem' }}>{t('reconciliation.closedPeriods.closedBy')}</th>
+                  <th style={{ padding: '0.5rem' }}>{t('reconciliation.closedPeriods.closedAt')}</th>
                   <th style={{ padding: '0.5rem' }}>Notes</th>
                   <th style={{ padding: '0.5rem' }}>Status</th>
                 </tr>

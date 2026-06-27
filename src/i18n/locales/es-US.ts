@@ -53,6 +53,9 @@ export const esUS = {
     "business": "Negocio"
   },
   "storefront": {
+    "collectionsTitle": "Nuestras colecciones más queridas",
+    "collectionsSubtitle": "Arreglos seleccionados para cada momento importante.",
+    "collectionsViewAll": "Ver todas las colecciones",
     "home": "Inicio",
     "shopFlowers": "Comprar Flores",
     "occasions": "Ocasiones",
@@ -1004,6 +1007,18 @@ export const esUS = {
     "shopOccasion": "Comprar {name}"
   },
   "reconciliation": {
+    "scan": {
+      "executing": "Ejecutando el análisis de auditoría de conciliación...",
+      "runningTitle": "Análisis de conciliación en curso",
+      "runningDesc": "Estamos verificando los detalles del libro mayor, cuentas por cobrar, cuentas por pagar, inventario, efectivo y cumplimiento fiscal. Esto puede tardar unos momentos.",
+      "failedTitle": "El análisis de auditoría de conciliación falló",
+      "failedDesc": "Ocurrió un error al ejecutar las verificaciones de auditoría de conciliación."
+    },
+    "closedPeriods": {
+      "periodEndDate": "Fecha de fin de período",
+      "closedBy": "Cerrado por",
+      "closedAt": "Cerrado el"
+    },
     "desc": "Auditoría de cuentas del Libro Mayor, análisis de variaciones de sub-libros, verificaciones de W-9 y preparación para el cierre de mes.",
     "noActiveRun": "Ninguna ejecución de auditoría activa seleccionada. Inicie o seleccione una auditoría de los registros del panel.",
     "ai": {

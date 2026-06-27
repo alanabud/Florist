@@ -12,7 +12,8 @@
     "test-cogs-adjustments": "node test-cogs-adjustments.js",
     "test-reconciliation": "node test-reconciliation.js",
     "smoke:auth": "playwright test",
-    "verify:prod": "npm run lint && npm run build && npm run test-reconciliation && npm run test-rules && npm run smoke:auth"
+    "i18n:audit": "node scripts/i18n-audit.mjs",
+    "verify:prod": "npm run lint && npm run i18n:audit && npm run build && npm run test-reconciliation && npm run test-rules && npm run smoke:auth"
   },
   "dependencies": {
     "date-fns": "^4.4.0",
