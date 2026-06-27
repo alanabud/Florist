@@ -1,5 +1,8 @@
 export const nlNL = {
   "common": {
+    "loadFailedTitle": "Kan deze gegevens niet laden",
+    "loadFailedMessage": "Er ging iets mis bij het laden. Probeer het opnieuw.",
+    "retry": "Opnieuw proberen",
     "save": "Opslaan",
     "cancel": "Annuleren",
     "edit": "Bewerken",

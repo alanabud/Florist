@@ -1,5 +1,8 @@
 export const esUS = {
   "common": {
+    "loadFailedTitle": "No se pudieron cargar los datos",
+    "loadFailedMessage": "Ocurrió un error al cargar. Inténtalo de nuevo.",
+    "retry": "Reintentar",
     "save": "Guardar",
     "cancel": "Cancelar",
     "edit": "Editar",

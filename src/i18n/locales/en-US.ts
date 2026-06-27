@@ -1,5 +1,8 @@
 export const enUS = {
   common: {
+    loadFailedTitle: "Couldn't load this data",
+    loadFailedMessage: "Something went wrong while loading. Please try again.",
+    retry: "Retry",
     save: "Save",
     cancel: "Cancel",
     edit: "Edit",

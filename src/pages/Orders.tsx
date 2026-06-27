@@ -9,13 +9,14 @@ import { exportOrdersExcel } from '../services/excelExportService';
 import { writeAuditLog } from '../services/auditService';
 import { EmptyState } from '../components/ui/EmptyState';
 import { SkeletonTableRows } from '../components/ui/Skeleton';
+import { ModuleErrorState } from '../components/ui/ModuleErrorState';
 import { useCompany } from '../context/CompanyContext';
 import { useI18n } from '../i18n/I18nProvider';
 import styles from '../components/layout/AdminList.module.css';
 
 export const Orders: React.FC = () => {
   const { selectedCompany, companySettings } = useCompany();
-  const { orders, updateOrderStatus, setActiveModal, fetchOrders, ordersLoading, postOrderFinancialsAction } = useAdminStore();
+  const { orders, updateOrderStatus, setActiveModal, fetchOrders, ordersLoading, ordersError, postOrderFinancialsAction } = useAdminStore();
   const [searchParams, setSearchParams] = useSearchParams();
   const addToast = useToastStore((state) => state.addToast);
   const { t, language } = useI18n();
@@ -322,7 +323,9 @@ export const Orders: React.FC = () => {
         </div>
 
         {/* Data Table */}
-        {ordersLoading ? (
+        {ordersError ? (
+          <ModuleErrorState detail={ordersError} onRetry={fetchOrders} />
+        ) : ordersLoading ? (
           <div className={styles.tableWrapper}>
             <SkeletonTableRows rows={6} cols={6} />
           </div>

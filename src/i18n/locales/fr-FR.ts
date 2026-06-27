@@ -1,5 +1,8 @@
 export const frFR = {
   "common": {
+    "loadFailedTitle": "Impossible de charger ces données",
+    "loadFailedMessage": "Une erreur s'est produite lors du chargement. Veuillez réessayer.",
+    "retry": "Réessayer",
     "save": "Enregistrer",
     "cancel": "Annuler",
     "edit": "Modifier",
