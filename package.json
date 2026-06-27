@@ -9,11 +9,12 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test-rules": "node test-rules-hardened.js",
+    "test-rules:xcompany": "firebase emulators:exec --only firestore \"node test-cross-company-rules.mjs\"",
     "test-cogs-adjustments": "node test-cogs-adjustments.js",
     "test-reconciliation": "node test-reconciliation.js",
     "smoke:auth": "playwright test",
     "i18n:audit": "node scripts/i18n-audit.mjs",
-    "verify:prod": "npm run lint && npm run i18n:audit && npm run build && npm run test-reconciliation && npm run test-rules && npm run smoke:auth"
+    "verify:prod": "npm run lint && npm run i18n:audit && npm run build && npm run test-reconciliation && npm run test-rules && npm run test-rules:xcompany && npm run smoke:auth"
   },
   "dependencies": {
     "date-fns": "^4.4.0",
@@ -30,6 +31,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@firebase/rules-unit-testing": "^5.0.1",
     "@playwright/test": "^1.61.1",
     "@types/jspdf": "^1.3.3",
     "@types/node": "^24.12.3",
@@ -40,6 +42,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "firebase-admin": "^14.0.0",
+    "firebase-tools": "^13.35.1",
     "globals": "^17.6.0",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.59.2",
