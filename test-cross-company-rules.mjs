@@ -8,6 +8,13 @@
  *
  * Run with:  firebase emulators:exec --only firestore "node test-cross-company-rules.mjs"
  *
+ * NOTE ON OUTPUT: the Firestore emulator verbosely logs every DENIED operation
+ * (Java "WARNING: ... evaluation error ... false ... @ L485" stack traces). Those
+ * are EXPECTED — each corresponds to an assertFails() below (a cross-company /
+ * spoof / role-escalation write the rules correctly reject). A "Connection reset"
+ * SocketException at the end is just the emulator shutting down. Neither is a
+ * failure; this script reports its own pass/fail tally and sets the exit code.
+ *
  * Proves:
  *   1. A member of company A can read/write allowed company A docs
  *   2. A member of company A cannot read company B docs
