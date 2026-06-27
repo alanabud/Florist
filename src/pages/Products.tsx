@@ -8,13 +8,14 @@ import { exportProductsPDF } from '../services/pdfExportService';
 import { exportProductsExcel } from '../services/excelExportService';
 import { EmptyState } from '../components/ui/EmptyState';
 import { SkeletonTableRows } from '../components/ui/Skeleton';
+import { ModuleErrorState } from '../components/ui/ModuleErrorState';
 import { useCompany } from '../context/CompanyContext';
 import { useI18n } from '../i18n/I18nProvider';
 import styles from '../components/layout/AdminList.module.css';
 
 export const Products: React.FC = () => {
   const { selectedCompany, companySettings } = useCompany();
-  const { products, setActiveModal, productsLoading } = useAdminStore();
+  const { products, setActiveModal, productsLoading, productsError, fetchProducts } = useAdminStore();
   const [searchParams, setSearchParams] = useSearchParams();
   const addToast = useToastStore((state) => state.addToast);
   const { t, language } = useI18n();
@@ -295,7 +296,9 @@ export const Products: React.FC = () => {
         </div>
 
         {/* Product Data Table */}
-        {productsLoading ? (
+        {productsError ? (
+          <ModuleErrorState detail={productsError} onRetry={fetchProducts} />
+        ) : productsLoading ? (
           <div className={styles.tableWrapper}>
             <SkeletonTableRows rows={6} cols={6} />
           </div>

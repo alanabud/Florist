@@ -11,13 +11,14 @@ import { exportInventoryPDF } from '../services/pdfExportService';
 import { exportInventoryExcel } from '../services/excelExportService';
 import { EmptyState } from '../components/ui/EmptyState';
 import { SkeletonTableRows } from '../components/ui/Skeleton';
+import { ModuleErrorState } from '../components/ui/ModuleErrorState';
 import { useCompany } from '../context/CompanyContext';
 import { useI18n } from '../i18n/I18nProvider';
 import styles from '../components/layout/AdminList.module.css';
 
 export const Inventory: React.FC = () => {
   const { selectedCompany, companySettings } = useCompany();
-  const { inventory, setActiveModal, inventoryLoading } = useAdminStore();
+  const { inventory, setActiveModal, inventoryLoading, inventoryError, fetchInventory } = useAdminStore();
   const fetchJournalEntries = useFinanceStore(s => s.fetchJournalEntries);
   const [searchParams, setSearchParams] = useSearchParams();
   const addToast = useToastStore((state) => state.addToast);
@@ -344,7 +345,9 @@ export const Inventory: React.FC = () => {
         </div>
 
         {/* Inventory Data Table */}
-        {inventoryLoading ? (
+        {inventoryError ? (
+          <ModuleErrorState detail={inventoryError} onRetry={fetchInventory} />
+        ) : inventoryLoading ? (
           <div className={styles.tableWrapper}>
             <SkeletonTableRows rows={6} cols={6} />
           </div>

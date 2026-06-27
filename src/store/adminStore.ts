@@ -597,8 +597,11 @@ interface AdminState {
   postOrderFinancialsAction: (orderId: string) => Promise<void>;
   
   inventoryLoading: boolean;
+  inventoryError: string | null;
   customersLoading: boolean;
+  customersError: string | null;
   productsLoading: boolean;
+  productsError: string | null;
   eventsLoading: boolean;
   subscriptionsLoading: boolean;
 
@@ -706,8 +709,11 @@ export const useAdminStore = create<AdminState>()(
       vendorPayments: [],
       vendorPaymentsLoading: false,
       inventoryLoading: false,
+      inventoryError: null,
       customersLoading: false,
+      customersError: null,
       productsLoading: false,
+      productsError: null,
       eventsLoading: false,
       subscriptionsLoading: false,
 
@@ -779,7 +785,7 @@ export const useAdminStore = create<AdminState>()(
 
       fetchInventory: async () => {
         if (useAdminStore.getState().inventoryLoading) return;
-        set({ inventoryLoading: true });
+        set({ inventoryLoading: true, inventoryError: null });
         try {
           const companyId = localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
           const seedDocRef = doc(db, 'systemSeeds', `inventoryDemoSeed_${companyId}`);
@@ -807,6 +813,7 @@ export const useAdminStore = create<AdminState>()(
           set({ inventory: parsed });
         } catch (e) {
           console.error("Failed to fetch inventory:", e);
+          set({ inventoryError: (e as Error)?.message || "Fetch failed" });
         } finally {
           set({ inventoryLoading: false });
         }
@@ -814,7 +821,7 @@ export const useAdminStore = create<AdminState>()(
 
       fetchCustomers: async () => {
         if (useAdminStore.getState().customersLoading) return;
-        set({ customersLoading: true });
+        set({ customersLoading: true, customersError: null });
         try {
           const companyId = localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
           const seedDocRef = doc(db, 'systemSeeds', `customersDemoSeed_${companyId}`);
@@ -842,6 +849,7 @@ export const useAdminStore = create<AdminState>()(
           set({ customers: parsed });
         } catch (e) {
           console.error("Failed to fetch customers:", e);
+          set({ customersError: (e as Error)?.message || "Fetch failed" });
         } finally {
           set({ customersLoading: false });
         }
@@ -849,7 +857,7 @@ export const useAdminStore = create<AdminState>()(
 
       fetchProducts: async () => {
         if (useAdminStore.getState().productsLoading) return;
-        set({ productsLoading: true });
+        set({ productsLoading: true, productsError: null });
         try {
           const companyId = localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
           const seedDocRef = doc(db, 'systemSeeds', `productsDemoSeed_${companyId}`);
@@ -878,6 +886,7 @@ export const useAdminStore = create<AdminState>()(
           set({ products: parsed });
         } catch (e) {
           console.error("Failed to fetch products:", e);
+          set({ productsError: (e as Error)?.message || "Fetch failed" });
         } finally {
           set({ productsLoading: false });
         }
