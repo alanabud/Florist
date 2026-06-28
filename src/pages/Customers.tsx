@@ -75,7 +75,7 @@ export const Customers: React.FC = () => {
   };
 
   const handleEmailCampaign = () => {
-    addToast(`Email campaign builder initialized. Selected ${filteredCustomers.length} customer contacts.`, 'success');
+    addToast(t('customers.emailCampaignInit', { count: filteredCustomers.length }), 'success');
   };
 
   const handleExport = () => {
@@ -85,7 +85,7 @@ export const Customers: React.FC = () => {
       locale: language,
       reportFooterText: companySettings?.reportFooterText
     });
-    addToast(`Exported ${filteredCustomers.length} customers to PDF.`, 'success');
+    addToast(t('customers.exportedPdf', { count: filteredCustomers.length }), 'success');
   };
 
   const handleExportExcel = () => {
@@ -95,12 +95,12 @@ export const Customers: React.FC = () => {
       locale: language,
       reportFooterText: companySettings?.reportFooterText
     });
-    addToast(`Exported ${filteredCustomers.length} customers as Excel.`, 'success');
+    addToast(t('customers.exportedExcel', { count: filteredCustomers.length }), 'success');
   };
 
   const handleViewProfile = (customer: typeof customers[0]) => {
     setActiveModal('newCustomer', customer as unknown as Record<string, unknown>);
-    addToast(`Opening client dossier for ${customer.name}.`, 'info');
+    addToast(t('customers.openingDossier', { name: customer.name }), 'info');
   };
 
   return (

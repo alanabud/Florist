@@ -50,11 +50,11 @@ export const Inventory: React.FC = () => {
     e.preventDefault();
     if (!adjustItem) return;
     if (adjustQty <= 0) {
-      addToast("Quantity must be greater than zero.", "error");
+      addToast(t('inventory.qtyMustBePositive'), "error");
       return;
     }
     if (!adjustReason.trim()) {
-      addToast("A justification reason is required.", "error");
+      addToast(t('inventory.reasonRequired'), "error");
       return;
     }
 
@@ -62,7 +62,7 @@ export const Inventory: React.FC = () => {
     
     // Check if decrease exceeds on-hand quantity
     if (adjustDirection === 'decrease' && adjustQty > adjustItem.quantity) {
-      addToast(`Cannot adjust below 0. Maximum decrease is ${adjustItem.quantity} units.`, "error");
+      addToast(t('inventory.cannotAdjustBelowZero', { max: adjustItem.quantity }), "error");
       return;
     }
 
@@ -76,7 +76,7 @@ export const Inventory: React.FC = () => {
         actor: 'Admin'
       });
       await fetchJournalEntries();
-      addToast(`Successfully adjusted SKU ${adjustItem.sku} stock.`, "success");
+      addToast(t('inventory.adjustSuccess', { sku: adjustItem.sku }), "success");
       setIsAdjustModalOpen(false);
     } catch (err: any) {
       console.error(err);
@@ -140,10 +140,10 @@ export const Inventory: React.FC = () => {
       try {
         await restockInventoryAndPostFinancials(sku, amount, unitCost, 'DEFAULT_COMPANY', 'Admin');
         await fetchJournalEntries();
-        addToast(`Successfully received ${amount} units and logged transaction in General Ledger.`, 'success');
+        addToast(t('inventory.restockSuccess', { amount }), 'success');
       } catch (err) {
         console.error(err);
-        addToast('Failed to post restock to General Ledger.', 'error');
+        addToast(t('inventory.restockFailed'), 'error');
       }
     }
   };
@@ -157,7 +157,7 @@ export const Inventory: React.FC = () => {
       locale: language,
       reportFooterText: companySettings?.reportFooterText
     });
-    addToast(`Exported ${filteredInventory.length} inventory items as PDF.`, 'success');
+    addToast(t('inventory.exportedPdf', { count: filteredInventory.length }), 'success');
   };
 
   const handleExportExcel = () => {
@@ -169,7 +169,7 @@ export const Inventory: React.FC = () => {
       locale: language,
       reportFooterText: companySettings?.reportFooterText
     });
-    addToast(`Exported ${filteredInventory.length} inventory items as Excel.`, 'success');
+    addToast(t('inventory.exportedExcel', { count: filteredInventory.length }), 'success');
   };
 
   return (

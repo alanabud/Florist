@@ -124,7 +124,7 @@ export const Orders: React.FC = () => {
       locale: language,
       reportFooterText: companySettings?.reportFooterText
     });
-    addToast(`Exported ${filteredOrders.length} orders to PDF.`, 'success');
+    addToast(t('orders.exportedPdf', { count: filteredOrders.length }), 'success');
   };
 
   const handleExportExcel = () => {
@@ -136,7 +136,7 @@ export const Orders: React.FC = () => {
       locale: language,
       reportFooterText: companySettings?.reportFooterText
     });
-    addToast(`Exported ${filteredOrders.length} orders as Excel.`, 'success');
+    addToast(t('orders.exportedExcel', { count: filteredOrders.length }), 'success');
   };
 
   return (
@@ -368,7 +368,7 @@ export const Orders: React.FC = () => {
                     key={order.id} 
                     onDoubleClick={() => {
                       setActiveModal('newOrder', order);
-                      addToast(`Opening order #${order.id.substring(0, 8)} details.`, 'info');
+                      addToast(t('orders.openingDetails', { id: order.id.substring(0, 8) }), 'info');
                     }}
                     style={{ cursor: 'pointer', borderBottom: '1px solid #F0EDE6', transition: 'background-color 150ms' }}
                     title="Double-click to open order console"

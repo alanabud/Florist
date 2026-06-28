@@ -598,6 +598,10 @@ export const enUS = {
     addToCartWithPrice: "Add to Cart - {price}"
   },
   customers: {
+    emailCampaignInit: "Email campaign builder initialized. Selected {count} customer contacts.",
+    exportedPdf: "Exported {count} customers to PDF.",
+    exportedExcel: "Exported {count} customers as Excel.",
+    openingDossier: "Opening client dossier for {name}.",
     totalCrmProfiles: "Total CRM Profiles",
     activeDatabaseContacts: "Active database contacts",
     loyaltyMembers: "Loyalty Members",
@@ -685,6 +689,14 @@ export const enUS = {
     generalLedgerAccount: "General Ledger Account"
   },
   inventory: {
+    qtyMustBePositive: "Quantity must be greater than zero.",
+    reasonRequired: "A justification reason is required.",
+    cannotAdjustBelowZero: "Cannot adjust below 0. Maximum decrease is {max} units.",
+    adjustSuccess: "Successfully adjusted SKU {sku} stock.",
+    restockSuccess: "Successfully received {amount} units and logged transaction in the General Ledger.",
+    restockFailed: "Failed to post restock to the General Ledger.",
+    exportedPdf: "Exported {count} inventory items as PDF.",
+    exportedExcel: "Exported {count} inventory items as Excel.",
     stemsOnHand: "Stems On Hand",
     grossMaterialInventory: "Gross material inventory",
     belowTargetReorderLevel: "Below target reorder level",
@@ -723,6 +735,9 @@ export const enUS = {
     recipientHome: "{name}'s home"
   },
   orders: {
+    exportedPdf: "Exported {count} orders to PDF.",
+    exportedExcel: "Exported {count} orders as Excel.",
+    openingDetails: "Opening order #{id} details.",
     statusUpdated: "Order {id} status updated to {status}",
     statusUpdateFailed: "Couldn't update the order status.",
     glPosted: "Order #{order} posted to the General Ledger.",
@@ -765,6 +780,9 @@ export const enUS = {
     removedFromWishlist: "Removed from wishlist"
   },
   products: {
+    exportedPdf: "Exported {count} products to PDF.",
+    exportedExcel: "Exported {count} products as Excel.",
+    openingProduct: "Opening product: {name}",
     totalCatalog: "Total Catalog",
     activeDesignerCollections: "Active designer collections",
     inStock: "In Stock",

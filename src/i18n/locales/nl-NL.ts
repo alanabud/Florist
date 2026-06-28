@@ -598,6 +598,10 @@ export const nlNL = {
     "addToCartWithPrice": "In winkelwagen - {price}"
   },
   "customers": {
+    "emailCampaignInit": "Campagnebouwer voor e-mail gestart. {count} klantcontacten geselecteerd.",
+    "exportedPdf": "{count} klanten geëxporteerd naar PDF.",
+    "exportedExcel": "{count} klanten geëxporteerd naar Excel.",
+    "openingDossier": "Klantdossier voor {name} wordt geopend.",
     "totalCrmProfiles": "Total CRM Profiles",
     "activeDatabaseContacts": "Active database contacts",
     "loyaltyMembers": "Loyalty Members",
@@ -685,6 +689,14 @@ export const nlNL = {
     "generalLedgerAccount": "General Ledger Account"
   },
   "inventory": {
+    "qtyMustBePositive": "De hoeveelheid moet groter zijn dan nul.",
+    "reasonRequired": "Een reden ter onderbouwing is vereist.",
+    "cannotAdjustBelowZero": "Kan niet onder 0 aanpassen. Maximale verlaging is {max} eenheden.",
+    "adjustSuccess": "Voorraad van SKU {sku} succesvol aangepast.",
+    "restockSuccess": "{amount} eenheden ontvangen en transactie geboekt in het grootboek.",
+    "restockFailed": "Kan aanvulling niet in het grootboek boeken.",
+    "exportedPdf": "{count} voorraaditems geëxporteerd naar PDF.",
+    "exportedExcel": "{count} voorraaditems geëxporteerd naar Excel.",
     "stemsOnHand": "Stems On Hand",
     "grossMaterialInventory": "Gross material inventory",
     "belowTargetReorderLevel": "Below target reorder level",
@@ -719,6 +731,9 @@ export const nlNL = {
     "recipientHome": "Huis van {name}"
   },
   "orders": {
+    "exportedPdf": "{count} bestellingen geëxporteerd naar PDF.",
+    "exportedExcel": "{count} bestellingen geëxporteerd naar Excel.",
+    "openingDetails": "Bestelling #{id} wordt geopend.",
     "statusUpdated": "Status van bestelling {id} bijgewerkt naar {status}",
     "statusUpdateFailed": "Kan de bestelstatus niet bijwerken.",
     "glPosted": "Bestelling #{order} geboekt in het grootboek.",
@@ -761,6 +776,9 @@ export const nlNL = {
     "removedFromWishlist": "Verwijderd van verlanglijst"
   },
   "products": {
+    "exportedPdf": "{count} producten geëxporteerd naar PDF.",
+    "exportedExcel": "{count} producten geëxporteerd naar Excel.",
+    "openingProduct": "Product openen: {name}",
     "totalCatalog": "Total Catalog",
     "activeDesignerCollections": "Active designer collections",
     "inStock": "In Stock",

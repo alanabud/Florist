@@ -598,6 +598,10 @@ export const esUS = {
     "addToCartWithPrice": "Agregar al Carrito - {price}"
   },
   "customers": {
+    "emailCampaignInit": "Generador de campañas de correo iniciado. Se seleccionaron {count} contactos de clientes.",
+    "exportedPdf": "Se exportaron {count} clientes a PDF.",
+    "exportedExcel": "Se exportaron {count} clientes a Excel.",
+    "openingDossier": "Abriendo el expediente del cliente {name}.",
     "totalCrmProfiles": "Total CRM Profiles",
     "activeDatabaseContacts": "Active database contacts",
     "loyaltyMembers": "Loyalty Members",
@@ -685,6 +689,14 @@ export const esUS = {
     "generalLedgerAccount": "General Ledger Account"
   },
   "inventory": {
+    "qtyMustBePositive": "La cantidad debe ser mayor que cero.",
+    "reasonRequired": "Se requiere un motivo de justificación.",
+    "cannotAdjustBelowZero": "No se puede ajustar por debajo de 0. La disminución máxima es de {max} unidades.",
+    "adjustSuccess": "Se ajustó correctamente el stock del SKU {sku}.",
+    "restockSuccess": "Se recibieron {amount} unidades y se registró la transacción en el libro mayor.",
+    "restockFailed": "No se pudo registrar el reabastecimiento en el libro mayor.",
+    "exportedPdf": "Se exportaron {count} artículos de inventario a PDF.",
+    "exportedExcel": "Se exportaron {count} artículos de inventario a Excel.",
     "stemsOnHand": "Stems On Hand",
     "grossMaterialInventory": "Gross material inventory",
     "belowTargetReorderLevel": "Below target reorder level",
@@ -719,6 +731,9 @@ export const esUS = {
     "recipientHome": "Hogar de {name}"
   },
   "orders": {
+    "exportedPdf": "Se exportaron {count} pedidos a PDF.",
+    "exportedExcel": "Se exportaron {count} pedidos a Excel.",
+    "openingDetails": "Abriendo los detalles del pedido n.º {id}.",
     "statusUpdated": "Estado del pedido {id} actualizado a {status}",
     "statusUpdateFailed": "No se pudo actualizar el estado del pedido.",
     "glPosted": "Pedido n.º {order} contabilizado en el libro mayor.",
@@ -761,6 +776,9 @@ export const esUS = {
     "removedFromWishlist": "Eliminado de la lista de deseos"
   },
   "products": {
+    "exportedPdf": "Se exportaron {count} productos a PDF.",
+    "exportedExcel": "Se exportaron {count} productos a Excel.",
+    "openingProduct": "Abriendo producto: {name}",
     "totalCatalog": "Total Catalog",
     "activeDesignerCollections": "Active designer collections",
     "inStock": "In Stock",

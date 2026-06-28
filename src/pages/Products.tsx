@@ -93,7 +93,7 @@ export const Products: React.FC = () => {
       locale: language,
       reportFooterText: companySettings?.reportFooterText
     });
-    addToast(`Exported ${filteredProducts.length} products to PDF.`, 'success');
+    addToast(t('products.exportedPdf', { count: filteredProducts.length }), 'success');
   };
 
   const handleExportExcel = () => {
@@ -105,7 +105,7 @@ export const Products: React.FC = () => {
       locale: language,
       reportFooterText: companySettings?.reportFooterText
     });
-    addToast(`Exported ${filteredProducts.length} products as Excel.`, 'success');
+    addToast(t('products.exportedExcel', { count: filteredProducts.length }), 'success');
   };
 
   return (
@@ -337,7 +337,7 @@ export const Products: React.FC = () => {
                       key={product.id}
                       onDoubleClick={() => {
                         setActiveModal('newProduct', product);
-                        addToast(`Opening product: ${product.name}`, 'info');
+                        addToast(t('products.openingProduct', { name: product.name }), 'info');
                       }}
                       style={{ cursor: 'pointer', borderBottom: '1px solid #F0EDE6', transition: 'background-color 150ms' }}
                       title="Double-click to open product console"

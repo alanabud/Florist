@@ -598,6 +598,10 @@ export const frFR = {
     "addToCartWithPrice": "Ajouter au Panier - {price}"
   },
   "customers": {
+    "emailCampaignInit": "Générateur de campagne e-mail initialisé. {count} contacts clients sélectionnés.",
+    "exportedPdf": "{count} clients exportés en PDF.",
+    "exportedExcel": "{count} clients exportés en Excel.",
+    "openingDossier": "Ouverture du dossier client de {name}.",
     "totalCrmProfiles": "Total CRM Profiles",
     "activeDatabaseContacts": "Active database contacts",
     "loyaltyMembers": "Loyalty Members",
@@ -685,6 +689,14 @@ export const frFR = {
     "generalLedgerAccount": "General Ledger Account"
   },
   "inventory": {
+    "qtyMustBePositive": "La quantité doit être supérieure à zéro.",
+    "reasonRequired": "Un motif de justification est requis.",
+    "cannotAdjustBelowZero": "Impossible d'ajuster en dessous de 0. La diminution maximale est de {max} unités.",
+    "adjustSuccess": "Stock du SKU {sku} ajusté avec succès.",
+    "restockSuccess": "{amount} unités reçues et transaction enregistrée au grand livre.",
+    "restockFailed": "Échec de l'enregistrement du réapprovisionnement au grand livre.",
+    "exportedPdf": "{count} articles d'inventaire exportés en PDF.",
+    "exportedExcel": "{count} articles d'inventaire exportés en Excel.",
     "stemsOnHand": "Stems On Hand",
     "grossMaterialInventory": "Gross material inventory",
     "belowTargetReorderLevel": "Below target reorder level",
@@ -719,6 +731,9 @@ export const frFR = {
     "recipientHome": "Domicile de {name}"
   },
   "orders": {
+    "exportedPdf": "{count} commandes exportées en PDF.",
+    "exportedExcel": "{count} commandes exportées en Excel.",
+    "openingDetails": "Ouverture des détails de la commande n° {id}.",
     "statusUpdated": "Statut de la commande {id} mis à jour : {status}",
     "statusUpdateFailed": "Impossible de mettre à jour le statut de la commande.",
     "glPosted": "Commande n° {order} comptabilisée au grand livre.",
@@ -761,6 +776,9 @@ export const frFR = {
     "removedFromWishlist": "Retiré de la liste d'envies"
   },
   "products": {
+    "exportedPdf": "{count} produits exportés en PDF.",
+    "exportedExcel": "{count} produits exportés en Excel.",
+    "openingProduct": "Ouverture du produit : {name}",
     "totalCatalog": "Total Catalog",
     "activeDesignerCollections": "Active designer collections",
     "inStock": "In Stock",
