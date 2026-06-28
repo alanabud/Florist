@@ -1,5 +1,5 @@
-import { 
-  collection, addDoc, getDocs, doc, updateDoc, query, where, orderBy, deleteDoc
+import {
+  collection, addDoc, getDocs, doc, updateDoc, query, where, deleteDoc
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { writeAuditLog } from './auditService';
@@ -27,13 +27,17 @@ export interface Branch {
 }
 
 export async function fetchBranches(companyId: string): Promise<Branch[]> {
+  // Company-scoped query only. Sort newest-first client-side to avoid requiring
+  // a composite index (an equality filter + orderBy on a different field needs
+  // one); branches are a small per-company list, so this is cheap.
   const q = query(
-    collection(db, COLLECTION_NAME), 
-    where('companyId', '==', companyId),
-    orderBy('createdAt', 'desc')
+    collection(db, COLLECTION_NAME),
+    where('companyId', '==', companyId)
   );
   const snap = await getDocs(q);
-  return snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Branch));
+  return snap.docs
+    .map(doc => ({ id: doc.id, ...doc.data() } as Branch))
+    .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
 }
 
 export async function addBranch(branch: Omit<Branch, 'id' | 'createdAt' | 'createdBy'>, actor: string): Promise<string> {

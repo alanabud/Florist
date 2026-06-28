@@ -65,6 +65,8 @@ await testEnv.withSecurityRulesDisabled(async (ctx) => {
   await setDoc(doc(db, `companies/${COMPANY_B}/members/userB`), { userId: 'userB', companyId: COMPANY_B, role: 'admin', status: 'active' });
   await setDoc(doc(db, 'orders/orderA'), { companyId: COMPANY_A, status: 'confirmed', total: 10 });
   await setDoc(doc(db, 'orders/orderB'), { companyId: COMPANY_B, status: 'confirmed', total: 20 });
+  await setDoc(doc(db, 'branches/branchA'), { companyId: COMPANY_A, branchCode: 'A1', displayName: 'A One', status: 'active', createdAt: new Date().toISOString(), createdBy: 'seed' });
+  await setDoc(doc(db, 'branches/branchB'), { companyId: COMPANY_B, branchCode: 'B1', displayName: 'B One', status: 'active', createdAt: new Date().toISOString(), createdBy: 'seed' });
 });
 
 const aDb = testEnv.authenticatedContext('userA').firestore();          // admin of company A
@@ -103,6 +105,15 @@ await allow('A (admin) creates a journal entry in company A', () => setDoc(doc(a
 await deny('Viewer (non-staff) creates a journal entry in company A', () => setDoc(doc(viewerDb, 'journalEntries/jeV'), { companyId: COMPANY_A, status: 'posted', sourceType: 'order', lines: [{ account: 'Cash', debit: 1, credit: 0 }, { account: 'Sales Revenue', debit: 0, credit: 1 }] }));
 await deny('Viewer (non-admin) adds a member to company A', () => setDoc(doc(viewerDb, `companies/${COMPANY_A}/members/hacker`), { userId: 'hacker', companyId: COMPANY_A, role: 'admin', status: 'active' }));
 await deny('A (admin of A) adds a member to company B', () => setDoc(doc(aDb, `companies/${COMPANY_B}/members/hacker`), { userId: 'hacker', companyId: COMPANY_B, role: 'admin', status: 'active' }));
+
+console.log('\n[7] Branch operations respect company isolation');
+const branch = (companyId, code) => ({ companyId, branchCode: code, displayName: code, status: 'active', createdAt: new Date().toISOString(), createdBy: 'userA' });
+await allow('A reads a company A branch', () => getDoc(doc(aDb, 'branches/branchA')));
+await deny('A reads a company B branch', () => getDoc(doc(aDb, 'branches/branchB')));
+await allow('A (staff) creates a company A branch', () => setDoc(doc(aDb, 'branches/newBranchA'), branch(COMPANY_A, 'NYC')));
+await deny('A creates a branch tagged company B (spoof)', () => setDoc(doc(aDb, 'branches/spoofBranchB'), branch(COMPANY_B, 'XXX')));
+await deny('Viewer (non-staff) creates a company A branch', () => setDoc(doc(viewerDb, 'branches/viewerBranch'), { ...branch(COMPANY_A, 'VVV'), createdBy: 'userViewer' }));
+await deny('Guest reads a company A branch', () => getDoc(doc(unauthDb, 'branches/branchA')));
 
 await testEnv.cleanup();
 
