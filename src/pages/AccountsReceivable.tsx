@@ -151,11 +151,11 @@ export const AccountsReceivable: React.FC = () => {
   const handleAddCollectionNote = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedCustomerId) {
-      addToast('Please select a customer first.', 'error');
+      addToast(t('accountsreceivable.toast.selectCustomer'), 'error');
       return;
     }
     if (!newNoteText.trim()) {
-      addToast('Please write a note.', 'error');
+      addToast(t('accountsreceivable.toast.writeNote'), 'error');
       return;
     }
 
@@ -187,10 +187,10 @@ export const AccountsReceivable: React.FC = () => {
       setNewNoteText('');
       setPromisedDate('');
       setDisputedAmount('');
-      addToast('Collection note logged successfully.', 'success');
+      addToast(t('accountsreceivable.toast.noteLogged'), 'success');
     } catch (e: any) {
       console.error(e);
-      addToast('Failed to add note: ' + e.message, 'error');
+      addToast(t('accountsreceivable.toast.noteFailed', { error: e.message }), 'error');
     } finally {
       setIsSubmittingNote(false);
     }
@@ -205,9 +205,9 @@ export const AccountsReceivable: React.FC = () => {
   const handleStatusChange = async (id: string, status: any) => {
     try {
       await updateCustomerDetailsInDb(id, { collectionStatus: status });
-      addToast(`Collection status updated to ${status.replace('_', ' ').toUpperCase()}`, 'success');
+      addToast(t('accountsreceivable.toast.statusUpdated', { status: status.replace('_', ' ').toUpperCase() }), 'success');
     } catch (e: any) {
-      addToast('Failed to update status: ' + e.message, 'error');
+      addToast(t('accountsreceivable.toast.statusFailed', { error: e.message }), 'error');
     }
   };
 
@@ -609,9 +609,9 @@ export const AccountsReceivable: React.FC = () => {
                         try {
                           const statementData = await generateCustomerStatement(s.customerId, s.startDate, s.endDate);
                           exportStatementPdf(statementData);
-                          addToast('Statement PDF generated for printing.', 'success');
+                          addToast(t('accountsreceivable.toast.statementGenerated'), 'success');
                         } catch (err: any) {
-                          addToast('Failed to regenerate: ' + err.message, 'error');
+                          addToast(t('accountsreceivable.toast.regenFailed', { error: err.message }), 'error');
                         }
                       };
 

@@ -102,18 +102,18 @@ export const FinanceAdmin: React.FC = () => {
       };
       
       await setDoc(docRef, payload, { merge: true });
-      addToast(`Accounting period successfully closed through ${lockDate}.`, "success");
+      addToast(t('financeadmin.toast.periodClosed', { date: lockDate }), "success");
       await fetchClosedPeriodConfig();
     } catch (err) {
       console.error(err);
-      addToast("Failed to close accounting period.", "error");
+      addToast(t('financeadmin.toast.periodCloseFailed'), "error");
     }
   };
 
   const handleUnlockPeriod = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!unlockReasonInput.trim()) {
-      addToast("An unlock reason is required.", "error");
+      addToast(t('financeadmin.toast.unlockReasonRequired'), "error");
       return;
     }
 
@@ -126,13 +126,13 @@ export const FinanceAdmin: React.FC = () => {
         unlockReason: unlockReasonInput
       }, { merge: true });
 
-      addToast("Accounting period unlocked successfully.", "success");
+      addToast(t('financeadmin.toast.periodUnlocked'), "success");
       setUnlockReasonInput('');
       setShowUnlockInput(false);
       await fetchClosedPeriodConfig();
     } catch (err) {
       console.error(err);
-      addToast("Failed to unlock accounting period.", "error");
+      addToast(t('financeadmin.toast.periodUnlockFailed'), "error");
     }
   };
   const [reportingPeriod, setReportingPeriod] = useState<ReportingPeriod>('all_time');
@@ -153,7 +153,7 @@ export const FinanceAdmin: React.FC = () => {
     try {
       await reverseJournalEntry(id, user?.email || 'Admin');
       await fetchJournalEntries();
-      addToast("Reversing entry posted successfully to general ledger.", "success");
+      addToast(t('financeadmin.toast.reversalPosted'), "success");
     } catch (err: unknown) {
       console.error(err);
       addToast((err as { message?: string })?.message || "Failed to reverse journal entry.", "error");
@@ -173,7 +173,7 @@ export const FinanceAdmin: React.FC = () => {
           `To confirm deactivation of this critical system account, please type "DEACTIVATE SYSTEM ACCOUNT":`
         );
         if (confirmText !== 'DEACTIVATE SYSTEM ACCOUNT') {
-          addToast("Deactivation aborted: confirmation phrase did not match.", "error");
+          addToast(t('financeadmin.toast.deactivateAborted'), "error");
           return;
         }
       } else {
@@ -183,7 +183,7 @@ export const FinanceAdmin: React.FC = () => {
       }
       try {
         await deactivateAccount(account.id!, actor);
-        addToast(`Account "${account.name}" has been deactivated.`, 'success');
+        addToast(t('financeadmin.toast.accountDeactivated', { name: account.name }), 'success');
       } catch (err: any) {
         console.error(err);
         addToast(err.message || 'Failed to deactivate account.', 'error');
@@ -191,7 +191,7 @@ export const FinanceAdmin: React.FC = () => {
     } else {
       try {
         await reactivateAccount(account.id!, actor);
-        addToast(`Account "${account.name}" has been reactivated.`, 'success');
+        addToast(t('financeadmin.toast.accountReactivated', { name: account.name }), 'success');
       } catch (err: any) {
         console.error(err);
         addToast(err.message || 'Failed to reactivate account.', 'error');
@@ -307,7 +307,7 @@ export const FinanceAdmin: React.FC = () => {
       locale: language,
       reportFooterText: companySettings?.reportFooterText
     });
-    addToast('Profit & Loss statement exported to PDF.', 'success');
+    addToast(t('financeadmin.toast.plExported'), 'success');
   };
 
   const handleExportBalanceSheet = () => {
@@ -317,7 +317,7 @@ export const FinanceAdmin: React.FC = () => {
       locale: language,
       reportFooterText: companySettings?.reportFooterText
     });
-    addToast('Balance Sheet exported to PDF.', 'success');
+    addToast(t('financeadmin.toast.bsExported'), 'success');
   };
 
   const handleExportFullWorkbook = () => {
@@ -333,7 +333,7 @@ export const FinanceAdmin: React.FC = () => {
       locale: language,
       reportFooterText: companySettings?.reportFooterText
     });
-    addToast('Full general ledger financial spreadsheet workbook exported.', 'success');
+    addToast(t('financeadmin.toast.glExported'), 'success');
   };
 
   // Staff gate check

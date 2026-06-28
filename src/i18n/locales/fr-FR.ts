@@ -451,6 +451,16 @@ export const frFR = {
     "proceedToCheckout": "Passer à la caisse"
   },
   "accountsreceivable": {
+    "toast": {
+      "selectCustomer": "Veuillez d'abord sélectionner un client.",
+      "writeNote": "Veuillez rédiger une note.",
+      "noteLogged": "Note de recouvrement enregistrée avec succès.",
+      "noteFailed": "Échec de l'ajout de la note : {error}",
+      "statusUpdated": "Statut de recouvrement mis à jour : {status}",
+      "statusFailed": "Échec de la mise à jour du statut : {error}",
+      "statementGenerated": "PDF du relevé généré pour impression.",
+      "regenFailed": "Échec de la régénération : {error}"
+    },
     "accessDenied": "Access Denied",
     "customerName": "Customer Name",
     "fulfillmentDate": "Fulfillment Date",
@@ -653,6 +663,20 @@ export const frFR = {
     "totalBudget": "Total Budget"
   },
   "financeadmin": {
+    "toast": {
+      "periodClosed": "Période comptable clôturée avec succès jusqu'au {date}.",
+      "periodCloseFailed": "Échec de la clôture de la période comptable.",
+      "unlockReasonRequired": "Un motif de déverrouillage est requis.",
+      "periodUnlocked": "Période comptable déverrouillée avec succès.",
+      "periodUnlockFailed": "Échec du déverrouillage de la période comptable.",
+      "reversalPosted": "Écriture de contre-passation comptabilisée avec succès au grand livre.",
+      "deactivateAborted": "Désactivation annulée : la phrase de confirmation ne correspond pas.",
+      "accountDeactivated": "Le compte « {name} » a été désactivé.",
+      "accountReactivated": "Le compte « {name} » a été réactivé.",
+      "plExported": "Compte de résultat exporté en PDF.",
+      "bsExported": "Bilan exporté en PDF.",
+      "glExported": "Grand livre financier complet exporté en feuille de calcul."
+    },
     "accessDenied": "Access Denied",
     "exportPlPdf": "Export P&L PDF",
     "exportBalanceSheetPdf": "Export Balance Sheet PDF",
@@ -797,6 +821,12 @@ export const frFR = {
     "fulfillmentStatus": "Fulfillment Status"
   },
   "purchasingconsole": {
+    "toast": {
+      "poCancelled": "Bon de commande {id} annulé avec succès.",
+      "billPosted": "Facture fournisseur {id} comptabilisée. Grand livre fournisseurs mis à jour.",
+      "billVoided": "Facture fournisseur {id} annulée. Écriture de contre-passation comptabilisée.",
+      "paymentVoided": "Paiement fournisseur {id} annulé. Solde de la facture restauré."
+    },
     "purchasingPayablesConsole": "Purchasing & Payables Console",
     "activePurchaseOrders": "Active Purchase Orders",
     "purchaseOrders": "Purchase Orders",
@@ -1102,6 +1132,15 @@ export const frFR = {
     },
     "toast": {
       "fetchFailed": "Échec de la récupération des audits.",
+      "noCompanyContext": "Aucun contexte d'entreprise sélectionné.",
+      "datesRequired": "Les dates de début et de fin sont requises.",
+      "startBeforeEnd": "La date de début doit être antérieure ou égale à la date de fin.",
+      "endNotFuture": "La date de fin de l'audit ne peut pas être dans le futur.",
+      "notAuthorizedApprove": "Non autorisé à approuver les ajustements.",
+      "notAuthorizedReject": "Non autorisé à rejeter les ajustements.",
+      "adjustmentNotFound": "Enregistrement d'ajustement introuvable.",
+      "periodAlreadyClosed": "Cette période (ou une période ultérieure) est déjà clôturée.",
+      "contextNotReady": "Le contexte d'entreprise n'est pas prêt. Veuillez actualiser ou sélectionner une entreprise avant de lancer un audit.",
       "triggering": "Lancement des contrôles de rapprochement...",
       "completed": "Contrôle de rapprochement terminé avec succès.",
       "failed": "Échec de l'audit financier.",

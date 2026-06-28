@@ -184,22 +184,22 @@ export const ReconciliationCenter: React.FC = () => {
         selectedCompanyId,
         memberships
       });
-      addToast('No company context selected.', 'error');
+      addToast(t('reconciliation.toast.noCompanyContext'), 'error');
       return;
     }
 
     // Date range validation
     if (!newStart || !newEnd) {
-      addToast('Start date and End date are required.', 'error');
+      addToast(t('reconciliation.toast.datesRequired'), 'error');
       return;
     }
     if (newStart > newEnd) {
-      addToast('Start date must be on or before End date.', 'error');
+      addToast(t('reconciliation.toast.startBeforeEnd'), 'error');
       return;
     }
     const todayStr = new Date().toISOString().split('T')[0];
     if (newEnd > todayStr) {
-      addToast('Audit end date cannot be in the future.', 'error');
+      addToast(t('reconciliation.toast.endNotFuture'), 'error');
       return;
     }
 
@@ -303,7 +303,7 @@ export const ReconciliationCenter: React.FC = () => {
    */
   const handleApproveAndPostAdjustment = async (adjId: string, notes: string) => {
     if (!selectedCompanyId || !isOwnerOrAdmin) {
-      addToast('Not authorized to approve adjustments.', 'error');
+      addToast(t('reconciliation.toast.notAuthorizedApprove'), 'error');
       return;
     }
     try {
@@ -427,7 +427,7 @@ export const ReconciliationCenter: React.FC = () => {
    */
   const handleRejectAdjustment = async (adjId: string, reason: string) => {
     if (!isOwnerOrAdmin) {
-      addToast('Not authorized to reject adjustments.', 'error');
+      addToast(t('reconciliation.toast.notAuthorizedReject'), 'error');
       return;
     }
     try {
@@ -436,7 +436,7 @@ export const ReconciliationCenter: React.FC = () => {
       const adjRef = doc(db, 'reconciliationAdjustments', adjId);
       const adjSnap = await getDoc(adjRef);
       if (!adjSnap.exists()) {
-        addToast('Adjustment record not found.', 'error');
+        addToast(t('reconciliation.toast.adjustmentNotFound'), 'error');
         return;
       }
       const adjData = adjSnap.data() as ReconciliationAdjustment;
@@ -477,7 +477,7 @@ export const ReconciliationCenter: React.FC = () => {
     // Graceful duplicate close check
     const alreadyClosed = closedPeriodsList.some(p => runToClose.periodEnd <= p.periodEndDate);
     if (alreadyClosed) {
-      addToast('This period (or a later period) is already closed.', 'info');
+      addToast(t('reconciliation.toast.periodAlreadyClosed'), 'info');
       return;
     }
 
@@ -637,7 +637,7 @@ export const ReconciliationCenter: React.FC = () => {
           onSelectRun={setSelectedRunId}
           onNewRun={() => {
             if (!isValidCompanyId(selectedCompanyId)) {
-              addToast('Company context is not ready. Please refresh or select a company before starting an audit.', 'error');
+              addToast(t('reconciliation.toast.contextNotReady'), 'error');
               return;
             }
             setShowRunModal(true);

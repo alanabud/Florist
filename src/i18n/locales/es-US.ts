@@ -451,6 +451,16 @@ export const esUS = {
     "proceedToCheckout": "Proceder al Pago"
   },
   "accountsreceivable": {
+    "toast": {
+      "selectCustomer": "Primero selecciona un cliente.",
+      "writeNote": "Escribe una nota.",
+      "noteLogged": "Nota de cobranza registrada correctamente.",
+      "noteFailed": "No se pudo agregar la nota: {error}",
+      "statusUpdated": "Estado de cobranza actualizado a {status}",
+      "statusFailed": "No se pudo actualizar el estado: {error}",
+      "statementGenerated": "PDF del estado de cuenta generado para imprimir.",
+      "regenFailed": "No se pudo regenerar: {error}"
+    },
     "accessDenied": "Access Denied",
     "customerName": "Customer Name",
     "fulfillmentDate": "Fulfillment Date",
@@ -653,6 +663,20 @@ export const esUS = {
     "totalBudget": "Total Budget"
   },
   "financeadmin": {
+    "toast": {
+      "periodClosed": "Período contable cerrado correctamente hasta {date}.",
+      "periodCloseFailed": "No se pudo cerrar el período contable.",
+      "unlockReasonRequired": "Se requiere un motivo de desbloqueo.",
+      "periodUnlocked": "Período contable desbloqueado correctamente.",
+      "periodUnlockFailed": "No se pudo desbloquear el período contable.",
+      "reversalPosted": "Asiento de reversión contabilizado correctamente en el libro mayor.",
+      "deactivateAborted": "Desactivación cancelada: la frase de confirmación no coincide.",
+      "accountDeactivated": "La cuenta \"{name}\" ha sido desactivada.",
+      "accountReactivated": "La cuenta \"{name}\" ha sido reactivada.",
+      "plExported": "Estado de resultados exportado a PDF.",
+      "bsExported": "Balance general exportado a PDF.",
+      "glExported": "Libro mayor financiero completo exportado en hoja de cálculo."
+    },
     "accessDenied": "Access Denied",
     "exportPlPdf": "Export P&L PDF",
     "exportBalanceSheetPdf": "Export Balance Sheet PDF",
@@ -797,6 +821,12 @@ export const esUS = {
     "fulfillmentStatus": "Fulfillment Status"
   },
   "purchasingconsole": {
+    "toast": {
+      "poCancelled": "Orden de compra {id} cancelada correctamente.",
+      "billPosted": "Factura de proveedor {id} contabilizada. Libro de CxP actualizado.",
+      "billVoided": "Factura de proveedor {id} anulada. Asiento de reversión contabilizado.",
+      "paymentVoided": "Pago a proveedor {id} anulado. Saldo de la factura restaurado."
+    },
     "purchasingPayablesConsole": "Purchasing & Payables Console",
     "activePurchaseOrders": "Active Purchase Orders",
     "purchaseOrders": "Purchase Orders",
@@ -1102,6 +1132,15 @@ export const esUS = {
     },
     "toast": {
       "fetchFailed": "Error al obtener las auditorías.",
+      "noCompanyContext": "No hay contexto de empresa seleccionado.",
+      "datesRequired": "La fecha de inicio y la fecha de fin son obligatorias.",
+      "startBeforeEnd": "La fecha de inicio debe ser anterior o igual a la fecha de fin.",
+      "endNotFuture": "La fecha de fin de la auditoría no puede ser futura.",
+      "notAuthorizedApprove": "No autorizado para aprobar ajustes.",
+      "notAuthorizedReject": "No autorizado para rechazar ajustes.",
+      "adjustmentNotFound": "No se encontró el registro de ajuste.",
+      "periodAlreadyClosed": "Este período (o un período posterior) ya está cerrado.",
+      "contextNotReady": "El contexto de empresa no está listo. Actualiza o selecciona una empresa antes de iniciar una auditoría.",
       "triggering": "Iniciando verificaciones de reconciliación...",
       "completed": "Verificación de reconciliación completada con éxito.",
       "failed": "Fallo en la ejecución de la auditoría.",

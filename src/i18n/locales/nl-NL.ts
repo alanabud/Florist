@@ -451,6 +451,16 @@ export const nlNL = {
     "proceedToCheckout": "Doorgaan naar afrekenen"
   },
   "accountsreceivable": {
+    "toast": {
+      "selectCustomer": "Selecteer eerst een klant.",
+      "writeNote": "Schrijf een notitie.",
+      "noteLogged": "Incassonotitie succesvol vastgelegd.",
+      "noteFailed": "Kan notitie niet toevoegen: {error}",
+      "statusUpdated": "Incassostatus bijgewerkt naar {status}",
+      "statusFailed": "Kan status niet bijwerken: {error}",
+      "statementGenerated": "Afschrift-pdf gegenereerd om af te drukken.",
+      "regenFailed": "Kan niet opnieuw genereren: {error}"
+    },
     "accessDenied": "Access Denied",
     "customerName": "Customer Name",
     "fulfillmentDate": "Fulfillment Date",
@@ -653,6 +663,20 @@ export const nlNL = {
     "totalBudget": "Total Budget"
   },
   "financeadmin": {
+    "toast": {
+      "periodClosed": "Boekhoudperiode succesvol gesloten t/m {date}.",
+      "periodCloseFailed": "Kan boekhoudperiode niet sluiten.",
+      "unlockReasonRequired": "Een reden voor ontgrendeling is vereist.",
+      "periodUnlocked": "Boekhoudperiode succesvol ontgrendeld.",
+      "periodUnlockFailed": "Kan boekhoudperiode niet ontgrendelen.",
+      "reversalPosted": "Tegenboeking succesvol geboekt in het grootboek.",
+      "deactivateAborted": "Deactivering afgebroken: bevestigingszin kwam niet overeen.",
+      "accountDeactivated": "Account \"{name}\" is gedeactiveerd.",
+      "accountReactivated": "Account \"{name}\" is opnieuw geactiveerd.",
+      "plExported": "Winst-en-verliesrekening geëxporteerd naar PDF.",
+      "bsExported": "Balans geëxporteerd naar PDF.",
+      "glExported": "Volledig financieel grootboek geëxporteerd als spreadsheet."
+    },
     "accessDenied": "Access Denied",
     "exportPlPdf": "Export P&L PDF",
     "exportBalanceSheetPdf": "Export Balance Sheet PDF",
@@ -797,6 +821,12 @@ export const nlNL = {
     "fulfillmentStatus": "Fulfillment Status"
   },
   "purchasingconsole": {
+    "toast": {
+      "poCancelled": "Inkooporder {id} succesvol geannuleerd.",
+      "billPosted": "Leveranciersfactuur {id} geboekt. Crediteurenadministratie bijgewerkt.",
+      "billVoided": "Leveranciersfactuur {id} geannuleerd. Tegenboeking geboekt.",
+      "paymentVoided": "Leveranciersbetaling {id} geannuleerd. Factuursaldo hersteld."
+    },
     "purchasingPayablesConsole": "Purchasing & Payables Console",
     "activePurchaseOrders": "Active Purchase Orders",
     "purchaseOrders": "Purchase Orders",
@@ -1102,6 +1132,15 @@ export const nlNL = {
     },
     "toast": {
       "fetchFailed": "Ophalen van audits mislukt.",
+      "noCompanyContext": "Geen bedrijfscontext geselecteerd.",
+      "datesRequired": "Begin- en einddatum zijn verplicht.",
+      "startBeforeEnd": "De begindatum moet op of vóór de einddatum liggen.",
+      "endNotFuture": "De einddatum van de audit mag niet in de toekomst liggen.",
+      "notAuthorizedApprove": "Niet bevoegd om aanpassingen goed te keuren.",
+      "notAuthorizedReject": "Niet bevoegd om aanpassingen af te wijzen.",
+      "adjustmentNotFound": "Aanpassingsrecord niet gevonden.",
+      "periodAlreadyClosed": "Deze periode (of een latere periode) is al gesloten.",
+      "contextNotReady": "De bedrijfscontext is niet gereed. Vernieuw of selecteer een bedrijf voordat u een audit start.",
       "triggering": "Reconciliatiecontroles starten...",
       "completed": "Reconciliatiecontrole succesvol afgerond.",
       "failed": "Auditrun mislukt.",

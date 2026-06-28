@@ -93,7 +93,7 @@ export const PurchasingConsole: React.FC = () => {
       setIsProcessing(true);
       try {
         await cancelPurchaseOrder(poId, 'Admin');
-        addToast(`Purchase Order ${poId} cancelled successfully.`, 'success');
+        addToast(t('purchasingconsole.toast.poCancelled', { id: poId }), 'success');
       } catch (e: any) {
         addToast(e.message || 'Failed to cancel Purchase Order.', 'error');
       } finally {
@@ -106,7 +106,7 @@ export const PurchasingConsole: React.FC = () => {
     setIsProcessing(true);
     try {
       await postVendorBill(billId, 'Admin');
-      addToast(`Vendor Bill ${billId} posted successfully. AP ledger updated.`, 'success');
+      addToast(t('purchasingconsole.toast.billPosted', { id: billId }), 'success');
     } catch (e: any) {
       addToast(e.message || 'Failed to post Vendor Bill.', 'error');
     } finally {
@@ -118,7 +118,7 @@ export const PurchasingConsole: React.FC = () => {
     setIsProcessing(true);
     try {
       await voidVendorBill(billId, 'Admin');
-      addToast(`Vendor Bill ${billId} voided. GL reversal entry posted.`, 'success');
+      addToast(t('purchasingconsole.toast.billVoided', { id: billId }), 'success');
     } catch (e: any) {
       addToast(e.message || 'Failed to void Vendor Bill.', 'error');
     } finally {
@@ -130,7 +130,7 @@ export const PurchasingConsole: React.FC = () => {
     setIsProcessing(true);
     try {
       await voidVendorPayment(paymentId, 'Admin');
-      addToast(`Vendor Payment ${paymentId} voided. Restored invoice balance.`, 'success');
+      addToast(t('purchasingconsole.toast.paymentVoided', { id: paymentId }), 'success');
     } catch (e: any) {
       addToast(e.message || 'Failed to void Vendor Payment.', 'error');
     } finally {

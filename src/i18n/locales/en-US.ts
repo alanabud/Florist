@@ -451,6 +451,16 @@ export const enUS = {
     proceedToCheckout: "Proceed to Checkout"
   },
   accountsreceivable: {
+    toast: {
+      selectCustomer: "Please select a customer first.",
+      writeNote: "Please write a note.",
+      noteLogged: "Collection note logged successfully.",
+      noteFailed: "Failed to add note: {error}",
+      statusUpdated: "Collection status updated to {status}",
+      statusFailed: "Failed to update status: {error}",
+      statementGenerated: "Statement PDF generated for printing.",
+      regenFailed: "Failed to regenerate: {error}"
+    },
     accessDenied: "Access Denied",
     customerName: "Customer Name",
     fulfillmentDate: "Fulfillment Date",
@@ -653,6 +663,20 @@ export const enUS = {
     totalBudget: "Total Budget"
   },
   financeadmin: {
+    toast: {
+      periodClosed: "Accounting period successfully closed through {date}.",
+      periodCloseFailed: "Failed to close accounting period.",
+      unlockReasonRequired: "An unlock reason is required.",
+      periodUnlocked: "Accounting period unlocked successfully.",
+      periodUnlockFailed: "Failed to unlock accounting period.",
+      reversalPosted: "Reversing entry posted successfully to general ledger.",
+      deactivateAborted: "Deactivation aborted: confirmation phrase did not match.",
+      accountDeactivated: "Account \"{name}\" has been deactivated.",
+      accountReactivated: "Account \"{name}\" has been reactivated.",
+      plExported: "Profit & Loss statement exported to PDF.",
+      bsExported: "Balance Sheet exported to PDF.",
+      glExported: "Full general ledger financial spreadsheet workbook exported."
+    },
     accessDenied: "Access Denied",
     exportPlPdf: "Export P&L PDF",
     exportBalanceSheetPdf: "Export Balance Sheet PDF",
@@ -801,6 +825,12 @@ export const enUS = {
     fulfillmentStatus: "Fulfillment Status"
   },
   purchasingconsole: {
+    toast: {
+      poCancelled: "Purchase Order {id} cancelled successfully.",
+      billPosted: "Vendor Bill {id} posted successfully. AP ledger updated.",
+      billVoided: "Vendor Bill {id} voided. GL reversal entry posted.",
+      paymentVoided: "Vendor Payment {id} voided. Restored invoice balance."
+    },
     purchasingPayablesConsole: "Purchasing & Payables Console",
     activePurchaseOrders: "Active Purchase Orders",
     purchaseOrders: "Purchase Orders",
@@ -1102,6 +1132,15 @@ export const enUS = {
     },
     toast: {
       fetchFailed: "Failed to fetch audits.",
+      noCompanyContext: "No company context selected.",
+      datesRequired: "Start date and End date are required.",
+      startBeforeEnd: "Start date must be on or before End date.",
+      endNotFuture: "Audit end date cannot be in the future.",
+      notAuthorizedApprove: "Not authorized to approve adjustments.",
+      notAuthorizedReject: "Not authorized to reject adjustments.",
+      adjustmentNotFound: "Adjustment record not found.",
+      periodAlreadyClosed: "This period (or a later period) is already closed.",
+      contextNotReady: "Company context is not ready. Please refresh or select a company before starting an audit.",
       triggering: "Triggering reconciliation checks...",
       completed: "Reconciliation check completed successfully.",
       failed: "Auditing run failed.",
