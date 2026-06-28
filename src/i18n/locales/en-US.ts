@@ -663,6 +663,7 @@ export const enUS = {
     totalBudget: "Total Budget"
   },
   financeadmin: {
+    reversing: "Reversing…",
     toast: {
       periodClosed: "Accounting period successfully closed through {date}.",
       periodCloseFailed: "Failed to close accounting period.",
@@ -759,6 +760,7 @@ export const enUS = {
     recipientHome: "{name}'s home"
   },
   orders: {
+    posting: "Posting…",
     exportedPdf: "Exported {count} orders to PDF.",
     exportedExcel: "Exported {count} orders as Excel.",
     openingDetails: "Opening order #{id} details.",

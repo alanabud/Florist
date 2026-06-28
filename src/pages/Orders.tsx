@@ -10,6 +10,7 @@ import { writeAuditLog } from '../services/auditService';
 import { EmptyState } from '../components/ui/EmptyState';
 import { SkeletonTableRows } from '../components/ui/Skeleton';
 import { ModuleErrorState } from '../components/ui/ModuleErrorState';
+import { AsyncActionButton } from '../components/ui/AsyncActionButton';
 import { useCompany } from '../context/CompanyContext';
 import { useI18n } from '../i18n/I18nProvider';
 import styles from '../components/layout/AdminList.module.css';
@@ -393,8 +394,9 @@ export const Orders: React.FC = () => {
                     <td style={{ padding: '1.125rem 1.5rem', textAlign: 'right' }} onClick={(e) => e.stopPropagation()}>
                       <div style={{ display: 'inline-flex', gap: '0.5rem', alignItems: 'center' }}>
                         {order.glPostingStatus === 'unposted' && (
-                          <button
+                          <AsyncActionButton
                             className={styles.actionBtn}
+                            pendingLabel={t('orders.posting')}
                             onClick={async () => {
                               try {
                                 await postOrderFinancialsAction(order.id);
@@ -406,7 +408,7 @@ export const Orders: React.FC = () => {
                             style={{ padding: '0.35rem 0.75rem', fontSize: '0.8125rem', border: '1px solid #4A6B50', borderRadius: '6px', background: '#F0F5F1', color: '#4A6B50', cursor: 'pointer', fontWeight: 600 }}
                           >
                             Post to Ledger
-                          </button>
+                          </AsyncActionButton>
                         )}
                         <select 
                           className={styles.actionBtn} 

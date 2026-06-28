@@ -6,7 +6,8 @@ import { useToastStore } from '../store/toastStore';
 import { useAuthStore } from '../store/authStore';
 import { Card, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { 
+import { AsyncActionButton } from '../components/ui/AsyncActionButton';
+import {
   DollarSign, FileText, PiggyBank, Landmark, 
   Download, Plus, ShieldCheck, ShieldAlert, BookOpen, Scale, Landmark as CoaIcon, ClipboardList
 } from 'lucide-react';
@@ -989,8 +990,9 @@ export const FinanceAdmin: React.FC = () => {
                                 )}
                               </div>
                               {je.status === 'posted' && !je.reversalOf && (role === 'admin' || role === 'owner') && (
-                                <button 
+                                <AsyncActionButton
                                   onClick={() => handleReverse(je.id!)}
+                                  pendingLabel={t('financeadmin.reversing')}
                                   style={{
                                     fontSize: '0.75rem',
                                     padding: '0.35rem 0.75rem',
@@ -1004,7 +1006,7 @@ export const FinanceAdmin: React.FC = () => {
                                   }}
                                 >
                                   Reverse Entry
-                                </button>
+                                </AsyncActionButton>
                               )}
                             </div>
                           </td>

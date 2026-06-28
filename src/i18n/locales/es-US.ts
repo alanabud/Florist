@@ -663,6 +663,7 @@ export const esUS = {
     "totalBudget": "Total Budget"
   },
   "financeadmin": {
+    "reversing": "Revirtiendo…",
     "toast": {
       "periodClosed": "Período contable cerrado correctamente hasta {date}.",
       "periodCloseFailed": "No se pudo cerrar el período contable.",
@@ -755,6 +756,7 @@ export const esUS = {
     "recipientHome": "Hogar de {name}"
   },
   "orders": {
+    "posting": "Contabilizando…",
     "exportedPdf": "Se exportaron {count} pedidos a PDF.",
     "exportedExcel": "Se exportaron {count} pedidos a Excel.",
     "openingDetails": "Abriendo los detalles del pedido n.º {id}.",

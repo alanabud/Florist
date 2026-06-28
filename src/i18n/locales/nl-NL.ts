@@ -663,6 +663,7 @@ export const nlNL = {
     "totalBudget": "Total Budget"
   },
   "financeadmin": {
+    "reversing": "Terugboeken…",
     "toast": {
       "periodClosed": "Boekhoudperiode succesvol gesloten t/m {date}.",
       "periodCloseFailed": "Kan boekhoudperiode niet sluiten.",
@@ -755,6 +756,7 @@ export const nlNL = {
     "recipientHome": "Huis van {name}"
   },
   "orders": {
+    "posting": "Boeken…",
     "exportedPdf": "{count} bestellingen geëxporteerd naar PDF.",
     "exportedExcel": "{count} bestellingen geëxporteerd naar Excel.",
     "openingDetails": "Bestelling #{id} wordt geopend.",
