@@ -759,6 +759,32 @@ export const nlNL = {
   },
   "orders": {
     "posting": "Boeken…",
+    "backorder": {
+      "detected": "Nabestelling gedetecteerd",
+      "available": "Beschikbaar",
+      "ordered": "Besteld",
+      "qty": "Nabesteld",
+      "reason": "Reden nabestelling *",
+      "selectReason": "-- Kies een reden --",
+      "otherDetail": "Toelichting reden *",
+      "expectedRestock": "Verwachte aanvuldatum",
+      "customerNote": "Klantnotitie",
+      "customerNotePlaceholder": "bijv. Resterende stelen worden verzonden na aanvulling door de leverancier.",
+      "draftHint": "U kunt dit concept opslaan, maar een reden voor de nabestelling is vereist voordat de bestelling kan worden bevestigd.",
+      "reasonRequired": "Een reden voor de nabestelling is vereist om deze bestelling te bevestigen.",
+      "confirmBlockedReason": "Regel {line}: nabestelde artikelen hebben een reden nodig vóór bevestiging.",
+      "confirmBlockedOther": "Regel {line}: beschrijf de reden \"Overig\" van de nabestelling.",
+      "reasons": {
+        "vendor_shipment_delay": "Vertraging leveranciersverzending",
+        "seasonal_shortage": "Seizoensgebonden producttekort",
+        "supplier_out_of_stock": "Leverancier zonder voorraad",
+        "partial_inventory_available": "Gedeeltelijke voorraad beschikbaar",
+        "special_order_item": "Speciaal besteld artikel",
+        "quality_hold": "Kwaliteitsblokkade / beschadigde voorraad",
+        "awaiting_po_receipt": "In afwachting van ontvangst inkooporder",
+        "other": "Overig"
+      }
+    },
     "exportedPdf": "{count} bestellingen geëxporteerd naar PDF.",
     "exportedExcel": "{count} bestellingen geëxporteerd naar Excel.",
     "openingDetails": "Bestelling #{id} wordt geopend.",

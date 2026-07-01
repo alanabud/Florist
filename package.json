@@ -12,9 +12,10 @@
     "test-rules:xcompany": "node scripts/run-xcompany-rules.mjs",
     "test-cogs-adjustments": "node test-cogs-adjustments.js",
     "test-reconciliation": "node test-reconciliation.js",
+    "test-backorder": "node test-backorder.mjs",
     "smoke:auth": "playwright test",
     "i18n:audit": "node scripts/i18n-audit.mjs",
-    "verify:prod": "npm run lint && npm run i18n:audit && npm run build && npm run test-reconciliation && npm run test-rules && npm run test-rules:xcompany && npm run smoke:auth"
+    "verify:prod": "npm run lint && npm run i18n:audit && npm run build && npm run test-reconciliation && npm run test-backorder && npm run test-rules && npm run test-rules:xcompany && npm run smoke:auth"
   },
   "dependencies": {
     "date-fns": "^4.4.0",

@@ -62,6 +62,12 @@ export interface OrderLineItem {
   designerNotes: string;
   isCustom?: boolean;
   customDetails?: any;
+  /** Backorder tracking (derived, never hand-typed): max(ordered - available, 0). */
+  backorderedQty?: number;
+  backorderReasonCode?: string;
+  backorderReasonText?: string;
+  expectedRestockDate?: string;
+  customerBackorderNote?: string;
 }
 
 // Storefront/checkout snapshot of a purchased line (distinct from the richer
@@ -134,6 +140,8 @@ export interface Order {
   safeDropAllowed?: boolean;
   signatureRequired?: boolean;
   lineItems?: OrderLineItem[];
+  /** Derived: true when any line has backorderedQty > 0. */
+  hasBackorder?: boolean;
   discount?: number;
   serviceFee?: number;
   tip?: number;
@@ -1001,6 +1009,18 @@ export const useAdminStore = create<AdminState>()(
           const totals = calculateOrderTotals(order);
           if (totals.balanceDue > 0) {
             throw new Error(`Cannot deliver order with unpaid balance of $${totals.balanceDue.toFixed(2)}.`);
+          }
+        }
+
+        // Backordered lines must carry a reason before the order leaves draft
+        // (mirrors the order-form confirm gate for the status-dropdown path).
+        if (oldStatus === 'draft' && status !== 'draft') {
+          const unreasoned = (order.lineItems || []).some((l) =>
+            (l.backorderedQty || 0) > 0 &&
+            (!l.backorderReasonCode || (l.backorderReasonCode === 'other' && !(l.backorderReasonText || '').trim()))
+          );
+          if (unreasoned) {
+            throw new Error("Backordered lines need a backorder reason. Edit the order and set a reason before confirming.");
           }
         }
 

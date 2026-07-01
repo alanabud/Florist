@@ -763,6 +763,32 @@ export const enUS = {
   },
   orders: {
     posting: "Posting…",
+    backorder: {
+      detected: "Backorder Detected",
+      available: "Available",
+      ordered: "Ordered",
+      qty: "Backordered",
+      reason: "Backorder Reason *",
+      selectReason: "-- Select a reason --",
+      otherDetail: "Reason Detail *",
+      expectedRestock: "Expected Restock Date",
+      customerNote: "Customer Note",
+      customerNotePlaceholder: "e.g. Remaining stems ship after vendor restock.",
+      draftHint: "You can save this draft, but a backorder reason is required before the order can be confirmed.",
+      reasonRequired: "A backorder reason is required to confirm this order.",
+      confirmBlockedReason: "Line {line}: backordered items need a backorder reason before confirming.",
+      confirmBlockedOther: "Line {line}: please describe the \"Other\" backorder reason.",
+      reasons: {
+        vendor_shipment_delay: "Vendor shipment delay",
+        seasonal_shortage: "Seasonal product shortage",
+        supplier_out_of_stock: "Supplier out of stock",
+        partial_inventory_available: "Partial inventory available",
+        special_order_item: "Special-order item",
+        quality_hold: "Quality hold / damaged stock",
+        awaiting_po_receipt: "Awaiting purchase order receipt",
+        other: "Other"
+      }
+    },
     exportedPdf: "Exported {count} orders to PDF.",
     exportedExcel: "Exported {count} orders as Excel.",
     openingDetails: "Opening order #{id} details.",

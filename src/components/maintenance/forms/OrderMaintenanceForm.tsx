@@ -11,7 +11,11 @@ import { db } from '../../../firebase/config';
 import { postOrderFinancials, reverseCOGSForOrder } from '../../../services/financeService';
 import { useAuthStore } from '../../../store/authStore';
 import { normalizeOrder } from '../../../services/normalizers';
-import { Plus, Trash2, RefreshCw } from 'lucide-react';
+import {
+  BACKORDER_REASON_CODES, getAvailableQtyForLine, applyBackorderDerivation,
+  validateBackorderLines, orderHasBackorder
+} from '../../../services/backorderService';
+import { Plus, Trash2, RefreshCw, AlertTriangle } from 'lucide-react';
 import { useI18n } from '../../../i18n/I18nProvider';
 
 
@@ -24,8 +28,14 @@ export const OrderMaintenanceForm: React.FC<OrderMaintenanceFormProps> = ({ isOp
   const { t } = useI18n();
   const addToast = useToastStore((s) => s.addToast);
   const { role, user } = useAuthStore();
-  const { orders, products, addOrder, updateOrderDetails, deleteOrder, modalPayload, postOrderFinancialsAction } = useAdminStore();
+  const { orders, products, inventory, fetchInventory, addOrder, updateOrderDetails, deleteOrder, modalPayload, postOrderFinancialsAction } = useAdminStore();
   const fetchJournalEntries = useFinanceStore((s) => s.fetchJournalEntries);
+
+  // Availability data for backorder detection — load once if not present yet.
+  React.useEffect(() => {
+    if (isOpen && inventory.length === 0) fetchInventory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const mode = modalPayload?.id ? 'edit' : 'create';
   const rawInitial = modalPayload?.id ? modalPayload : {};
@@ -34,6 +44,17 @@ export const OrderMaintenanceForm: React.FC<OrderMaintenanceFormProps> = ({ isOp
   // Validate wrapper
   const handleValidate = (values: Record<string, any>) => {
     const res = validateOrder(values);
+
+    // Backorder gate: leaving 'draft' requires a reason on every backordered
+    // line ('other' additionally needs free text). Keyed to the line-items
+    // custom field so the modal blocks save and jumps to the Items tab.
+    const issues = validateBackorderLines(values.lineItems || [], values.status || 'draft');
+    if (issues.length > 0) {
+      const first = issues[0];
+      res.errors['line_items_editor'] = first.code === 'missing_reason'
+        ? t('orders.backorder.confirmBlockedReason', { line: first.index + 1 })
+        : t('orders.backorder.confirmBlockedOther', { line: first.index + 1 });
+    }
     return res.errors;
   };
 
@@ -45,7 +66,20 @@ export const OrderMaintenanceForm: React.FC<OrderMaintenanceFormProps> = ({ isOp
       const finalOrder = {
         ...normalized,
         ...totals,
+        hasBackorder: orderHasBackorder(normalized.lineItems || []),
       };
+
+      // Audit detail for backordered lines (written only after a successful
+      // non-draft save — never on failed validation/save).
+      const backorderedLines = (normalized.lineItems || [])
+        .filter((l: any) => (l.backorderedQty || 0) > 0)
+        .map((l: any) => ({
+          sku: l.sku || null,
+          description: l.description || null,
+          backorderedQty: l.backorderedQty,
+          reason: l.backorderReasonCode || null,
+          expectedRestockDate: l.expectedRestockDate || null,
+        }));
 
       if (mode === 'create') {
         const orderRef = collection(db, 'orders');
@@ -96,6 +130,17 @@ export const OrderMaintenanceForm: React.FC<OrderMaintenanceFormProps> = ({ isOp
           after: { status: finalOrder.status, total: finalOrder.grandTotal, journalEntryId: jeId },
         });
 
+        if (finalOrder.status !== 'draft' && finalOrder.hasBackorder) {
+          await writeAuditLog({
+            actor: 'Admin',
+            action: 'ORDER_BACKORDER',
+            entityType: 'order',
+            entityId: newId,
+            before: null,
+            after: { status: finalOrder.status, backorderedLines },
+          });
+        }
+
         addToast('New order created successfully & General Ledger updated.', 'success');
       } else {
         const orderId = finalOrder.id;
@@ -112,6 +157,17 @@ export const OrderMaintenanceForm: React.FC<OrderMaintenanceFormProps> = ({ isOp
           before: oldOrder ? { status: oldOrder.status, total: oldOrder.total } : null,
           after: { status: finalOrder.status, total: finalOrder.grandTotal },
         });
+
+        if (finalOrder.status !== 'draft' && finalOrder.hasBackorder) {
+          await writeAuditLog({
+            actor: 'Admin',
+            action: 'ORDER_BACKORDER',
+            entityType: 'order',
+            entityId: orderId,
+            before: oldOrder ? { status: oldOrder.status } : null,
+            after: { status: finalOrder.status, backorderedLines },
+          });
+        }
 
         addToast(`Order ${orderId.substring(0, 8)} updated successfully.`, 'success');
       }
@@ -305,7 +361,7 @@ export const OrderMaintenanceForm: React.FC<OrderMaintenanceFormProps> = ({ isOp
                 substitutionAllowed: true,
                 designerNotes: '',
               };
-              onChange('lineItems', [...lineItems, newLine]);
+              onChange('lineItems', [...lineItems, applyBackorderDerivation(newLine, products, inventory)]);
             };
 
             const handleRemoveLine = (index: number) => {
@@ -322,13 +378,15 @@ export const OrderMaintenanceForm: React.FC<OrderMaintenanceFormProps> = ({ isOp
                   if (matched) {
                     newItem.description = matched.name;
                     newItem.unitPrice = matched.price;
+                    if (matched.sku) newItem.sku = matched.sku; // keep sku in sync for availability lookups
                   }
                 }
                 const qty = parseInt(newItem.quantity) || 0;
                 const price = parseFloat(newItem.unitPrice) || 0;
                 const disc = parseFloat(newItem.discount) || 0;
                 newItem.lineTotal = Math.max(0, qty * price - disc);
-                return newItem;
+                // Re-derive backorderedQty (clears stale reason fields when resolved).
+                return applyBackorderDerivation(newItem, products, inventory);
               });
               onChange('lineItems', updated);
             };
@@ -352,7 +410,8 @@ export const OrderMaintenanceForm: React.FC<OrderMaintenanceFormProps> = ({ isOp
                     </thead>
                     <tbody>
                       {lineItems.map((item: any, idx: number) => (
-                        <tr key={idx} style={{ borderBottom: '1px solid #E8EAE6' }}>
+                        <React.Fragment key={idx}>
+                        <tr style={{ borderBottom: (item.backorderedQty || 0) > 0 ? 'none' : '1px solid #E8EAE6' }}>
                            <td style={{ padding: '0.25rem' }}>
                             <select
                               value={item.productId}
@@ -427,6 +486,83 @@ export const OrderMaintenanceForm: React.FC<OrderMaintenanceFormProps> = ({ isOp
                             </button>
                           </td>
                         </tr>
+                        {(item.backorderedQty || 0) > 0 && (() => {
+                          const available = getAvailableQtyForLine(item, products, inventory) ?? 0;
+                          const missingReason = !item.backorderReasonCode;
+                          const missingOtherText = item.backorderReasonCode === 'other' && !(item.backorderReasonText || '').trim();
+                          const inputStyle = { width: '100%', padding: '0.35rem', border: '1px solid #FCD34D', borderRadius: '4px', fontSize: '0.8125rem', background: '#FFFFFF' };
+                          const labelStyle = { display: 'block', fontSize: '0.6875rem', fontWeight: 600 as const, color: '#92400E', marginBottom: '0.2rem' };
+                          return (
+                            <tr style={{ borderBottom: '1px solid #E8EAE6' }}>
+                              <td colSpan={9} style={{ padding: '0.5rem' }}>
+                                <div role="alert" style={{ background: '#FEF3C7', border: '1px solid #FCD34D', borderRadius: '8px', padding: '0.75rem' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700, color: '#92400E', fontSize: '0.8125rem', marginBottom: '0.5rem' }}>
+                                    <AlertTriangle size={15} />
+                                    {t('orders.backorder.detected')}
+                                    <span style={{ fontWeight: 500, marginLeft: 'auto', fontSize: '0.75rem' }}>
+                                      {t('orders.backorder.available')}: <strong>{available}</strong>
+                                      {' · '}{t('orders.backorder.ordered')}: <strong>{item.quantity}</strong>
+                                      {' · '}{t('orders.backorder.qty')}: <strong>{item.backorderedQty}</strong>
+                                    </span>
+                                  </div>
+                                  <div style={{ display: 'grid', gridTemplateColumns: item.backorderReasonCode === 'other' ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)', gap: '0.5rem' }}>
+                                    <div>
+                                      <label style={labelStyle}>{t('orders.backorder.reason')}</label>
+                                      <select
+                                        value={item.backorderReasonCode || ''}
+                                        onChange={(e) => handleLineChange(idx, 'backorderReasonCode', e.target.value)}
+                                        style={inputStyle}
+                                      >
+                                        <option value="">{t('orders.backorder.selectReason')}</option>
+                                        {BACKORDER_REASON_CODES.map((code) => (
+                                          <option key={code} value={code}>{t(`orders.backorder.reasons.${code}`)}</option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                    {item.backorderReasonCode === 'other' && (
+                                      <div>
+                                        <label style={labelStyle}>{t('orders.backorder.otherDetail')}</label>
+                                        <input
+                                          type="text"
+                                          value={item.backorderReasonText || ''}
+                                          onChange={(e) => handleLineChange(idx, 'backorderReasonText', e.target.value)}
+                                          style={inputStyle}
+                                        />
+                                      </div>
+                                    )}
+                                    <div>
+                                      <label style={labelStyle}>{t('orders.backorder.expectedRestock')}</label>
+                                      <input
+                                        type="date"
+                                        value={item.expectedRestockDate || ''}
+                                        onChange={(e) => handleLineChange(idx, 'expectedRestockDate', e.target.value)}
+                                        style={inputStyle}
+                                      />
+                                    </div>
+                                    <div>
+                                      <label style={labelStyle}>{t('orders.backorder.customerNote')}</label>
+                                      <input
+                                        type="text"
+                                        value={item.customerBackorderNote || ''}
+                                        placeholder={t('orders.backorder.customerNotePlaceholder')}
+                                        onChange={(e) => handleLineChange(idx, 'customerBackorderNote', e.target.value)}
+                                        style={inputStyle}
+                                      />
+                                    </div>
+                                  </div>
+                                  {(missingReason || missingOtherText) && (
+                                    <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', fontWeight: 600, color: values.status === 'draft' ? '#92400E' : '#B91C1C' }}>
+                                      {values.status === 'draft'
+                                        ? t('orders.backorder.draftHint')
+                                        : t('orders.backorder.reasonRequired')}
+                                    </div>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })()}
+                        </React.Fragment>
                       ))}
                     </tbody>
                   </table>

@@ -759,6 +759,32 @@ export const esUS = {
   },
   "orders": {
     "posting": "Contabilizando…",
+    "backorder": {
+      "detected": "Pedido pendiente detectado",
+      "available": "Disponible",
+      "ordered": "Pedido",
+      "qty": "Pendiente",
+      "reason": "Motivo del pendiente *",
+      "selectReason": "-- Selecciona un motivo --",
+      "otherDetail": "Detalle del motivo *",
+      "expectedRestock": "Fecha estimada de reposición",
+      "customerNote": "Nota para el cliente",
+      "customerNotePlaceholder": "p. ej. Los tallos restantes se envían tras la reposición del proveedor.",
+      "draftHint": "Puedes guardar este borrador, pero se requiere un motivo de pendiente antes de confirmar el pedido.",
+      "reasonRequired": "Se requiere un motivo de pendiente para confirmar este pedido.",
+      "confirmBlockedReason": "Línea {line}: los artículos pendientes necesitan un motivo antes de confirmar.",
+      "confirmBlockedOther": "Línea {line}: describe el motivo \"Otro\" del pendiente.",
+      "reasons": {
+        "vendor_shipment_delay": "Retraso en el envío del proveedor",
+        "seasonal_shortage": "Escasez estacional del producto",
+        "supplier_out_of_stock": "Proveedor sin existencias",
+        "partial_inventory_available": "Inventario parcial disponible",
+        "special_order_item": "Artículo de pedido especial",
+        "quality_hold": "Retención de calidad / stock dañado",
+        "awaiting_po_receipt": "En espera de recepción de orden de compra",
+        "other": "Otro"
+      }
+    },
     "exportedPdf": "Se exportaron {count} pedidos a PDF.",
     "exportedExcel": "Se exportaron {count} pedidos a Excel.",
     "openingDetails": "Abriendo los detalles del pedido n.º {id}.",

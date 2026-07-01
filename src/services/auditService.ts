@@ -14,6 +14,7 @@ export interface AuditRecord {
     | 'TAX_ADJUSTMENT'
     | 'CREATE_ORDER'
     | 'UPDATE_ORDER'
+    | 'ORDER_BACKORDER'
     | 'DELETE_ORDER'
     | 'DUPLICATE_ORDER'
     | 'CREATE_PRODUCT'

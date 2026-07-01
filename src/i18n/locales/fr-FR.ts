@@ -759,6 +759,32 @@ export const frFR = {
   },
   "orders": {
     "posting": "Comptabilisation…",
+    "backorder": {
+      "detected": "Rupture de stock détectée",
+      "available": "Disponible",
+      "ordered": "Commandé",
+      "qty": "En reliquat",
+      "reason": "Motif du reliquat *",
+      "selectReason": "-- Sélectionnez un motif --",
+      "otherDetail": "Détail du motif *",
+      "expectedRestock": "Date de réassort prévue",
+      "customerNote": "Note client",
+      "customerNotePlaceholder": "p. ex. Les tiges restantes seront expédiées après réassort du fournisseur.",
+      "draftHint": "Vous pouvez enregistrer ce brouillon, mais un motif de reliquat est requis avant de confirmer la commande.",
+      "reasonRequired": "Un motif de reliquat est requis pour confirmer cette commande.",
+      "confirmBlockedReason": "Ligne {line} : les articles en reliquat nécessitent un motif avant confirmation.",
+      "confirmBlockedOther": "Ligne {line} : veuillez décrire le motif « Autre » du reliquat.",
+      "reasons": {
+        "vendor_shipment_delay": "Retard d'expédition du fournisseur",
+        "seasonal_shortage": "Pénurie saisonnière du produit",
+        "supplier_out_of_stock": "Fournisseur en rupture de stock",
+        "partial_inventory_available": "Inventaire partiellement disponible",
+        "special_order_item": "Article en commande spéciale",
+        "quality_hold": "Blocage qualité / stock endommagé",
+        "awaiting_po_receipt": "En attente de réception du bon de commande",
+        "other": "Autre"
+      }
+    },
     "exportedPdf": "{count} commandes exportées en PDF.",
     "exportedExcel": "{count} commandes exportées en Excel.",
     "openingDetails": "Ouverture des détails de la commande n° {id}.",
