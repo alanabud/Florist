@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import styles from './MaintenanceModal.module.css';
 import { useI18n } from '../../i18n/I18nProvider';
@@ -78,17 +78,23 @@ export const MaintenanceModal: React.FC<MaintenanceModalProps> = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Load initial values when modal opens or initialValues change
+  // Seed form values ONCE per open. initialValues/tabs are rebuilt with new
+  // object identity on every parent render, so depending on them directly
+  // re-ran this effect mid-edit (e.g. when a store slice like inventory loads)
+  // and silently wiped in-progress input. The ref guard scopes (re)initialize
+  // to the actual open transition; it resets when the modal closes so the next
+  // open — including switching to a different record — re-seeds correctly.
+  const initializedRef = useRef(false);
   useEffect(() => {
-    if (isOpen) {
-      const timer = setTimeout(() => {
-        setFormValues(initialValues || {});
-        setErrors({});
-        if (tabs.length > 0) {
-          setActiveTab(tabs[0].id);
-        }
-      }, 0);
-      return () => clearTimeout(timer);
+    if (isOpen && !initializedRef.current) {
+      initializedRef.current = true;
+      setFormValues(initialValues || {});
+      setErrors({});
+      if (tabs.length > 0) {
+        setActiveTab(tabs[0].id);
+      }
+    } else if (!isOpen) {
+      initializedRef.current = false;
     }
   }, [isOpen, initialValues, tabs]);
 
@@ -315,6 +321,11 @@ export const MaintenanceModal: React.FC<MaintenanceModalProps> = ({
                         return (
                           <div key={field.name} className={getColSpanClass(field.colSpan)}>
                             {field.render(formValues, handleFieldChange)}
+                            {hasError && (
+                              <span role="alert" style={{ fontSize: '0.75rem', color: '#DC2626', marginTop: '0.25rem', display: 'block', fontWeight: 600 }}>
+                                {errors[field.name]}
+                              </span>
+                            )}
                           </div>
                         );
                       }
