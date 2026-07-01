@@ -83,14 +83,18 @@ export const FinanceAdmin: React.FC = () => {
     }
   };
 
+  const [isLocking, setIsLocking] = useState(false);
+  const [isUnlocking, setIsUnlocking] = useState(false);
+
   const handleLockPeriod = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!lockDate) return;
+    if (!lockDate || isLocking) return;
     
     if (!window.confirm(`Are you sure you want to close and lock the accounting period through ${lockDate}? This will block all financial postings, COGS calculations, and inventory adjustments on or before this date.`)) {
       return;
     }
     
+    setIsLocking(true);
     try {
       const docRef = doc(db, 'settings', 'finance');
       const payload = {
@@ -108,16 +112,20 @@ export const FinanceAdmin: React.FC = () => {
     } catch (err) {
       console.error(err);
       addToast(t('financeadmin.toast.periodCloseFailed'), "error");
+    } finally {
+      setIsLocking(false);
     }
   };
 
   const handleUnlockPeriod = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isUnlocking) return;
     if (!unlockReasonInput.trim()) {
       addToast(t('financeadmin.toast.unlockReasonRequired'), "error");
       return;
     }
 
+    setIsUnlocking(true);
     try {
       const docRef = doc(db, 'settings', 'finance');
       await setDoc(docRef, {
@@ -134,6 +142,8 @@ export const FinanceAdmin: React.FC = () => {
     } catch (err) {
       console.error(err);
       addToast(t('financeadmin.toast.periodUnlockFailed'), "error");
+    } finally {
+      setIsUnlocking(false);
     }
   };
   const [reportingPeriod, setReportingPeriod] = useState<ReportingPeriod>('all_time');
@@ -852,8 +862,8 @@ export const FinanceAdmin: React.FC = () => {
                           Typically set to the final day of a closed fiscal month (e.g. 2026-05-31).
                         </span>
                       </div>
-                      <Button type="submit" style={{ background: '#4A6B50', color: '#FFFFFF', border: 'none', width: '100%' }}>
-                        Lock Accounting Period
+                      <Button type="submit" isLoading={isLocking} style={{ background: '#4A6B50', color: '#FFFFFF', border: 'none', width: '100%' }}>
+                        {isLocking ? t('financeadmin.closing') : 'Lock Accounting Period'}
                       </Button>
                     </form>
                   </div>
@@ -889,8 +899,8 @@ export const FinanceAdmin: React.FC = () => {
                             <Button type="button" variant="outline" onClick={() => setShowUnlockInput(false)} style={{ width: '50%' }}>
                               Cancel
                             </Button>
-                            <Button type="submit" style={{ width: '50%', background: '#EF4444', color: '#FFFFFF', border: 'none' }}>
-                              Confirm Unlock
+                            <Button type="submit" isLoading={isUnlocking} style={{ width: '50%', background: '#EF4444', color: '#FFFFFF', border: 'none' }}>
+                              {isUnlocking ? t('financeadmin.unlocking') : 'Confirm Unlock'}
                             </Button>
                           </div>
                         </form>

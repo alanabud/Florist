@@ -664,6 +664,8 @@ export const esUS = {
   },
   "financeadmin": {
     "reversing": "Revirtiendo…",
+    "closing": "Cerrando…",
+    "unlocking": "Desbloqueando…",
     "toast": {
       "periodClosed": "Período contable cerrado correctamente hasta {date}.",
       "periodCloseFailed": "No se pudo cerrar el período contable.",

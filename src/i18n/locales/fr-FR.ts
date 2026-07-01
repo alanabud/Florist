@@ -664,6 +664,8 @@ export const frFR = {
   },
   "financeadmin": {
     "reversing": "Contre-passation…",
+    "closing": "Clôture…",
+    "unlocking": "Déverrouillage…",
     "toast": {
       "periodClosed": "Période comptable clôturée avec succès jusqu'au {date}.",
       "periodCloseFailed": "Échec de la clôture de la période comptable.",

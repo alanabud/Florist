@@ -664,6 +664,8 @@ export const enUS = {
   },
   financeadmin: {
     reversing: "Reversing…",
+    closing: "Closing…",
+    unlocking: "Unlocking…",
     toast: {
       periodClosed: "Accounting period successfully closed through {date}.",
       periodCloseFailed: "Failed to close accounting period.",

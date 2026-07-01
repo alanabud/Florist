@@ -664,6 +664,8 @@ export const nlNL = {
   },
   "financeadmin": {
     "reversing": "Terugboeken…",
+    "closing": "Sluiten…",
+    "unlocking": "Ontgrendelen…",
     "toast": {
       "periodClosed": "Boekhoudperiode succesvol gesloten t/m {date}.",
       "periodCloseFailed": "Kan boekhoudperiode niet sluiten.",
