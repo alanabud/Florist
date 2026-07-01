@@ -3,6 +3,7 @@ import {
   collection, doc, getDoc, getDocs, setDoc, updateDoc, query, where, collectionGroup, serverTimestamp 
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
+import { ensureOwnerMembershipRole } from '../services/companyMemberService';
 import { useAuthStore } from '../store/authStore';
 import { useAdminStore } from '../store/adminStore';
 import { useFinanceStore } from '../store/financeStore';
@@ -126,7 +127,7 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
 };
 
 export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useAuthStore();
+  const { user, role: globalRole } = useAuthStore();
   const { setLanguage } = useI18n();
 
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
@@ -449,7 +450,24 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
 
       const cData = { id: compSnap.id, ...compSnap.data() } as Company;
-      const userMember = currentMemberships.find(m => m.companyId === companyId) || null;
+      let userMember = currentMemberships.find(m => m.companyId === companyId) || null;
+
+      // Owner-repair: if the authenticated user is the effective (global)
+      // owner but this membership doc says otherwise (legacy bootstrap drift),
+      // sync the stored role to 'owner' so badge, member table, and can()
+      // permissions agree. Rules only permit this exact write for the global
+      // owner on their own doc; failure is non-fatal (keeps stored role).
+      if (userMember && globalRole === 'owner' && userMember.role !== 'owner') {
+        try {
+          await ensureOwnerMembershipRole(companyId, userMember, globalRole);
+          userMember = { ...userMember, role: 'owner' };
+          setMemberships(prev => prev.map(m =>
+            m.companyId === companyId && m.userId === userMember!.userId ? { ...m, role: 'owner' } : m
+          ));
+        } catch (repairErr) {
+          console.warn('[CompanyContext] Owner-role sync failed (keeping stored role):', repairErr);
+        }
+      }
 
       setSelectedCompanyId(companyId);
       setSelectedCompany(cData);

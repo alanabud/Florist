@@ -67,11 +67,18 @@ await testEnv.withSecurityRulesDisabled(async (ctx) => {
   await setDoc(doc(db, 'orders/orderB'), { companyId: COMPANY_B, status: 'confirmed', total: 20 });
   await setDoc(doc(db, 'branches/branchA'), { companyId: COMPANY_A, branchCode: 'A1', displayName: 'A One', status: 'active', createdAt: new Date().toISOString(), createdBy: 'seed' });
   await setDoc(doc(db, 'branches/branchB'), { companyId: COMPANY_B, branchCode: 'B1', displayName: 'B One', status: 'active', createdAt: new Date().toISOString(), createdBy: 'seed' });
+  // Owner-sync fixtures: global roles live in users/{uid}; globalOwner's
+  // membership has drifted to 'admin' (the legacy bootstrap bug being repaired).
+  await setDoc(doc(db, 'users/globalOwner'), { uid: 'globalOwner', role: 'owner' });
+  await setDoc(doc(db, 'users/userA'), { uid: 'userA', role: 'staff' });
+  await setDoc(doc(db, 'users/userViewer'), { uid: 'userViewer', role: 'staff' });
+  await setDoc(doc(db, `companies/${COMPANY_A}/members/globalOwner`), { userId: 'globalOwner', companyId: COMPANY_A, role: 'admin', status: 'active' });
 });
 
 const aDb = testEnv.authenticatedContext('userA').firestore();          // admin of company A
 const viewerDb = testEnv.authenticatedContext('userViewer').firestore(); // viewer of company A
 const unauthDb = testEnv.unauthenticatedContext().firestore();
+const ownerDb = testEnv.authenticatedContext('globalOwner').firestore(); // effective (global) owner whose membership drifted to 'admin'
 
 console.log('\n=== AUTHENTICATED CROSS-COMPANY RULES ISOLATION ===\n');
 
@@ -114,6 +121,16 @@ await allow('A (staff) creates a company A branch', () => setDoc(doc(aDb, 'branc
 await deny('A creates a branch tagged company B (spoof)', () => setDoc(doc(aDb, 'branches/spoofBranchB'), branch(COMPANY_B, 'XXX')));
 await deny('Viewer (non-staff) creates a company A branch', () => setDoc(doc(viewerDb, 'branches/viewerBranch'), { ...branch(COMPANY_A, 'VVV'), createdBy: 'userViewer' }));
 await deny('Guest reads a company A branch', () => getDoc(doc(unauthDb, 'branches/branchA')));
+
+console.log('\n[8] Owner-role sync: only the effective (global) owner may self-repair to owner');
+await deny('Viewer (global staff) cannot self-promote to owner', () => updateDoc(doc(viewerDb, `companies/${COMPANY_A}/members/userViewer`), { role: 'owner' }));
+await deny('Admin (global staff) cannot self-promote to owner', () => updateDoc(doc(aDb, `companies/${COMPANY_A}/members/userA`), { role: 'owner' }));
+await deny('Admin cannot change own status (self-protection)', () => updateDoc(doc(aDb, `companies/${COMPANY_A}/members/userA`), { status: 'disabled' }));
+await allow('Effective owner reads own drifted membership', () => getDoc(doc(ownerDb, `companies/${COMPANY_A}/members/globalOwner`)));
+await deny('Effective owner cannot self-sync in a company they are NOT a member of', () => updateDoc(doc(ownerDb, `companies/${COMPANY_B}/members/globalOwner`), { role: 'owner' }));
+await allow('Effective owner self-syncs membership role to owner (repair path)', () => updateDoc(doc(ownerDb, `companies/${COMPANY_A}/members/globalOwner`), { role: 'owner' }));
+await deny('Owner cannot accidentally self-demote (must stay owner)', () => updateDoc(doc(ownerDb, `companies/${COMPANY_A}/members/globalOwner`), { role: 'admin' }));
+await allow("Admin still updates ANOTHER member's role (dropdown flow)", () => updateDoc(doc(aDb, `companies/${COMPANY_A}/members/userViewer`), { role: 'sales', updatedAt: new Date().toISOString(), updatedBy: 'userA' }));
 
 await testEnv.cleanup();
 

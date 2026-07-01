@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { updateCompanyProfile, updateCompanySettings } from '../services/companySettingsService';
 import { 
-  fetchCompanyMembers, inviteCompanyMember, updateCompanyMemberRole, 
+  fetchCompanyMembers, inviteCompanyMember, updateCompanyMemberRole, ensureOwnerMembershipRole,
   updateCompanyMemberStatus, removeCompanyMember 
 } from '../services/companyMemberService';
 import { 
@@ -23,7 +23,7 @@ import type { Branch } from '../services/branchService';
 import styles from './Settings.module.css';
 
 export const Settings: React.FC = () => {
-  const { user } = useAuthStore();
+  const { user, role: globalRole } = useAuthStore();
   const { 
     selectedCompanyId, selectedCompany, companySettings, refreshContext, can 
   } = useCompany();
@@ -163,7 +163,20 @@ export const Settings: React.FC = () => {
     if (!selectedCompanyId) return;
     setMembersLoading(true);
     try {
-      const list = await fetchCompanyMembers(selectedCompanyId);
+      let list = await fetchCompanyMembers(selectedCompanyId);
+
+      // Owner-repair: the effective (global) owner's membership row must read
+      // 'owner'. Idempotent, self-only, rules-enforced; see companyMemberService.
+      const mine = list.find(m => m.userId === user?.uid);
+      if (mine && globalRole === 'owner' && mine.role !== 'owner') {
+        try {
+          await ensureOwnerMembershipRole(selectedCompanyId, mine, globalRole);
+          list = list.map(m => m.userId === mine.userId ? { ...m, role: 'owner' as const } : m);
+        } catch (repairErr) {
+          console.warn('[Settings] Owner-role sync failed (keeping stored role):', repairErr);
+        }
+      }
+
       setMembers(list);
     } catch (err) {
       console.error(err);

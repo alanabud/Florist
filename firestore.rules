@@ -174,12 +174,23 @@ service cloud.firestore {
         // Listing/managing the full member roster is restricted to owner/admin.
         allow list: if isCompanyAdmin(companyId);
         allow create: if isCompanyAdmin(companyId);
-        // Owner/admin may manage members; a user may only self-update their
-        // own language/branch preference (never role or status).
-        allow update: if isCompanyAdmin(companyId) || (
+        // Owner/admin may manage OTHER members. Self-updates are restricted to
+        // language/branch preference — nobody (admin included) can change their
+        // own role/status, protecting the owner account from self-demotion and
+        // admins from self-promotion. One precise exception: the effective
+        // (global) owner — users/{uid}.role == 'owner', assigned only via the
+        // first-user owner claim — may sync their own membership role to
+        // exactly 'owner' (owner-repair path; fixes badge/member-role drift).
+        allow update: if (isCompanyAdmin(companyId) && request.auth.uid != memberUserId) || (
           isSignedIn() &&
           request.auth.uid == memberUserId &&
           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['languagePreference', 'defaultBranchId'])
+        ) || (
+          isSignedIn() &&
+          request.auth.uid == memberUserId &&
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'owner' &&
+          request.resource.data.role == 'owner' &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role'])
         );
         allow delete: if isCompanyOwner(companyId);
       }
