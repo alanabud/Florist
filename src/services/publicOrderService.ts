@@ -1,4 +1,4 @@
-import { collection, addDoc, setDoc, doc } from 'firebase/firestore';
+import { collection, setDoc, doc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
 export interface GuestOrderLineItem {
@@ -40,11 +40,15 @@ export const createGuestOrder = async (orderData: GuestOrderData) => {
     const senderEmailNormalized = orderData.senderEmail.toLowerCase().trim();
     const trackingLookupId = `${orderNumberNormalized}_${senderEmailNormalized}`;
 
-    // 3. Write protected full order to 'orders' collection
-    const orderRef = collection(db, 'orders');
+    // 3. Write protected full order to 'orders' collection. Pre-allocate the
+    // doc ref so the stored id equals the Firestore document id — admin-side
+    // mutations (edit/delete/status/GL post) key off order.id, and a fabricated
+    // 'ord-…' id would make them target a nonexistent document. Note: the
+    // guest-create rules allowlist 'id' but not 'documentId', so only id is set.
+    const orderRef = doc(collection(db, 'orders'));
     const fullOrderPayload = {
       ...orderData,
-      id: `ord-${generatedNum}`, // internal ID matching orderNumber
+      id: orderRef.id,
       orderNumber,
       orderNumberNormalized,
       senderEmailNormalized,
@@ -57,8 +61,8 @@ export const createGuestOrder = async (orderData: GuestOrderData) => {
       deliveryDate: orderData.deliveryDate,
     };
 
-    const fullOrderDoc = await addDoc(orderRef, fullOrderPayload);
-    const orderId = fullOrderDoc.id; // Firestore auto ID
+    await setDoc(orderRef, fullOrderPayload);
+    const orderId = orderRef.id;
 
     // 4. Create timeline array
     const timeline = [

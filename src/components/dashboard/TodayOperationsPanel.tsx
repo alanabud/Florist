@@ -41,14 +41,22 @@ export const TodayOperationsPanel: React.FC = () => {
     addToast(`Order #${id.substring(0, 8).toUpperCase()} marked ready for courier.`, 'success');
   };
 
-  const handleMarkDelivered = (id: string) => {
-    updateOrderStatus(id, 'delivered');
-    addToast(`Order #${id.substring(0, 8).toUpperCase()} successfully marked as delivered.`, 'success');
+  const handleMarkDelivered = async (id: string) => {
+    try {
+      await updateOrderStatus(id, 'delivered');
+      addToast(`Order #${id.substring(0, 8).toUpperCase()} successfully marked as delivered.`, 'success');
+    } catch (e: any) {
+      addToast(e?.message || 'Failed to mark order as delivered.', 'error');
+    }
   };
 
-  const handleAssignDriver = (id: string, driverName: string) => {
-    updateOrderDetails(id, { driver: driverName });
-    addToast(`Driver ${driverName} assigned to Order #${id.substring(0, 8).toUpperCase()}.`, 'success');
+  const handleAssignDriver = async (id: string, driverName: string) => {
+    try {
+      await updateOrderDetails(id, { driver: driverName });
+      addToast(`Driver ${driverName} assigned to Order #${id.substring(0, 8).toUpperCase()}.`, 'success');
+    } catch (e: any) {
+      addToast(e?.message || 'Failed to assign driver.', 'error');
+    }
   };
 
   return (

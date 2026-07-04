@@ -981,12 +981,18 @@ export const Settings: React.FC = () => {
                       <td style={{ fontWeight: 600 }}>{member.displayName}</td>
                       <td>{member.email}</td>
                       <td>
-                        <select 
-                          value={member.role} 
+                        <select
+                          value={member.role}
                           onChange={(e) => handleChangeMemberRole(member.userId, e.target.value)}
                           className={styles.roleSelect}
                           disabled={!can('members.updateRole') || member.userId === user?.uid}
                         >
+                          {/* Legacy/unknown stored roles (e.g. 'staff') must render
+                              truthfully — without this the browser falls back to the
+                              first option and displays "Owner" for any invalid role. */}
+                          {!['owner','admin','manager','designer','sales','accountant','viewer'].includes(member.role) && (
+                            <option value={member.role}>{member.role} (legacy)</option>
+                          )}
                           <option value="owner">Owner</option>
                           <option value="admin">Admin</option>
                           <option value="manager">Manager</option>

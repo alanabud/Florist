@@ -602,7 +602,7 @@ interface AdminState {
   ordersLoading: boolean;
   ordersError: string | null;
   fetchOrders: () => Promise<void>;
-  postOrderFinancialsAction: (orderId: string) => Promise<void>;
+  postOrderFinancialsAction: (orderId: string) => Promise<string>;
   
   inventoryLoading: boolean;
   inventoryError: string | null;
@@ -622,7 +622,7 @@ interface AdminState {
   // Actions
   updateOrderStatus: (id: string, status: OrderStatus) => Promise<void>;
   updateOrderDetails: (id: string, updates: Partial<Order>) => Promise<void>;
-  addOrder: (order: any) => Promise<void>;
+  addOrder: (order: any) => Promise<string>;
   deleteOrder: (id: string) => Promise<void>;
   adjustInventory: (id: string, newQuantity: number) => void;
   restockInventoryItem: (sku: string, amount: number) => void;
@@ -776,10 +776,13 @@ export const useAdminStore = create<AdminState>()(
             snapshot = await getDocs(q);
           }
 
+          // Snapshot ID is canonical: spread data first so a bad stored id
+          // ('' or a legacy 'ord-…') can never mask the real document id —
+          // downstream mutations (edit/delete/status/GL) all key off order.id.
           const docs = snapshot.docs.map(doc => ({
+            ...doc.data(),
             id: doc.id,
-            documentId: doc.id,
-            ...doc.data()
+            documentId: doc.id
           }));
           const parsed = docs.map(normalizeOrder);
           set({ orders: parsed });
@@ -977,6 +980,7 @@ export const useAdminStore = create<AdminState>()(
           set(state => ({
             orders: state.orders.map(o => o.id === orderId ? { ...o, glPostingStatus: 'posted', journalEntryId: jeId } : o)
           }));
+          return jeId;
         } catch (error) {
           console.error("Failed to post financials action:", error);
           throw error;
@@ -1116,11 +1120,16 @@ export const useAdminStore = create<AdminState>()(
       },
 
       updateOrderDetails: async (id, updates) => {
+        // Truthful persistence: local state only reflects what Firestore
+        // accepted. Swallowing the write failure here previously let the UI
+        // show an edit as saved while the document was untouched (e.g. when a
+        // corrupted order.id pointed at a nonexistent doc).
         try {
           const orderRef = doc(db, 'orders', id);
           await updateDoc(orderRef, updates);
         } catch (e) {
           console.error("Failed to update order details in Firestore:", e);
+          throw e;
         }
         set((state) => ({
           orders: state.orders.map(o => o.id === id ? { ...o, ...updates } : o)
@@ -1130,15 +1139,26 @@ export const useAdminStore = create<AdminState>()(
       addOrder: async (order) => {
         try {
           const companyId = localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
-          const docRef = await addDoc(collection(db, 'orders'), {
+          // Single write with a pre-allocated ref: the stored id always equals
+          // the Firestore document id. No create-then-patch window (which left
+          // id: '' behind) and no second addDoc (which created duplicate docs).
+          const ref = doc(collection(db, 'orders'));
+          const orderNumber = order.orderNumber || `BLM-${ref.id.substring(0, 5).toUpperCase()}`;
+          const payload = {
             ...order,
+            id: ref.id,
+            documentId: ref.id,
+            orderNumber,
+            orderNumberNormalized: orderNumber.toLowerCase(),
             companyId,
-            createdAt: new Date().toISOString()
-          });
-          const normalized = normalizeOrder({ ...order, id: docRef.id, documentId: docRef.id, companyId });
+            createdAt: order.createdAt || new Date().toISOString()
+          };
+          await setDoc(ref, payload);
+          const normalized = normalizeOrder(payload);
           set((state) => ({
             orders: [normalized, ...state.orders]
           }));
+          return ref.id;
         } catch (e) {
           console.error("Failed to add order in Firestore:", e);
           throw e;
@@ -1151,6 +1171,7 @@ export const useAdminStore = create<AdminState>()(
           await deleteDoc(orderRef);
         } catch (e) {
           console.error("Failed to delete order in Firestore:", e);
+          throw e;
         }
         set((state) => ({
           orders: state.orders.filter(o => o.id !== id)

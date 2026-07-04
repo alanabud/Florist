@@ -90,9 +90,12 @@ test.describe('backorder live smoke (creates production data — opt-in)', () =>
     console.log('[smoke] #5 stale reason cleared on resolve');
 
     // ── 4. Save as DRAFT without a reason -> allowed (#2). Modal closes. ──
-    // status left at default 'draft'
+    // status left at default 'draft'. Assert on the footer save button, which
+    // renders while the modal is open regardless of the active tab
+    // (#field-status only exists on the Order tab — asserting it hidden was
+    // vacuous from any other tab).
     await saveBtn().click();
-    await expect(page.locator('#field-status')).toBeHidden({ timeout: 45_000 });
+    await expect(saveBtn()).toBeHidden({ timeout: 45_000 });
     console.log('[smoke] #2 draft saved without reason (modal closed)');
 
     // ── 5. List status dropdown draft->confirmed blocked without reason (#6) ──
@@ -123,7 +126,7 @@ test.describe('backorder live smoke (creates production data — opt-in)', () =>
     await card().locator('input[type="date"]').fill('2026-07-10');
     await card().locator('input[type="text"]').last().fill('Remaining stems ship after vendor restock (smoke).');
     await saveBtn().click();
-    await expect(page.locator('#field-status')).toBeHidden({ timeout: 45_000 });
+    await expect(saveBtn()).toBeHidden({ timeout: 45_000 });
     console.log('[smoke] #3-pass confirmed with reason (modal closed)');
 
     // ── 8. Reload + reopen: backorder card & reason persist ──

@@ -55,14 +55,22 @@ export const ActionRequiredPanel: React.FC = () => {
     }
   };
 
-  const handleAssignDriver = (orderId: string, driver: string) => {
-    updateOrderDetails(orderId, { driver });
-    addToast(`Assigned courier ${driver} to order.`, 'success');
+  const handleAssignDriver = async (orderId: string, driver: string) => {
+    try {
+      await updateOrderDetails(orderId, { driver });
+      addToast(`Assigned courier ${driver} to order.`, 'success');
+    } catch (e: any) {
+      addToast(e?.message || 'Failed to assign courier.', 'error');
+    }
   };
 
-  const handleConfirmOrder = (orderId: string) => {
-    updateOrderStatus(orderId, 'confirmed');
-    addToast(`High priority order verified and confirmed.`, 'success');
+  const handleConfirmOrder = async (orderId: string) => {
+    try {
+      await updateOrderStatus(orderId, 'confirmed');
+      addToast(`High priority order verified and confirmed.`, 'success');
+    } catch (e: any) {
+      addToast(e?.message || 'Failed to confirm order.', 'error');
+    }
   };
 
   const hasAlerts = lowStockItems.length > 0 || unassignedOrders.length > 0 || unconfirmedOrders.length > 0;

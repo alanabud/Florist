@@ -100,7 +100,7 @@ export const DeliveryMaintenanceForm: React.FC<DeliveryMaintenanceFormProps> = (
         deliveryPhotoUrl: values.deliveryPhotoUrl,
       };
 
-      updateOrderDetails(orderId, updates);
+      await updateOrderDetails(orderId, updates);
 
       await writeAuditLog({
         actor: 'Logistics',

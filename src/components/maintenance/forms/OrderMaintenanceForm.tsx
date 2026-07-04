@@ -6,9 +6,7 @@ import { useToastStore } from '../../../store/toastStore';
 import { calculateOrderTotals } from '../../../services/orderCalculationService';
 import { validateOrder } from '../../../services/validators';
 import { writeAuditLog } from '../../../services/auditService';
-import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
-import { db } from '../../../firebase/config';
-import { postOrderFinancials, reverseCOGSForOrder } from '../../../services/financeService';
+import { reverseCOGSForOrder } from '../../../services/financeService';
 import { useAuthStore } from '../../../store/authStore';
 import { normalizeOrder } from '../../../services/normalizers';
 import {
@@ -82,43 +80,27 @@ export const OrderMaintenanceForm: React.FC<OrderMaintenanceFormProps> = ({ isOp
         }));
 
       if (mode === 'create') {
-        const orderRef = collection(db, 'orders');
-        const docRef = await addDoc(orderRef, {
+        // Single write: addOrder pre-allocates the doc ref so the stored id,
+        // documentId and orderNumber are correct from the first (only) write.
+        // No create-then-patch window, no duplicate document.
+        const newId = await addOrder({
           ...finalOrder,
-          id: '',
-          documentId: '',
+          orderNumber: '',
+          orderNumberNormalized: '',
           glPostingStatus: 'unposted',
-          createdAt: new Date().toISOString(),
+          journalEntryId: '',
           createdBy: 'Admin'
-        });
-
-        const newId = docRef.id;
-        
-        await updateDoc(doc(db, 'orders', newId), {
-          id: newId,
-          documentId: newId,
-          orderNumber: `BLM-${newId.substring(0, 5).toUpperCase()}`,
-          orderNumberNormalized: `blm-${newId.substring(0, 5).toLowerCase()}`
         });
 
         let jeId = '';
         try {
-          jeId = await postOrderFinancials(newId, 'DEFAULT_COMPANY', 'Admin');
+          jeId = await postOrderFinancialsAction(newId);
         } catch (e: any) {
           console.error("Failed to post financials on create:", e);
           addToast("Order created, but GL posting failed: " + e.message, "error");
         }
 
         await fetchJournalEntries();
-
-        addOrder({
-          ...finalOrder,
-          id: newId,
-          documentId: newId,
-          orderNumber: `BLM-${newId.substring(0, 5).toUpperCase()}`,
-          glPostingStatus: jeId ? 'posted' : 'unposted',
-          journalEntryId: jeId || ''
-        });
 
         // Audit Trail
         await writeAuditLog({
@@ -146,7 +128,7 @@ export const OrderMaintenanceForm: React.FC<OrderMaintenanceFormProps> = ({ isOp
         const orderId = finalOrder.id;
         const oldOrder = orders.find((o) => o.id === orderId);
 
-        updateOrderDetails(orderId, finalOrder);
+        await updateOrderDetails(orderId, finalOrder);
 
         // Audit Trail
         await writeAuditLog({
@@ -182,22 +164,28 @@ export const OrderMaintenanceForm: React.FC<OrderMaintenanceFormProps> = ({ isOp
     try {
       const normalized = normalizeOrder(values);
       const totals = calculateOrderTotals(normalized);
-      const dupId = `ord-${Date.now()}`;
       const duplicateOrder = {
         ...normalized,
         ...totals,
-        id: dupId,
-        invoiceNumber: `INV-${dupId.replace('ord-', '')}`,
+        // id/documentId/orderNumber are assigned by addOrder from the real doc
+        // ref; a duplicate must not inherit the source's number or GL linkage.
+        id: '',
+        documentId: '',
+        orderNumber: '',
+        orderNumberNormalized: '',
+        invoiceNumber: `INV-${Date.now()}`,
         status: 'draft' as const,
         paymentStatus: 'unpaid',
         amountPaid: 0,
         balanceDue: totals.grandTotal,
+        glPostingStatus: 'unposted',
+        journalEntryId: '',
         createdAt: new Date().toISOString(),
         createdBy: 'Admin',
         auditTrail: [`Order duplicated from ${normalized.id} on ${new Date().toLocaleDateString()}`],
       };
 
-      addOrder(duplicateOrder);
+      const dupId = await addOrder(duplicateOrder);
 
       await writeAuditLog({
         actor: 'Admin',
@@ -221,7 +209,12 @@ export const OrderMaintenanceForm: React.FC<OrderMaintenanceFormProps> = ({ isOp
       const orderId = modalPayload.id;
       const oldOrder = orders.find((o) => o.id === orderId);
 
-      deleteOrder(orderId);
+      try {
+        await deleteOrder(orderId);
+      } catch (e: any) {
+        addToast(`Failed to delete order: ${e.message || e}`, 'error');
+        return;
+      }
 
       await writeAuditLog({
         actor: 'Admin',
