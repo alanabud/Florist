@@ -634,7 +634,7 @@ interface AdminState {
   updateProductDetails: (id: string, updates: Partial<Product>) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
   adjustRosePrices: () => Promise<void>;
-  addCustomer: (customer: Customer) => Promise<void>;
+  addCustomer: (customer: Customer) => Promise<string>;
   updateCustomerDetails: (id: string, updates: Partial<Customer>) => Promise<void>;
   deleteCustomer: (id: string) => Promise<void>;
   addEvent: (event: EventItem) => Promise<void>;
@@ -857,7 +857,9 @@ export const useAdminStore = create<AdminState>()(
             snapshot = await getDocs(q);
           }
 
-          const parsed = snapshot.docs.map(doc => normalizeCustomer({ id: doc.id, ...doc.data() }));
+          // Snapshot ID is canonical (data first, doc.id last) — a stale stored
+          // id must never mask the real document id.
+          const parsed = snapshot.docs.map(doc => normalizeCustomer({ ...doc.data(), id: doc.id }));
           set({ customers: parsed });
         } catch (e) {
           console.error("Failed to fetch customers:", e);
@@ -1292,15 +1294,22 @@ export const useAdminStore = create<AdminState>()(
       addCustomer: async (customer) => {
         try {
           const companyId = localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
-          const docRef = await addDoc(collection(db, 'customers'), {
+          // Single write with a pre-allocated ref: stored id always equals the
+          // Firestore document id (same canonical-ID discipline as addOrder —
+          // fabricated ids made edits/deletes target nonexistent docs).
+          const ref = doc(collection(db, 'customers'));
+          const payload = {
             ...customer,
+            id: ref.id,
             companyId,
             createdAt: new Date().toISOString()
-          });
-          const normalized = normalizeCustomer({ ...customer, id: docRef.id });
+          };
+          await setDoc(ref, payload);
+          const normalized = normalizeCustomer(payload);
           set((state) => ({
             customers: [normalized, ...state.customers]
           }));
+          return ref.id;
         } catch (e) {
           console.error("Failed to add customer:", e);
           throw e;
@@ -1316,6 +1325,7 @@ export const useAdminStore = create<AdminState>()(
           }));
         } catch (e) {
           console.error("Failed to update customer details:", e);
+          throw e;
         }
       },
 
@@ -1328,6 +1338,7 @@ export const useAdminStore = create<AdminState>()(
           }));
         } catch (e) {
           console.error("Failed to delete customer:", e);
+          throw e;
         }
       },
 

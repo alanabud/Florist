@@ -31,11 +31,9 @@ export const CustomerMaintenanceForm: React.FC<CustomerMaintenanceFormProps> = (
       const finalCustomer = normalizeCustomer(values);
 
       if (mode === 'create') {
-        const custId = `cust-${Date.now()}`;
-        addCustomer({
-          ...finalCustomer,
-          id: custId,
-        });
+        // addCustomer assigns the canonical id (== Firestore doc id) and only
+        // resolves after the write is accepted — audit/toast are truthful.
+        const custId = await addCustomer({ ...finalCustomer });
 
         await writeAuditLog({
           actor: 'Admin',
@@ -51,7 +49,7 @@ export const CustomerMaintenanceForm: React.FC<CustomerMaintenanceFormProps> = (
         const custId = finalCustomer.id;
         const oldCustomer = customers.find((c) => c.id === custId);
 
-        updateCustomerDetails(custId, finalCustomer);
+        await updateCustomerDetails(custId, finalCustomer);
 
         await writeAuditLog({
           actor: 'Admin',
@@ -76,7 +74,12 @@ export const CustomerMaintenanceForm: React.FC<CustomerMaintenanceFormProps> = (
       const custId = modalPayload.id;
       const oldCustomer = customers.find((c) => c.id === custId);
 
-      deleteCustomer(custId);
+      try {
+        await deleteCustomer(custId);
+      } catch (e: any) {
+        addToast(`Failed to delete customer: ${e.message || e}`, 'error');
+        return;
+      }
 
       await writeAuditLog({
         actor: 'Admin',
