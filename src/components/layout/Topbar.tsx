@@ -6,6 +6,7 @@ import { logout } from '../../services/authService';
 import { useToastStore } from '../../store/toastStore';
 import { useAdminStore } from '../../store/adminStore';
 import { CompanySwitcher } from '../company/CompanySwitcher';
+import { useCompany } from '../../context/CompanyContext';
 import { LanguageSwitcher } from '../common/LanguageSwitcher';
 import { useI18n } from '../../i18n/I18nProvider';
 import styles from './Topbar.module.css';
@@ -15,6 +16,12 @@ export const Topbar: React.FC = () => {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user, role } = useAuthStore();
+  // Effective role: permissions (can()) run off the ACTIVE COMPANY membership
+  // role, so the badge must show that — the global users/{uid} role is only a
+  // fallback while no company context is active. Showing the global role for
+  // company members produced conflicting labels (e.g. badge "staff" for a
+  // company admin).
+  const { userRole: companyRole } = useCompany();
   const { inventory, orders, customers, products } = useAdminStore();
   const addToast = useToastStore((state) => state.addToast);
   const { t } = useI18n();
@@ -262,7 +269,7 @@ export const Topbar: React.FC = () => {
             </div>
             <div className={styles.profileInfo}>
               <span className={styles.name}>{user?.displayName || user?.email || 'Studio Director'}</span>
-              <span className={styles.role}>{role || 'Staff'}</span>
+              <span className={styles.role}>{companyRole || role || 'Staff'}</span>
             </div>
           </button>
 
