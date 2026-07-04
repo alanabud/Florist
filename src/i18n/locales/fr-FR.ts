@@ -195,6 +195,10 @@ export const frFR = {
     "membersTitle": "Membres Autorisés de l'Entreprise"
   },
   "dashboard": {
+    "assignCourierFailed": "Échec de l'affectation du coursier.",
+    "confirmOrderFailed": "Échec de la confirmation de la commande.",
+    "markDeliveredFailed": "Impossible de marquer la commande comme livrée.",
+    "assignDriverFailed": "Échec de l'affectation du chauffeur.",
     "operationsCommandCenter": "Centre de Commandement des Opérations",
     "dailyBriefing": "Briefing Quotidien",
     "revenueToday": "Chiffre d'Affaires du Jour",
@@ -759,6 +763,14 @@ export const frFR = {
   },
   "orders": {
     "posting": "Comptabilisation…",
+    "guards": {
+      "notFound": "Commande introuvable",
+      "terminalStatus": "Impossible de modifier le statut d'une commande terminale ({status}).",
+      "cancelDelivered": "Les commandes livrées ne peuvent pas être annulées. Utilisez plutôt un remboursement.",
+      "refundNotDelivered": "Seules les commandes livrées peuvent être remboursées.",
+      "unpaidBalance": "Impossible de livrer une commande avec un solde impayé de {balance} $.",
+      "backorderReason": "Les lignes en reliquat nécessitent un motif. Modifiez la commande et définissez un motif avant de confirmer."
+    },
     "backorder": {
       "detected": "Rupture de stock détectée",
       "available": "Disponible",

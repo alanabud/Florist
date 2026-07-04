@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import { DEMO_ORDERS, DEMO_INVENTORY, DEMO_CUSTOMERS, DEMO_EVENTS, DEMO_SUBSCRIPTIONS } from '../data/demoData';
 import { PRODUCTS, type Product } from '../data/products';
 import { normalizeOrder, normalizeProduct, normalizeCustomer, normalizeInventoryItem, normalizeSubscription, normalizeEvent } from '../services/normalizers';
+import { LocalizedError } from '../i18n/localizedError';
 import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, getDoc, setDoc, query, orderBy, where } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { postOrderFinancials, reverseJournalEntry, postCOGSForDeliveredOrder } from '../services/financeService';
@@ -989,30 +990,35 @@ export const useAdminStore = create<AdminState>()(
 
       updateOrderStatus: async (id, status) => {
         const order = get().orders.find((o: Order) => o.id === id);
-        if (!order) throw new Error("Order not found");
+        if (!order) throw new LocalizedError('orders.guards.notFound', "Order not found");
 
         const oldStatus = order.status;
-        
+
         if (oldStatus === 'cancelled' || oldStatus === 'refunded') {
-          throw new Error(`Cannot change status of a terminal ${oldStatus} order.`);
+          throw new LocalizedError('orders.guards.terminalStatus',
+            `Cannot change status of a terminal ${oldStatus} order.`, { status: oldStatus });
         }
 
         if (status === 'cancelled') {
           if (oldStatus === 'delivered') {
-            throw new Error("Delivered orders cannot be cancelled. Use refund instead.");
+            throw new LocalizedError('orders.guards.cancelDelivered',
+              "Delivered orders cannot be cancelled. Use refund instead.");
           }
         }
 
         if (status === 'refunded') {
           if (oldStatus !== 'delivered') {
-            throw new Error("Only delivered orders can be refunded.");
+            throw new LocalizedError('orders.guards.refundNotDelivered',
+              "Only delivered orders can be refunded.");
           }
         }
 
         if (status === 'delivered') {
           const totals = calculateOrderTotals(order);
           if (totals.balanceDue > 0) {
-            throw new Error(`Cannot deliver order with unpaid balance of $${totals.balanceDue.toFixed(2)}.`);
+            throw new LocalizedError('orders.guards.unpaidBalance',
+              `Cannot deliver order with unpaid balance of $${totals.balanceDue.toFixed(2)}.`,
+              { balance: totals.balanceDue.toFixed(2) });
           }
         }
 
@@ -1024,7 +1030,8 @@ export const useAdminStore = create<AdminState>()(
             (!l.backorderReasonCode || (l.backorderReasonCode === 'other' && !(l.backorderReasonText || '').trim()))
           );
           if (unreasoned) {
-            throw new Error("Backordered lines need a backorder reason. Edit the order and set a reason before confirming.");
+            throw new LocalizedError('orders.guards.backorderReason',
+              "Backordered lines need a backorder reason. Edit the order and set a reason before confirming.");
           }
         }
 

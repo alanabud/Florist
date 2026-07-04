@@ -13,6 +13,7 @@ import { ModuleErrorState } from '../components/ui/ModuleErrorState';
 import { AsyncActionButton } from '../components/ui/AsyncActionButton';
 import { useCompany } from '../context/CompanyContext';
 import { useI18n } from '../i18n/I18nProvider';
+import { localizeError } from '../i18n/localizedError';
 import styles from '../components/layout/AdminList.module.css';
 
 export const Orders: React.FC = () => {
@@ -100,7 +101,7 @@ export const Orders: React.FC = () => {
     try {
       await updateOrderStatus(id, newStatus);
     } catch (e) {
-      addToast((e as Error)?.message || t('orders.statusUpdateFailed'), 'error');
+      addToast(localizeError(e, t, 'orders.statusUpdateFailed'), 'error');
       return;
     }
 

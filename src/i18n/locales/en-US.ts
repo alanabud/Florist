@@ -195,6 +195,10 @@ export const enUS = {
     membersTitle: "Authorized Company Members"
   },
   dashboard: {
+    assignCourierFailed: "Failed to assign courier.",
+    confirmOrderFailed: "Failed to confirm order.",
+    markDeliveredFailed: "Failed to mark order as delivered.",
+    assignDriverFailed: "Failed to assign driver.",
     operationsCommandCenter: "Operations Command Center",
     dailyBriefing: "Daily Briefing",
     revenueToday: "Revenue Today",
@@ -763,6 +767,14 @@ export const enUS = {
   },
   orders: {
     posting: "Posting…",
+    guards: {
+      notFound: "Order not found",
+      terminalStatus: "Cannot change status of a terminal {status} order.",
+      cancelDelivered: "Delivered orders cannot be cancelled. Use refund instead.",
+      refundNotDelivered: "Only delivered orders can be refunded.",
+      unpaidBalance: "Cannot deliver order with unpaid balance of ${balance}.",
+      backorderReason: "Backordered lines need a backorder reason. Edit the order and set a reason before confirming."
+    },
     backorder: {
       detected: "Backorder Detected",
       available: "Available",

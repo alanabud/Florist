@@ -5,6 +5,7 @@ import { restockInventoryAndPostFinancials } from '../../services/financeService
 import { AlertTriangle, UserPlus, ShieldCheck } from 'lucide-react';
 import styles from './ActionRequiredPanel.module.css';
 import { useI18n } from '../../i18n/I18nProvider';
+import { localizeError } from '../../i18n/localizedError';
 
 export const ActionRequiredPanel: React.FC = () => {
   const { t } = useI18n();
@@ -59,8 +60,8 @@ export const ActionRequiredPanel: React.FC = () => {
     try {
       await updateOrderDetails(orderId, { driver });
       addToast(`Assigned courier ${driver} to order.`, 'success');
-    } catch (e: any) {
-      addToast(e?.message || 'Failed to assign courier.', 'error');
+    } catch (e) {
+      addToast(localizeError(e, t, 'dashboard.assignCourierFailed'), 'error');
     }
   };
 
@@ -68,8 +69,8 @@ export const ActionRequiredPanel: React.FC = () => {
     try {
       await updateOrderStatus(orderId, 'confirmed');
       addToast(`High priority order verified and confirmed.`, 'success');
-    } catch (e: any) {
-      addToast(e?.message || 'Failed to confirm order.', 'error');
+    } catch (e) {
+      addToast(localizeError(e, t, 'dashboard.confirmOrderFailed'), 'error');
     }
   };
 

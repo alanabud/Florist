@@ -195,6 +195,10 @@ export const nlNL = {
     "membersTitle": "Geautoriseerde Bedrijfsleden"
   },
   "dashboard": {
+    "assignCourierFailed": "Koerier toewijzen mislukt.",
+    "confirmOrderFailed": "Bestelling bevestigen mislukt.",
+    "markDeliveredFailed": "Kan bestelling niet als bezorgd markeren.",
+    "assignDriverFailed": "Chauffeur toewijzen mislukt.",
     "operationsCommandCenter": "Operationeel Commandocentrum",
     "dailyBriefing": "Dagelijkse Briefing",
     "revenueToday": "Omzet Vandaag",
@@ -759,6 +763,14 @@ export const nlNL = {
   },
   "orders": {
     "posting": "Boeken…",
+    "guards": {
+      "notFound": "Bestelling niet gevonden",
+      "terminalStatus": "De status van een afgesloten bestelling ({status}) kan niet worden gewijzigd.",
+      "cancelDelivered": "Bezorgde bestellingen kunnen niet worden geannuleerd. Gebruik een terugbetaling.",
+      "refundNotDelivered": "Alleen bezorgde bestellingen kunnen worden terugbetaald.",
+      "unpaidBalance": "Kan bestelling met openstaand saldo van ${balance} niet bezorgen.",
+      "backorderReason": "Nabestelde regels hebben een reden nodig. Bewerk de bestelling en stel een reden in vóór bevestiging."
+    },
     "backorder": {
       "detected": "Nabestelling gedetecteerd",
       "available": "Beschikbaar",

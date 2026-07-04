@@ -5,6 +5,7 @@ import { useToastStore } from '../../store/toastStore';
 import { Truck, Sparkles, Clock, CheckCircle2, ChevronRight, AlertCircle, Play } from 'lucide-react';
 import styles from './TodayOperationsPanel.module.css';
 import { useI18n } from '../../i18n/I18nProvider';
+import { localizeError } from '../../i18n/localizedError';
 
 export const TodayOperationsPanel: React.FC = () => {
   const { t } = useI18n();
@@ -45,8 +46,8 @@ export const TodayOperationsPanel: React.FC = () => {
     try {
       await updateOrderStatus(id, 'delivered');
       addToast(`Order #${id.substring(0, 8).toUpperCase()} successfully marked as delivered.`, 'success');
-    } catch (e: any) {
-      addToast(e?.message || 'Failed to mark order as delivered.', 'error');
+    } catch (e) {
+      addToast(localizeError(e, t, 'dashboard.markDeliveredFailed'), 'error');
     }
   };
 
@@ -54,8 +55,8 @@ export const TodayOperationsPanel: React.FC = () => {
     try {
       await updateOrderDetails(id, { driver: driverName });
       addToast(`Driver ${driverName} assigned to Order #${id.substring(0, 8).toUpperCase()}.`, 'success');
-    } catch (e: any) {
-      addToast(e?.message || 'Failed to assign driver.', 'error');
+    } catch (e) {
+      addToast(localizeError(e, t, 'dashboard.assignDriverFailed'), 'error');
     }
   };
 

@@ -195,6 +195,10 @@ export const esUS = {
     "membersTitle": "Miembros Autorizados de la Empresa"
   },
   "dashboard": {
+    "assignCourierFailed": "No se pudo asignar el mensajero.",
+    "confirmOrderFailed": "No se pudo confirmar el pedido.",
+    "markDeliveredFailed": "No se pudo marcar el pedido como entregado.",
+    "assignDriverFailed": "No se pudo asignar el conductor.",
     "operationsCommandCenter": "Centro de Comando de Operaciones",
     "dailyBriefing": "Informe Diario",
     "revenueToday": "Ingresos de Hoy",
@@ -759,6 +763,14 @@ export const esUS = {
   },
   "orders": {
     "posting": "Contabilizando…",
+    "guards": {
+      "notFound": "Pedido no encontrado",
+      "terminalStatus": "No se puede cambiar el estado de un pedido terminal ({status}).",
+      "cancelDelivered": "Los pedidos entregados no se pueden cancelar. Usa un reembolso en su lugar.",
+      "refundNotDelivered": "Solo se pueden reembolsar pedidos entregados.",
+      "unpaidBalance": "No se puede entregar un pedido con saldo pendiente de ${balance}.",
+      "backorderReason": "Las líneas pendientes necesitan un motivo. Edita el pedido y asigna un motivo antes de confirmar."
+    },
     "backorder": {
       "detected": "Pedido pendiente detectado",
       "available": "Disponible",
