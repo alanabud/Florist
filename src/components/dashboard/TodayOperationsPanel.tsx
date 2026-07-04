@@ -32,14 +32,22 @@ export const TodayOperationsPanel: React.FC = () => {
     o.status !== 'refunded'
   );
 
-  const handleStartProduction = (id: string) => {
-    updateOrderStatus(id, 'in_design');
-    addToast(t('dashboard.movedToDesign', { order: id.substring(0, 8).toUpperCase() }), 'success');
+  const handleStartProduction = async (id: string) => {
+    try {
+      await updateOrderStatus(id, 'in_design');
+      addToast(t('dashboard.movedToDesign', { order: id.substring(0, 8).toUpperCase() }), 'success');
+    } catch (e) {
+      addToast(localizeError(e, t, 'dashboard.moveToDesignFailed'), 'error');
+    }
   };
 
-  const handleCompleteProduction = (id: string) => {
-    updateOrderStatus(id, 'ready');
-    addToast(t('dashboard.readyForCourier', { order: id.substring(0, 8).toUpperCase() }), 'success');
+  const handleCompleteProduction = async (id: string) => {
+    try {
+      await updateOrderStatus(id, 'ready');
+      addToast(t('dashboard.readyForCourier', { order: id.substring(0, 8).toUpperCase() }), 'success');
+    } catch (e) {
+      addToast(localizeError(e, t, 'dashboard.readyForCourierFailed'), 'error');
+    }
   };
 
   const handleMarkDelivered = async (id: string) => {
@@ -206,14 +214,18 @@ export const TodayOperationsPanel: React.FC = () => {
                   <div className={styles.cardRight}>
                     <button 
                       className={styles.btnUrgentSolve}
-                      onClick={() => {
+                      onClick={async () => {
                         if (order.status === 'draft' || order.status === 'confirmed' || order.status === 'scheduled') {
                           handleStartProduction(order.id);
                         } else if (order.status === 'in_design') {
                           handleCompleteProduction(order.id);
                         } else if (order.status === 'ready') {
-                          updateOrderStatus(order.id, 'out_for_delivery');
-                          addToast(t('dashboard.dispatchedToCourier', { order: order.id.substring(0, 8).toUpperCase() }), 'success');
+                          try {
+                            await updateOrderStatus(order.id, 'out_for_delivery');
+                            addToast(t('dashboard.dispatchedToCourier', { order: order.id.substring(0, 8).toUpperCase() }), 'success');
+                          } catch (e) {
+                            addToast(localizeError(e, t, 'dashboard.dispatchFailed'), 'error');
+                          }
                         } else {
                           handleMarkDelivered(order.id);
                         }
