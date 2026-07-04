@@ -40,6 +40,9 @@ test.describe('backorder live smoke (creates production data — opt-in)', () =>
 
     const card = () => page.locator('div[role="alert"]').filter({ hasText: 'Backorder Detected' });
     const saveBtn = () => page.getByRole('button', { name: /^(Create|Save Changes)$/ });
+    // Modal-closure check must also match the in-flight "Saving..." label —
+    // matching only the idle labels lets a HUNG write pass as "modal closed".
+    const modalSaveButtons = () => page.getByRole('button', { name: /^(Create|Save Changes|Saving\.\.\.)$/ });
     const fillRequired = async () => {
       await page.getByRole('button', { name: 'Customer', exact: true }).click();
       await page.locator('#field-customerName').fill(CUSTOMER);
@@ -95,7 +98,7 @@ test.describe('backorder live smoke (creates production data — opt-in)', () =>
     // (#field-status only exists on the Order tab — asserting it hidden was
     // vacuous from any other tab).
     await saveBtn().click();
-    await expect(saveBtn()).toBeHidden({ timeout: 45_000 });
+    await expect(modalSaveButtons()).toHaveCount(0, { timeout: 45_000 });
     console.log('[smoke] #2 draft saved without reason (modal closed)');
 
     // ── 5. List status dropdown draft->confirmed blocked without reason (#6) ──
@@ -113,7 +116,9 @@ test.describe('backorder live smoke (creates production data — opt-in)', () =>
     await page.getByRole('button', { name: 'Items', exact: true }).click();
     await saveBtn().click();
     await expect(page.getByText(/backordered items need a backorder reason/i)).toBeVisible();
-    await expect(page.locator('#field-status')).toBeVisible(); // still open
+    // Modal still open — assert the footer save button (tab-agnostic; the
+    // validation error auto-jumps to the Items tab, unmounting #field-status).
+    await expect(saveBtn()).toBeVisible();
     console.log('[smoke] #3 confirm blocked without reason');
 
     await card().locator('select').selectOption('other');
@@ -126,13 +131,17 @@ test.describe('backorder live smoke (creates production data — opt-in)', () =>
     await card().locator('input[type="date"]').fill('2026-07-10');
     await card().locator('input[type="text"]').last().fill('Remaining stems ship after vendor restock (smoke).');
     await saveBtn().click();
-    await expect(saveBtn()).toBeHidden({ timeout: 45_000 });
+    await expect(modalSaveButtons()).toHaveCount(0, { timeout: 45_000 });
     console.log('[smoke] #3-pass confirmed with reason (modal closed)');
 
-    // ── 8. Reload + reopen: backorder card & reason persist ──
+    // ── 8. Reload + reopen: PERSISTED state, not optimistic store state ──
     await page.goto(LIST_URL);
     const row2 = page.locator('tr', { hasText: CUSTOMER }).first();
     await expect(row2).toBeVisible({ timeout: 20_000 });
+    // Let fetchOrders finish replacing any stale local state: the row can
+    // render from the pre-navigation store first, so an immediate assertion
+    // could pass on an optimistic value Firestore never accepted.
+    await page.waitForTimeout(4000);
     await expect(row2.locator('select')).toHaveValue('confirmed'); // persisted confirmed
     await row2.getByRole('button', { name: 'Edit' }).click();
     await page.getByRole('button', { name: 'Items', exact: true }).click();
