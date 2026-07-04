@@ -211,7 +211,9 @@ service cloud.firestore {
     // ORDERS
     match /orders/{orderId} {
       allow read: if canReadCompanyDoc();
-      allow create: if canCreateCompanyDoc() || isValidGuestOrderCreate();
+      // Staff-vocabulary gate matches every other business collection —
+      // read-only members (viewer) must not be able to create orders.
+      allow create: if (canCreateCompanyDoc() && isCompanyStaff(request.resource.data.companyId)) || isValidGuestOrderCreate();
       allow update: if canUpdateCompanyDoc() && isCompanyStaff(resource.data.companyId);
       allow delete: if canDeleteCompanyDoc();
     }

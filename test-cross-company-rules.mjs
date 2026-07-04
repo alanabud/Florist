@@ -87,6 +87,8 @@ await allow('A reads own company doc', () => getDoc(doc(aDb, `companies/${COMPAN
 await allow('A reads company A order', () => getDoc(doc(aDb, 'orders/orderA')));
 await allow('A creates company A order', () => setDoc(doc(aDb, 'orders/newA'), { companyId: COMPANY_A, status: 'confirmed', total: 5 }));
 await allow('A updates company A order (companyId unchanged)', () => updateDoc(doc(aDb, 'orders/orderA'), { status: 'scheduled' }));
+await allow('A (staff role) creates a company A order', () => setDoc(doc(aDb, 'orders/orderA2'), { companyId: COMPANY_A, status: 'draft', total: 5 }));
+await deny('Viewer (read-only role) creates a company A order', () => setDoc(doc(viewerDb, 'orders/orderViewerProbe'), { companyId: COMPANY_A, status: 'draft', total: 1 }));
 await allow('A reads own membership doc', () => getDoc(doc(aDb, `companies/${COMPANY_A}/members/userA`)));
 
 console.log('\n[2] Company A member CANNOT read company B data');
