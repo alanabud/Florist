@@ -195,6 +195,16 @@ export const enUS = {
     membersTitle: "Authorized Company Members"
   },
   dashboard: {
+    restockQtyInvalid: "Restock quantity must be greater than zero.",
+    restockSuccess: "Restocked {amount}x {name}. GL posted & ledger refreshed.",
+    restockFailed: "Failed to complete restocking transaction for {name}.",
+    courierAssigned: "Assigned courier {driver} to order.",
+    orderConfirmed: "High priority order verified and confirmed.",
+    movedToDesign: "Order #{order} moved to design.",
+    readyForCourier: "Order #{order} marked ready for courier.",
+    orderDelivered: "Order #{order} successfully marked as delivered.",
+    driverAssigned: "Driver {driver} assigned to Order #{order}.",
+    dispatchedToCourier: "Order #{order} dispatched to courier.",
     assignCourierFailed: "Failed to assign courier.",
     confirmOrderFailed: "Failed to confirm order.",
     markDeliveredFailed: "Failed to mark order as delivered.",

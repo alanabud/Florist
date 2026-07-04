@@ -34,18 +34,18 @@ export const TodayOperationsPanel: React.FC = () => {
 
   const handleStartProduction = (id: string) => {
     updateOrderStatus(id, 'in_design');
-    addToast(`Order #${id.substring(0, 8).toUpperCase()} moved to design.`, 'success');
+    addToast(t('dashboard.movedToDesign', { order: id.substring(0, 8).toUpperCase() }), 'success');
   };
 
   const handleCompleteProduction = (id: string) => {
     updateOrderStatus(id, 'ready');
-    addToast(`Order #${id.substring(0, 8).toUpperCase()} marked ready for courier.`, 'success');
+    addToast(t('dashboard.readyForCourier', { order: id.substring(0, 8).toUpperCase() }), 'success');
   };
 
   const handleMarkDelivered = async (id: string) => {
     try {
       await updateOrderStatus(id, 'delivered');
-      addToast(`Order #${id.substring(0, 8).toUpperCase()} successfully marked as delivered.`, 'success');
+      addToast(t('dashboard.orderDelivered', { order: id.substring(0, 8).toUpperCase() }), 'success');
     } catch (e) {
       addToast(localizeError(e, t, 'dashboard.markDeliveredFailed'), 'error');
     }
@@ -54,7 +54,7 @@ export const TodayOperationsPanel: React.FC = () => {
   const handleAssignDriver = async (id: string, driverName: string) => {
     try {
       await updateOrderDetails(id, { driver: driverName });
-      addToast(`Driver ${driverName} assigned to Order #${id.substring(0, 8).toUpperCase()}.`, 'success');
+      addToast(t('dashboard.driverAssigned', { driver: driverName, order: id.substring(0, 8).toUpperCase() }), 'success');
     } catch (e) {
       addToast(localizeError(e, t, 'dashboard.assignDriverFailed'), 'error');
     }
@@ -213,7 +213,7 @@ export const TodayOperationsPanel: React.FC = () => {
                           handleCompleteProduction(order.id);
                         } else if (order.status === 'ready') {
                           updateOrderStatus(order.id, 'out_for_delivery');
-                          addToast(`Order #${order.id.substring(0, 8).toUpperCase()} dispatched to courier.`, 'success');
+                          addToast(t('dashboard.dispatchedToCourier', { order: order.id.substring(0, 8).toUpperCase() }), 'success');
                         } else {
                           handleMarkDelivered(order.id);
                         }

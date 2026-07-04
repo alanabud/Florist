@@ -195,6 +195,16 @@ export const esUS = {
     "membersTitle": "Miembros Autorizados de la Empresa"
   },
   "dashboard": {
+    "restockQtyInvalid": "La cantidad de reposición debe ser mayor que cero.",
+    "restockSuccess": "Repuesto {amount}x {name}. GL contabilizado y libro mayor actualizado.",
+    "restockFailed": "No se pudo completar la transacción de reposición de {name}.",
+    "courierAssigned": "Mensajero {driver} asignado al pedido.",
+    "orderConfirmed": "Pedido de alta prioridad verificado y confirmado.",
+    "movedToDesign": "Pedido #{order} pasado a diseño.",
+    "readyForCourier": "Pedido #{order} listo para el mensajero.",
+    "orderDelivered": "Pedido #{order} marcado como entregado.",
+    "driverAssigned": "Conductor {driver} asignado al pedido #{order}.",
+    "dispatchedToCourier": "Pedido #{order} enviado con el mensajero.",
     "assignCourierFailed": "No se pudo asignar el mensajero.",
     "confirmOrderFailed": "No se pudo confirmar el pedido.",
     "markDeliveredFailed": "No se pudo marcar el pedido como entregado.",

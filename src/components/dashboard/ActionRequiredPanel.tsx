@@ -31,7 +31,7 @@ export const ActionRequiredPanel: React.FC = () => {
   const handleRestock = async (sku: string, unitCost: number, name: string) => {
     const amount = restockAmounts[sku] || 50;
     if (amount <= 0) {
-      addToast('Restock quantity must be greater than zero.', 'error');
+      addToast(t('dashboard.restockQtyInvalid'), 'error');
       return;
     }
 
@@ -39,7 +39,7 @@ export const ActionRequiredPanel: React.FC = () => {
     try {
       // Safe, protected transaction flow
       await restockInventoryAndPostFinancials(sku, amount, unitCost);
-      addToast(`Restocked ${amount}x ${name}. GL posted & ledger refreshed.`, 'success');
+      addToast(t('dashboard.restockSuccess', { amount, name }), 'success');
       
       // Clear amount input
       setRestockAmounts(prev => {
@@ -49,7 +49,7 @@ export const ActionRequiredPanel: React.FC = () => {
       });
     } catch (error: unknown) {
       console.error(error);
-      const errMsg = (error as { message?: string })?.message || `Failed to complete restocking transaction for ${name}.`;
+      const errMsg = (error as { message?: string })?.message || t('dashboard.restockFailed', { name });
       addToast(errMsg, 'error');
     } finally {
       setIsRestockingSku(null);
@@ -59,7 +59,7 @@ export const ActionRequiredPanel: React.FC = () => {
   const handleAssignDriver = async (orderId: string, driver: string) => {
     try {
       await updateOrderDetails(orderId, { driver });
-      addToast(`Assigned courier ${driver} to order.`, 'success');
+      addToast(t('dashboard.courierAssigned', { driver }), 'success');
     } catch (e) {
       addToast(localizeError(e, t, 'dashboard.assignCourierFailed'), 'error');
     }
@@ -68,7 +68,7 @@ export const ActionRequiredPanel: React.FC = () => {
   const handleConfirmOrder = async (orderId: string) => {
     try {
       await updateOrderStatus(orderId, 'confirmed');
-      addToast(`High priority order verified and confirmed.`, 'success');
+      addToast(t('dashboard.orderConfirmed'), 'success');
     } catch (e) {
       addToast(localizeError(e, t, 'dashboard.confirmOrderFailed'), 'error');
     }

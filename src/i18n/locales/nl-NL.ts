@@ -195,6 +195,16 @@ export const nlNL = {
     "membersTitle": "Geautoriseerde Bedrijfsleden"
   },
   "dashboard": {
+    "restockQtyInvalid": "De aanvulhoeveelheid moet groter zijn dan nul.",
+    "restockSuccess": "{amount}x {name} aangevuld. GL geboekt en grootboek vernieuwd.",
+    "restockFailed": "Aanvultransactie voor {name} kon niet worden voltooid.",
+    "courierAssigned": "Koerier {driver} toegewezen aan bestelling.",
+    "orderConfirmed": "Bestelling met hoge prioriteit geverifieerd en bevestigd.",
+    "movedToDesign": "Bestelling #{order} naar ontwerp verplaatst.",
+    "readyForCourier": "Bestelling #{order} klaar voor koerier.",
+    "orderDelivered": "Bestelling #{order} gemarkeerd als bezorgd.",
+    "driverAssigned": "Chauffeur {driver} toegewezen aan bestelling #{order}.",
+    "dispatchedToCourier": "Bestelling #{order} met de koerier meegegeven.",
     "assignCourierFailed": "Koerier toewijzen mislukt.",
     "confirmOrderFailed": "Bestelling bevestigen mislukt.",
     "markDeliveredFailed": "Kan bestelling niet als bezorgd markeren.",

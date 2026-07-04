@@ -195,6 +195,16 @@ export const frFR = {
     "membersTitle": "Membres Autorisés de l'Entreprise"
   },
   "dashboard": {
+    "restockQtyInvalid": "La quantité de réassort doit être supérieure à zéro.",
+    "restockSuccess": "Réassort de {amount}x {name}. GL comptabilisé et grand livre actualisé.",
+    "restockFailed": "Échec de la transaction de réassort pour {name}.",
+    "courierAssigned": "Coursier {driver} affecté à la commande.",
+    "orderConfirmed": "Commande haute priorité vérifiée et confirmée.",
+    "movedToDesign": "Commande #{order} passée en création.",
+    "readyForCourier": "Commande #{order} prête pour le coursier.",
+    "orderDelivered": "Commande #{order} marquée comme livrée.",
+    "driverAssigned": "Chauffeur {driver} affecté à la commande #{order}.",
+    "dispatchedToCourier": "Commande #{order} expédiée avec le coursier.",
     "assignCourierFailed": "Échec de l'affectation du coursier.",
     "confirmOrderFailed": "Échec de la confirmation de la commande.",
     "markDeliveredFailed": "Impossible de marquer la commande comme livrée.",
