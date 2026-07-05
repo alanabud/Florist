@@ -11,6 +11,10 @@ import { writeAuditLog } from '../../services/auditService';
 export const TodayOperationsPanel: React.FC = () => {
   const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<'deliveries' | 'production' | 'alerts'>('production');
+  // Single-flight guard for Resolve Status: a plain button double-click fired
+  // the transition handler twice (duplicate audits/toasts even though the
+  // status write and COGS posting are idempotent).
+  const [resolvingId, setResolvingId] = useState<string | null>(null);
   const navigate = useNavigate();
   const { orders, updateOrderStatus, updateOrderDetails } = useAdminStore();
   const addToast = useToastStore(s => s.addToast);
@@ -232,21 +236,28 @@ export const TodayOperationsPanel: React.FC = () => {
                   <div className={styles.cardRight}>
                     <button 
                       className={styles.btnUrgentSolve}
+                      disabled={resolvingId === order.id}
                       onClick={async () => {
-                        if (order.status === 'draft' || order.status === 'confirmed' || order.status === 'scheduled') {
-                          handleStartProduction(order.id);
-                        } else if (order.status === 'in_design') {
-                          handleCompleteProduction(order.id);
-                        } else if (order.status === 'ready') {
-                          try {
-                            await updateOrderStatus(order.id, 'out_for_delivery');
-                            await auditStatusChange(order.id, 'out_for_delivery');
-                            addToast(t('dashboard.dispatchedToCourier', { order: order.id.substring(0, 8).toUpperCase() }), 'success');
-                          } catch (e) {
-                            addToast(localizeError(e, t, 'dashboard.dispatchFailed'), 'error');
+                        if (resolvingId) return;
+                        setResolvingId(order.id);
+                        try {
+                          if (order.status === 'draft' || order.status === 'confirmed' || order.status === 'scheduled') {
+                            await handleStartProduction(order.id);
+                          } else if (order.status === 'in_design') {
+                            await handleCompleteProduction(order.id);
+                          } else if (order.status === 'ready') {
+                            try {
+                              await updateOrderStatus(order.id, 'out_for_delivery');
+                              await auditStatusChange(order.id, 'out_for_delivery');
+                              addToast(t('dashboard.dispatchedToCourier', { order: order.id.substring(0, 8).toUpperCase() }), 'success');
+                            } catch (e) {
+                              addToast(localizeError(e, t, 'dashboard.dispatchFailed'), 'error');
+                            }
+                          } else {
+                            await handleMarkDelivered(order.id);
                           }
-                        } else {
-                          handleMarkDelivered(order.id);
+                        } finally {
+                          setResolvingId(null);
                         }
                       }}
                     >
