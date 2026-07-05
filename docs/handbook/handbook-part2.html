@@ -1,0 +1,564 @@
+<!-- ═══════════ 09 DESIGNER & PRODUCTION ═══════════ -->
+<div class="page chapter" id="ch09">
+  <div class="ch-open">
+    <div class="ch-num">09</div>
+    <div class="ch-title"><h2>DESIGNER &amp; PRODUCTION WORKFLOW</h2><div class="purpose">From confirmed order to finished arrangement.</div></div>
+    <div class="ch-meta">~4 min read<div class="roles"><span class="role">DESIGNER</span><span class="role">MANAGER</span><span class="role">ADMIN</span></div></div>
+  </div>
+  <h3 class="sec">Overview</h3>
+  <p>Production lives on the <strong>Dashboard → Today's Operations</strong> panel. The production queue lists confirmed work; the urgent list surfaces today's deliveries and high-priority orders with a single <strong>Resolve Status</strong> action that always moves the order to its next stage.</p>
+  <h4>Start and finish production</h4>
+  <ol class="steps">
+    <li>Open <strong>Dashboard</strong> and review the production queue and urgent list.</li>
+    <li>Select <strong>Resolve Status</strong> on a confirmed order — it moves to <strong>In Design</strong>. The designer builds the arrangement.</li>
+    <li>Select <strong>Resolve Status</strong> again — the order becomes <strong>Ready</strong> and waits in the cooler for dispatch.</li>
+  </ol>
+  <div class="next"><b>WHAT HAPPENS NEXT</b>Each move is saved immediately, stamped in the order's audit history, and reflected everywhere — the Orders pipeline filters, the dashboard counts, and the delivery queue.</div>
+  <div class="card"><h4>A production morning</h4>
+  <p style="font-size:9.6pt">8:00 — Three arrangements due today. The urgent list shows all three. 8:05 — First order to <strong>In Design</strong>; roses from the cooler. 8:40 — Marked <strong>Ready</strong>. The next order starts. By 10:30 all three sit in the cooler as Ready, and dispatch takes over.</p></div>
+  <div class="panel tip"><span class="tag">TIP</span>The Resolve Status button disables itself while a change is saving — one click is always enough.</div>
+</div>
+
+<!-- ═══════════ 10 READY & DELIVERY ═══════════ -->
+<div class="page chapter" id="ch10">
+  <div class="ch-open">
+    <div class="ch-num">10</div>
+    <div class="ch-title"><h2>READY &amp; DELIVERY OPERATIONS</h2><div class="purpose">Dispatch, out-for-delivery, and completing the drop.</div></div>
+    <div class="ch-meta">~4 min read<div class="roles"><span class="role">DISPATCHER</span><span class="role">DRIVER</span><span class="role">MANAGER</span><span class="role">ADMIN</span></div></div>
+  </div>
+  <h3 class="sec">Overview</h3>
+  <p>The <strong>Deliveries</strong> module manages dispatch details — couriers, routes, delivery notes, and proof of delivery — while status moves can be made from the Dashboard or the Orders list.</p>
+  <div class="shot"><img src="assets/deliveries.png" alt="Deliveries module for dispatch and courier management">
+  <div class="cap">Deliveries: courier assignment, dispatch details, and delivery status in one place.</div></div>
+  <h4>Dispatch and complete a delivery</h4>
+  <ol class="steps">
+    <li>From the Dashboard urgent list, select <strong>Resolve Status</strong> on a <strong>Ready</strong> order — it becomes <strong>Out for Delivery</strong>. Assign the driver if not already assigned.</li>
+    <li>When the flowers are in the recipient's hands, mark the order <strong>Delivered</strong>.</li>
+  </ol>
+  <div class="next"><b>WHAT HAPPENS NEXT</b>Delivered stamps the delivery time, records the order's cost of goods against your inventory (Chapter 15), and finishes the lifecycle.</div>
+  <div class="panel imp"><span class="tag">IMPORTANT</span>Delivery completion is blocked while the order has a remaining balance. Record the payment first (Chapter 11), then deliver. The block message states the outstanding amount.</div>
+  <div class="panel bp"><span class="tag">BEST PRACTICE</span>Assign drivers at dispatch, not after. The driver name on the order is what makes tomorrow's "who delivered this?" question answerable in seconds.</div>
+</div>
+
+<!-- ═══════════ 11 PAYMENTS & AR ═══════════ -->
+<div class="page chapter" id="ch11">
+  <div class="ch-open">
+    <div class="ch-num">11</div>
+    <div class="ch-title"><h2>PAYMENTS &amp; ACCOUNTS RECEIVABLE</h2><div class="purpose">Record money in, track balances, manage collections.</div></div>
+    <div class="ch-meta">~6 min read<div class="roles"><span class="role">OWNER</span><span class="role">ADMIN</span><span class="role">MANAGER</span><span class="role">SALES</span><span class="role">ACCOUNTANT</span></div></div>
+  </div>
+  <h3 class="sec">Overview</h3>
+  <p><strong>Use this module when…</strong> a customer pays a deposit · you receive final payment before delivery · reviewing who owes what · working collections on overdue balances.</p>
+  <div class="shot"><img src="assets/receivables.png" alt="Accounts Receivable module with customer balances and payment recording">
+  <div class="cap">Receivables: open balances by customer, payment recording, and allocation to orders.</div></div>
+  <h4>Record a payment</h4>
+  <ol class="steps">
+    <li>Open <strong>Receivables</strong>.</li>
+    <li>Find the customer and record the payment amount and method.</li>
+    <li>Allocate the payment to one or more open orders.</li>
+    <li>Save, then verify the customer's remaining balance reflects the payment.</li>
+  </ol>
+  <div class="next"><b>WHAT HAPPENS NEXT</b>The payment reduces the allocated orders' balances and the customer's total receivable. A partial payment leaves the remainder due; a full payment clears the way for delivery completion.</div>
+  <h3 class="sec">Four words that are not the same</h3>
+  <table class="t">
+    <tr><th>Term</th><th>What it means</th></tr>
+    <tr><td><strong>Cancel</strong></td><td>The order will not happen. Allowed before delivery; books are corrected automatically if the sale was already posted.</td></tr>
+    <tr><td><strong>Refund</strong></td><td>A delivered order is being given back / made good. Only delivered orders can be refunded.</td></tr>
+    <tr><td><strong>Payment reversal</strong></td><td>Undoing a recorded customer payment (wrong amount, bounced card) — the order balance reopens.</td></tr>
+    <tr><td><strong>Journal reversal</strong></td><td>The accounting correction behind the scenes: a matching opposite entry that nets a posted entry to zero while keeping history intact (Chapter 17).</td></tr>
+  </table>
+  <div class="panel bp"><span class="tag">BEST PRACTICE</span>Record payments the moment they arrive, and allocate them immediately. Unallocated cash is tomorrow's mystery.</div>
+</div>
+
+<!-- ═══════════ 12 STATEMENTS ═══════════ -->
+<div class="page chapter" id="ch12">
+  <div class="ch-open">
+    <div class="ch-num">12</div>
+    <div class="ch-title"><h2>CUSTOMER STATEMENTS</h2><div class="purpose">A customer's activity, balances, and history — exportable.</div></div>
+    <div class="ch-meta">~3 min read<div class="roles"><span class="role">OWNER</span><span class="role">ADMIN</span><span class="role">ACCOUNTANT</span></div></div>
+  </div>
+  <p>Statements summarize a customer's orders, payments, and running balance over a period — the document you send corporate accounts at month end.</p>
+  <ol class="steps">
+    <li>Open the customer's statement view from Receivables.</li>
+    <li>Choose the statement period (the cutoff date controls which activity is included).</li>
+    <li>Review the activity and closing balance.</li>
+    <li>Export as <strong>PDF</strong> (to send) or <strong>Excel</strong> (to analyze).</li>
+  </ol>
+  <div class="card"><h4>Example</h4><p style="font-size:9.6pt">The Grand Hotel runs a monthly account. On the 1st you generate their statement for last month: eleven orders, two payments, closing balance $1,240. The PDF goes to their accounts team; the balance appears on your receivables aging until paid.</p></div>
+  <div class="panel tip"><span class="tag">TIP</span>PDF for people, Excel for spreadsheets. The numbers are identical.</div>
+</div>
+
+<!-- ═══════════ 13 PURCHASING ═══════════ -->
+<div class="page chapter" id="ch13">
+  <div class="ch-open">
+    <div class="ch-num">13</div>
+    <div class="ch-title"><h2>PURCHASING &amp; VENDORS</h2><div class="purpose">Order stock from wholesalers with purchase orders.</div></div>
+    <div class="ch-meta">~5 min read<div class="roles"><span class="role">OWNER</span><span class="role">ADMIN</span><span class="role">MANAGER</span></div></div>
+  </div>
+  <h3 class="sec">Overview</h3>
+  <p>The <strong>Purchasing</strong> console manages vendors (your wholesalers), purchase orders (POs), receiving, and the bills that follow. A PO states what you are buying, from whom, at what cost — and becomes the reference receiving is checked against.</p>
+  <div class="shot"><img src="assets/purchasing.png" alt="Purchasing console with vendors, purchase orders and receiving">
+  <div class="cap">The Purchasing console: vendors, purchase orders, receiving, and vendor bills.</div></div>
+  <h4>Create a purchase order</h4>
+  <ol class="steps">
+    <li>Open <strong>Purchasing</strong> and select the vendor (create the vendor first if new).</li>
+    <li>Create a purchase order with line items — SKU, quantity, unit cost.</li>
+    <li>Review totals and approve the PO according to your shop's practice.</li>
+  </ol>
+  <div class="next"><b>WHAT HAPPENS NEXT</b>The PO waits for the physical delivery. When stems arrive, you receive against it (Chapter 14), which updates inventory quantities and costs.</div>
+  <div class="card"><h4>Example — Tuesday roses</h4><p style="font-size:9.6pt">You order 200 Premium Red Roses at $1.35/stem from Bloemen Wholesale for Tuesday. The PO records the commitment. Tuesday morning the boxes arrive; receiving turns the PO into real inventory — and its $270 into your rose cost.</p></div>
+  <div class="panel bp"><span class="tag">BEST PRACTICE</span>One PO per vendor delivery. It makes receiving checks and vendor bill matching effortless.</div>
+</div>
+
+<!-- ═══════════ 14 RECEIVING ═══════════ -->
+<div class="page chapter" id="ch14">
+  <div class="ch-open">
+    <div class="ch-num">14</div>
+    <div class="ch-title"><h2>RECEIVING INVENTORY</h2><div class="purpose">Turn deliveries at the back door into accurate stock and cost.</div></div>
+    <div class="ch-meta">~4 min read<div class="roles"><span class="role">OWNER</span><span class="role">ADMIN</span><span class="role">MANAGER</span></div></div>
+  </div>
+  <p>Receiving records what actually arrived against the PO. Quantities increase inventory; costs update your weighted average cost (Chapter 15); the vendor bill becomes payable (accounts payable).</p>
+  <ol class="steps">
+    <li>Open the PO in <strong>Purchasing</strong> when the delivery arrives.</li>
+    <li>Count the boxes. Enter the quantities actually received — receive partially where supported if the delivery is short.</li>
+    <li>Confirm the receipt.</li>
+  </ol>
+  <div class="next"><b>WHAT HAPPENS NEXT</b>Inventory quantities rise immediately, each SKU's average cost is re-weighted with the new receipt cost, and the amount owed to the vendor is recorded for accounts payable.</div>
+  <div class="panel warn"><span class="tag">WARNING</span>Receiving is where inventory truth is made. Receiving 200 when 180 arrived means twenty phantom roses — shortage warnings that never fire, and margins that flatter you falsely.</div>
+  <div class="panel bp"><span class="tag">BEST PRACTICE</span>Count before you sign the driver's slip, and receive in BloomPro Studio the same hour. Same-day receiving keeps stock, cost, and payables all true.</div>
+</div>
+
+<!-- ═══════════ 15 COSTING ═══════════ -->
+<div class="page chapter" id="ch15">
+  <div class="ch-open">
+    <div class="ch-num">15</div>
+    <div class="ch-title"><h2>INVENTORY COSTING: WAC, COGS &amp; MARGIN</h2><div class="purpose">What your flowers really cost, and what each order really earns.</div></div>
+    <div class="ch-meta">~5 min read<div class="roles"><span class="role">OWNER</span><span class="role">ADMIN</span><span class="role">ACCOUNTANT</span></div></div>
+  </div>
+  <h3 class="sec">Weighted Average Cost, simply</h3>
+  <p>Flower prices change weekly. BloomPro Studio blends every receipt into a single honest number per SKU — the <strong>weighted average cost (WAC)</strong>:</p>
+  <div class="card" style="max-width:5.4in">
+    <table class="t" style="margin:0">
+      <tr><th></th><th>Stems</th><th>Cost each</th><th>Value</th></tr>
+      <tr><td>Current inventory</td><td>10</td><td>$1.00</td><td>$10.00</td></tr>
+      <tr><td>New receipt</td><td>10</td><td>$1.50</td><td>$15.00</td></tr>
+      <tr><td style="font-weight:700">New weighted average</td><td style="font-weight:700">20</td><td style="font-weight:800;color:var(--green)">$1.25</td><td style="font-weight:700">$25.00</td></tr>
+    </table>
+    <p style="font-size:9pt;color:var(--muted);margin-top:6px">$25.00 of value ÷ 20 stems = $1.25 per stem. Every receipt re-weights the average.</p>
+  </div>
+  <h3 class="sec">COGS and margin</h3>
+  <p>When an order is <strong>Delivered</strong>, BloomPro Studio records its <strong>Cost of Goods Sold (COGS)</strong> — the stems consumed, valued at their weighted average cost — and keeps a cost snapshot on the order. Margin follows naturally:</p>
+  <p style="font-size:11pt;text-align:center;margin:10px 0 14px"><strong>Revenue − COGS = Gross margin</strong></p>
+  <p>An $85 bouquet consuming $19.50 of stems earns $65.50 gross. This is why receiving accuracy (Chapter 14) matters: WAC feeds COGS, and COGS feeds every profit number in your reports.</p>
+  <div class="panel imp"><span class="tag">IMPORTANT</span>COGS is recorded once per order at delivery. Marking delivered twice will not double-count your costs.</div>
+</div>
+
+<!-- ═══════════ 16 ADJUSTMENTS ═══════════ -->
+<div class="page chapter" id="ch16">
+  <div class="ch-open">
+    <div class="ch-num">16</div>
+    <div class="ch-title"><h2>INVENTORY ADJUSTMENTS &amp; SPOILAGE</h2><div class="purpose">Keep counts honest when flowers wilt, break, or walk away.</div></div>
+    <div class="ch-meta">~3 min read<div class="roles"><span class="role">OWNER</span><span class="role">ADMIN</span><span class="role">MANAGER</span></div></div>
+  </div>
+  <p>Flowers are perishable. Adjustments record the difference between what the system says and what the cooler holds — with a reason:</p>
+  <table class="t">
+    <tr><th>Situation</th><th>Adjustment</th><th>Example</th></tr>
+    <tr><td><strong>Spoilage</strong></td><td>Reduce quantity, reason: spoiled/expired</td><td>Two dozen roses browned over a hot weekend</td></tr>
+    <tr><td><strong>Shrinkage</strong></td><td>Reduce quantity, reason: loss/damage</td><td>A dropped vase case; miscounted delivery</td></tr>
+    <tr><td><strong>Correction</strong></td><td>Set quantity to the physical count</td><td>Weekly cooler count finds 96, system says 100</td></tr>
+  </table>
+  <div class="next"><b>WHAT HAPPENS NEXT</b>The quantity changes immediately and the financial effect of lost stock flows into your books, so spoiled inventory is not silently carried as an asset.</div>
+  <div class="panel bp"><span class="tag">BEST PRACTICE</span>Record spoilage daily, at close. It takes thirty seconds and keeps shortage detection, WAC, and your margin reports truthful.</div>
+</div>
+
+<!-- ═══════════ 17 FINANCE & GL ═══════════ -->
+<div class="page chapter" id="ch17">
+  <div class="ch-open">
+    <div class="ch-num">17</div>
+    <div class="ch-title"><h2>FINANCE &amp; GENERAL LEDGER</h2><div class="purpose">Your books, in plain language.</div></div>
+    <div class="ch-meta">~6 min read<div class="roles"><span class="role">OWNER</span><span class="role">ADMIN</span><span class="role">ACCOUNTANT</span></div></div>
+  </div>
+  <h3 class="sec">Overview</h3>
+  <p>The <strong>Finance</strong> module holds your chart of accounts, journal entries, and period controls. You rarely need to write entries by hand — orders, payments, deliveries, and receiving post their own accounting automatically. Finance is where you review it.</p>
+  <div class="shot"><img src="assets/finance.png" alt="Finance administration module with journal entries and period controls">
+  <div class="cap">Finance: journal entries with full line detail, reversal actions, and accounting period controls.</div></div>
+  <h3 class="sec">Double-entry, with flowers</h3>
+  <p>Every financial event records two sides that always balance. When Maria's $85 bouquet is sold on account:</p>
+  <div class="card" style="max-width:5.2in">
+    <table class="t" style="margin:0">
+      <tr><th>Account</th><th>Debit</th><th>Credit</th></tr>
+      <tr><td>Accounts Receivable <em>(Maria owes you)</em></td><td>$85.00</td><td></td></tr>
+      <tr><td>Sales Revenue <em>(you earned it)</em></td><td></td><td>$85.00</td></tr>
+    </table>
+  </div>
+  <p><strong>Debit</strong> and <strong>credit</strong> are just the two sides of the same event. If they didn't match, money would appear or vanish — so BloomPro Studio only posts balanced entries.</p>
+  <h3 class="sec">Posting, reversals, and periods</h3>
+  <ul class="clean">
+    <li><strong>Posting</strong> writes an entry into the ledger. Orders post their sale when created; COGS posts at delivery.</li>
+    <li><strong>Reversal</strong> is how posted history is corrected: a matching opposite entry nets the original to zero. Both remain visible. Posted activity is never silently rewritten.</li>
+    <li><strong>Period controls</strong> let owners/accountants lock a closed accounting period so past months cannot drift; unlocking requires a documented reason.</li>
+  </ul>
+  <div class="panel adm"><span class="tag">ADMIN ONLY</span>Manual journal reversal and accounting-period lock/unlock are administrative actions, available to owner/admin-level finance roles.</div>
+  <div class="panel warn"><span class="tag">WARNING</span>Reversals are immutable corrections, not deletions. If a posted entry looks wrong, reverse it and post the correct one — that is the discipline auditors expect.</div>
+</div>
+
+<!-- ═══════════ 18 RECONCILIATION ═══════════ -->
+<div class="page chapter" id="ch18">
+  <div class="ch-open">
+    <div class="ch-num">18</div>
+    <div class="ch-title"><h2>RECONCILIATION</h2><div class="purpose">Prove your records match reality, on a schedule.</div></div>
+    <div class="ch-meta">~3 min read<div class="roles"><span class="role">OWNER</span><span class="role">ADMIN</span><span class="role">ACCOUNTANT</span><span class="role">MANAGER</span></div></div>
+  </div>
+  <p><strong>Reconciliation</strong> is a periodic check that your operational records and your books agree — the flower-shop equivalent of balancing the till. The AI Reconciliation module runs a scan over a date range, surfaces <strong>exceptions</strong> (differences it found), and lets authorized users propose <strong>adjustments</strong> that go through approval before they touch the ledger.</p>
+  <ol class="steps">
+    <li>Open <strong>AI Reconciliation</strong> and choose the period to scan.</li>
+    <li>Run the scan and review each exception — every difference has a story: a missed payment allocation, an unposted order, a spoilage never recorded.</li>
+    <li>Resolve each one at its source where possible; propose an adjustment when a correcting entry is genuinely needed.</li>
+  </ol>
+  <div class="panel imp"><span class="tag">IMPORTANT</span>Proposed adjustments require approval before posting, and each carries balanced journal lines — reconciliation corrects your books with the same discipline as every other posting.</div>
+  <div class="panel bp"><span class="tag">BEST PRACTICE</span>Reconcile monthly, before locking the period. Small months reconcile in minutes; skipped months compound.</div>
+</div>
+
+<!-- ═══════════ 19 REPORTS ═══════════ -->
+<div class="page chapter" id="ch19">
+  <div class="ch-open">
+    <div class="ch-num">19</div>
+    <div class="ch-title"><h2>REPORTS &amp; EXPORTS</h2><div class="purpose">Business intelligence you can hand to anyone.</div></div>
+    <div class="ch-meta">~3 min read<div class="roles"><span class="role">OWNER</span><span class="role">ADMIN</span><span class="role">MANAGER</span><span class="role">ACCOUNTANT</span></div></div>
+  </div>
+  <p>The <strong>Reports</strong> module presents KPIs and operational analytics — revenue, pipeline, margin intelligence — and most list views (orders, statements, financial data) export to <strong>PDF</strong> and <strong>Excel</strong>.</p>
+  <div class="shot"><img src="assets/reports.png" alt="Reports module with business KPIs and analytics">
+  <div class="cap">Reports: KPIs and analytics for the active company.</div></div>
+  <table class="t">
+    <tr><th>Choose</th><th>When</th></tr>
+    <tr><td><strong>PDF</strong></td><td>Sending to a person: statements, end-of-day summaries, anything read as a document</td></tr>
+    <tr><td><strong>Excel</strong></td><td>Working with the numbers: pivots, filters, your accountant's month-end workpapers</td></tr>
+  </table>
+  <div class="panel tip"><span class="tag">TIP</span>Exports carry your company identity — display name, currency, language, and the report footer configured in Company Settings (Chapter 24). Set those once and every export looks official.</div>
+</div>
+
+<!-- ═══════════ 20 EVENTS & QUICK ACTIONS ═══════════ -->
+<div class="page chapter" id="ch20">
+  <div class="ch-open">
+    <div class="ch-num">20</div>
+    <div class="ch-title"><h2>EVENTS &amp; QUICK ACTIONS</h2><div class="purpose">Weddings, funerals, corporate work — and faster daily moves.</div></div>
+    <div class="ch-meta">~3 min read<div class="roles"><span class="role">OWNER</span><span class="role">ADMIN</span><span class="role">MANAGER</span><span class="role">SALES</span></div></div>
+  </div>
+  <p>The <strong>Events</strong> module tracks larger engagements — a wedding, a funeral service, a corporate installation — with their own dates, budgets, clients, and status, separate from (but alongside) day-to-day orders.</p>
+  <p><strong>Quick actions</strong> across BloomPro Studio reduce navigation: dashboard panels act directly on orders and inventory (confirm, assign, restock, resolve status), and list rows carry their own status and edit controls — so routine moves never require opening a full record.</p>
+  <div class="panel bp"><span class="tag">BEST PRACTICE</span>Use Events for anything with a date and a budget bigger than a single arrangement; use ordinary orders for daily work. Mixing the two makes both harder to read.</div>
+</div>
+
+<!-- ═══════════ 21 BRANCHES ═══════════ -->
+<div class="page chapter" id="ch21">
+  <div class="ch-open">
+    <div class="ch-num">21</div>
+    <div class="ch-title"><h2>BRANCH OPERATIONS</h2><div class="purpose">Multiple locations under one company.</div></div>
+    <div class="ch-meta">~2 min read<div class="roles"><span class="role">OWNER</span><span class="role">ADMIN</span><span class="role">MANAGER</span></div></div>
+  </div>
+  <p>Branches represent your company's physical locations — the downtown shop, the market stall. Under <strong>Settings → Branch Operations</strong>, owners and admins maintain branch records (code, display name, status). Branches belong to the company; users can have a default branch preference.</p>
+  <div class="panel imp"><span class="tag">IMPORTANT</span>Branches are organizational records within a company. They do not create separate data worlds — that is what companies do (Chapter 23).</div>
+</div>
+
+<!-- ═══════════ 22 ROLES & PERMISSIONS ═══════════ -->
+<div class="page chapter" id="ch22">
+  <div class="ch-open">
+    <div class="ch-num">22</div>
+    <div class="ch-title"><h2>USERS, ROLES &amp; PERMISSIONS</h2><div class="purpose">Who can do what — and why that's a feature.</div></div>
+    <div class="ch-meta">~5 min read<div class="roles"><span class="role">OWNER</span><span class="role">ADMIN</span></div></div>
+  </div>
+  <h3 class="sec">Roles are per company</h3>
+  <p>Your permissions come from your <strong>membership role in the active company</strong> — the badge in the top bar shows it. The same person can be an Admin in one company and a Viewer in another.</p>
+  <table class="t matrix">
+    <tr><th>Capability</th><th>Owner</th><th>Admin</th><th>Manager</th><th>Sales</th><th>Designer</th><th>Accountant</th><th>Dispatcher</th><th>Driver</th><th>Viewer</th></tr>
+    <tr><td>View company &amp; reports</td><td>●</td><td>●</td><td>●</td><td>●</td><td>●</td><td>●</td><td>●</td><td>●</td><td>●</td></tr>
+    <tr><td>Manage customers</td><td>●</td><td>●</td><td>●</td><td>●</td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>Manage orders</td><td>●</td><td>●</td><td>●</td><td>●</td><td>●</td><td></td><td>●</td><td></td><td></td></tr>
+    <tr><td>Manage inventory</td><td>●</td><td>●</td><td>●</td><td></td><td>●</td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>Manage purchasing</td><td>●</td><td>●</td><td>●</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>Manage payments</td><td>●</td><td>●</td><td>●</td><td>●</td><td></td><td>●</td><td></td><td></td><td></td></tr>
+    <tr><td>Post finance / view GL</td><td>●</td><td>●</td><td>view</td><td></td><td></td><td>●</td><td></td><td></td><td></td></tr>
+    <tr><td>Export reports</td><td>●</td><td>●</td><td>●</td><td></td><td></td><td>●</td><td></td><td></td><td></td></tr>
+    <tr><td>Deliveries update</td><td>●</td><td>●</td><td>●</td><td></td><td></td><td></td><td>●</td><td>●</td><td></td></tr>
+    <tr><td>Manage users &amp; roles</td><td>●</td><td>●</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>Company settings</td><td>●</td><td>●</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+  </table>
+  <div class="shot"><img src="assets/settings.png" alt="Settings module with company configuration tabs">
+  <div class="cap">Settings: Company Settings · Default Language &amp; Base Currency · User Access Control · Branch Operations.</div></div>
+  <div class="panel adm"><span class="tag">ADMIN ONLY</span>User Access Control (invite, role changes, enable/disable, remove) is owner/admin territory. Your own row's role selector is intentionally disabled — nobody edits their own role.</div>
+  <div class="panel warn"><span class="tag">WARNING</span>Role security is enforced by the platform itself, not just the screen. Users cannot promote themselves, read-only roles cannot create records, and no supported procedure bypasses these rules. If you need more access, ask an owner or admin to change your role.</div>
+  <h3 class="sec">Common questions</h3>
+  <p class="qa"><b>Why can't I edit a user's role?</b> You need owner/admin in the active company — and no one can edit their own row.</p>
+  <p class="qa"><b>Why is a whole module missing from my sidebar?</b> Role-based visibility. Viewer sees far less than Manager by design.</p>
+</div>
+
+<!-- ═══════════ 23 MULTI-COMPANY ═══════════ -->
+<div class="page chapter" id="ch23">
+  <div class="ch-open">
+    <div class="ch-num">23</div>
+    <div class="ch-title"><h2>MULTI-COMPANY OPERATIONS</h2><div class="purpose">One login, cleanly separated businesses.</div></div>
+    <div class="ch-meta">~3 min read<div class="roles"><span class="role">ALL ROLES</span></div></div>
+  </div>
+  <p>BloomPro Studio can host multiple companies — separate florist businesses with separate customers, orders, inventory, and books. Your <strong>active company</strong> (shown in the top bar) determines every record you see. If you belong to more than one company, switch using the company selector; your role may differ per company.</p>
+  <div class="panel adm"><span class="tag">YOUR COMPANY DATA</span>BloomPro Studio separates company data according to company membership and application authorization rules. Records from a company you do not belong to are not visible, searchable, or reachable — this is enforced by the platform, not by the screen you happen to be on.</div>
+  <p class="qa"><b>Why can't I see another company's information?</b> You are not a member of it, or it is not your active company. Membership is provisioned by administrators — there is no self-service way to join a company.</p>
+</div>
+
+<!-- ═══════════ 24 COMPANY SETTINGS ═══════════ -->
+<div class="page chapter" id="ch24">
+  <div class="ch-open">
+    <div class="ch-num">24</div>
+    <div class="ch-title"><h2>COMPANY SETTINGS</h2><div class="purpose">Identity, currency, language, and report presentation.</div></div>
+    <div class="ch-meta">~3 min read<div class="roles"><span class="role">OWNER</span><span class="role">ADMIN</span></div></div>
+  </div>
+  <p>Under <strong>Settings</strong>, owners and admins configure the company profile and operating defaults:</p>
+  <table class="t">
+    <tr><th>Setting</th><th>What it affects</th></tr>
+    <tr><td><strong>Company profile / display name</strong></td><td>How your business is identified across the app and on exports</td></tr>
+    <tr><td><strong>Base currency</strong></td><td>How money is displayed and reported</td></tr>
+    <tr><td><strong>Default language</strong></td><td>The starting interface language for the company (members can prefer their own)</td></tr>
+    <tr><td><strong>Report options &amp; footer</strong></td><td>The professional footer and presentation on PDF/Excel exports</td></tr>
+  </table>
+  <div class="panel tip"><span class="tag">TIP</span>Set the report footer once — every exported statement and report instantly looks like official company paper.</div>
+</div>
+
+<!-- ═══════════ 25 LANGUAGES ═══════════ -->
+<div class="page chapter" id="ch25">
+  <div class="ch-open">
+    <div class="ch-num">25</div>
+    <div class="ch-title"><h2>LANGUAGES &amp; LOCALIZATION</h2><div class="purpose">Work in the language your team thinks in.</div></div>
+    <div class="ch-meta">~2 min read<div class="roles"><span class="role">ALL ROLES</span></div></div>
+  </div>
+  <p>BloomPro Studio's interface is available in four languages:</p>
+  <table class="t" style="max-width:4.6in">
+    <tr><th>Language</th><th>Display name</th></tr>
+    <tr><td>English</td><td>English</td></tr>
+    <tr><td>Spanish</td><td>Español</td></tr>
+    <tr><td>French</td><td>Français</td></tr>
+    <tr><td>Dutch</td><td>Nederlands</td></tr>
+  </table>
+  <p>Switch anytime from the language selector in the top bar. Interface labels, messages, and workflow text follow your selection; your business data (names, notes, orders) stays exactly as entered. A company default language applies first; each member's own preference is remembered.</p>
+</div>
+
+<!-- ═══════════ 26 NOTIFICATIONS ═══════════ -->
+<div class="page chapter" id="ch26">
+  <div class="ch-open">
+    <div class="ch-num">26</div>
+    <div class="ch-title"><h2>NOTIFICATIONS</h2><div class="purpose">The bell that keeps operations honest.</div></div>
+    <div class="ch-meta">~2 min read<div class="roles"><span class="role">ALL ROLES</span></div></div>
+  </div>
+  <p>The <strong>bell icon</strong> in the top bar surfaces operational alerts inside the application — the kind of things the Dashboard also watches: work needing attention, low stock, and items worth a look. Open the bell to review them; act on each by visiting the module it points to.</p>
+  <p>In addition, every action you take answers immediately with a <strong>toast message</strong> — a brief confirmation (success) or explanation (why something was blocked). A success toast means the change is genuinely saved.</p>
+  <div class="panel imp"><span class="tag">IMPORTANT</span>Notifications live inside BloomPro Studio. The platform does not send SMS or push notifications to your phone.</div>
+</div>
+
+<!-- ═══════════ 27 DAILY WORKFLOWS ═══════════ -->
+<div class="page chapter" id="ch27">
+  <div class="ch-open">
+    <div class="ch-num">27</div>
+    <div class="ch-title"><h2>COMMON DAILY WORKFLOWS</h2><div class="purpose">Recipe cards for the moves you make every day.</div></div>
+    <div class="ch-meta">Reference<div class="roles"><span class="role">ALL ROLES</span></div></div>
+  </div>
+  <div class="recipes">
+    <div class="recipe"><h4>Start the business day</h4><div class="goal">Goal: know today's work in 5 minutes</div>
+      <ol><li>Open Dashboard</li><li>Review Today's Operations &amp; urgent list</li><li>Check Action Required for low stock</li></ol>
+      <div class="res">Result: a clear picture of deliveries, production, and gaps.</div></div>
+    <div class="recipe"><h4>Create a customer order</h4><div class="goal">Goal: phone order to confirmed sale</div>
+      <ol><li>Orders → Create Order</li><li>Customer, delivery, items, payment</li><li>Status Confirmed → Create</li></ol>
+      <div class="res">Result: numbered order in the pipeline, sale on the books.</div></div>
+    <div class="recipe"><h4>Handle a product shortage</h4><div class="goal">Goal: confirm a short order responsibly</div>
+      <ol><li>Note the amber Backorder card</li><li>Choose the reason; add restock date &amp; note</li><li>Save / confirm</li></ol>
+      <div class="res">Result: documented shortage; production knows the plan.</div></div>
+    <div class="recipe"><h4>Start designing an order</h4><div class="goal">Goal: move confirmed work into production</div>
+      <ol><li>Dashboard → urgent/production queue</li><li>Resolve Status → In Design</li></ol>
+      <div class="res">Result: order visibly in production; audit trail updated.</div></div>
+    <div class="recipe"><h4>Mark an arrangement ready</h4><div class="goal">Goal: finished work waits for dispatch</div>
+      <ol><li>Resolve Status on the In-Design order</li></ol>
+      <div class="res">Result: order Ready; dispatch can plan the run.</div></div>
+    <div class="recipe"><h4>Dispatch an order</h4><div class="goal">Goal: flowers leave with a driver</div>
+      <ol><li>Assign the driver</li><li>Resolve Status → Out for Delivery</li></ol>
+      <div class="res">Result: order in transit with a named driver.</div></div>
+    <div class="recipe"><h4>Complete a delivery</h4><div class="goal">Goal: close the loop</div>
+      <ol><li>Confirm balance is zero (record payment if not)</li><li>Mark Delivered</li></ol>
+      <div class="res">Result: delivery time stamped; COGS recorded; lifecycle complete.</div></div>
+    <div class="recipe"><h4>Record a customer payment</h4><div class="goal">Goal: money in, balance down</div>
+      <ol><li>Receivables → find customer</li><li>Record amount &amp; method; allocate</li><li>Verify remaining balance</li></ol>
+      <div class="res">Result: balances and receivables reflect the payment.</div></div>
+    <div class="recipe"><h4>Review accounts receivable</h4><div class="goal">Goal: know who owes what</div>
+      <ol><li>Open Receivables</li><li>Scan open balances &amp; aging</li><li>Follow up on overdue accounts</li></ol>
+      <div class="res">Result: collections happen before they become problems.</div></div>
+    <div class="recipe"><h4>Create a purchase order</h4><div class="goal">Goal: commit next week's stems</div>
+      <ol><li>Purchasing → select vendor</li><li>Add lines (SKU, qty, cost)</li><li>Approve</li></ol>
+      <div class="res">Result: PO awaiting delivery; receiving has its reference.</div></div>
+    <div class="recipe"><h4>Receive inventory</h4><div class="goal">Goal: boxes into truth</div>
+      <ol><li>Open the PO on arrival</li><li>Count; enter actual quantities</li><li>Confirm receipt</li></ol>
+      <div class="res">Result: stock up, WAC re-weighted, vendor payable recorded.</div></div>
+    <div class="recipe"><h4>Record spoilage</h4><div class="goal">Goal: cooler and system agree</div>
+      <ol><li>Inventory → adjust the SKU</li><li>Reduce quantity; reason: spoilage</li></ol>
+      <div class="res">Result: honest stock; loss reflected in the books.</div></div>
+    <div class="recipe"><h4>Review daily financial activity</h4><div class="goal">Goal: end the day reconciled</div>
+      <ol><li>Finance → today's journal entries</li><li>Orders → any unposted rows → Post to Ledger</li></ol>
+      <div class="res">Result: books current; tomorrow starts clean.</div></div>
+  </div>
+</div>
+
+<!-- ═══════════ 28 TROUBLESHOOTING ═══════════ -->
+<div class="page chapter" id="ch28">
+  <div class="ch-open">
+    <div class="ch-num">28</div>
+    <div class="ch-title"><h2>TROUBLESHOOTING</h2><div class="purpose">Organized by the question you're actually asking.</div></div>
+    <div class="ch-meta">Reference</div>
+  </div>
+  <table class="t">
+    <tr><th style="width:2.4in">Question</th><th>Possible cause → what to check → action</th></tr>
+    <tr><td><strong>Why can't I confirm an order?</strong></td><td>A backordered line is missing its reason (or "Other" detail). Check the Items tab's amber card → complete the reason → save. Required fields on other tabs (highlighted) can also block. <em>Escalate:</em> only if no field is highlighted anywhere.</td></tr>
+    <tr><td><strong>Why can't I change an order status?</strong></td><td>Lifecycle guard: cancelled/refunded are final; delivered can't be cancelled; refunds require delivered. The block message names the rule. Action: use the correct workflow (refund vs cancel).</td></tr>
+    <tr><td><strong>Why can't I mark an order Delivered?</strong></td><td>A balance remains. Check the order's balance due → record the payment (Ch. 11) → deliver.</td></tr>
+    <tr><td><strong>Why do I see a backorder warning?</strong></td><td>Ordered &gt; available for that SKU. Check Inventory → either reduce quantity, restock, or document the reason and proceed.</td></tr>
+    <tr><td><strong>Why is a reason required?</strong></td><td>Shortage documentation is mandatory beyond Draft. It protects the customer promise and the production plan. Choose the closest reason; "Other" plus detail if none fit.</td></tr>
+    <tr><td><strong>Why can't I edit a user's role?</strong></td><td>You need owner/admin in the active company — and your own row is always locked. Ask an administrator.</td></tr>
+    <tr><td><strong>Why can't I see another company's data?</strong></td><td>You are not a member, or it isn't your active company. Membership is administrator-provisioned. This is data isolation working.</td></tr>
+    <tr><td><strong>Why is an admin feature unavailable?</strong></td><td>Role-based access. Check your badge (top-right). If your duties changed, an owner/admin can change your role.</td></tr>
+    <tr><td><strong>Why did a save fail?</strong></td><td>Look for the error toast — it states the reason (validation, permissions, or a business rule). Fix what it names and retry. A save that fails is <em>not</em> stored: what you see after a reload is the truth.</td></tr>
+    <tr><td><strong>I got an error I don't understand.</strong></td><td>Note the exact message and what you were doing → retry once → if it repeats, contact your administrator with both. Never attempt workarounds that bypass a stated rule.</td></tr>
+  </table>
+</div>
+
+<!-- ═══════════ 29 BEST PRACTICES ═══════════ -->
+<div class="page chapter" id="ch29">
+  <div class="ch-open">
+    <div class="ch-num">29</div>
+    <div class="ch-title"><h2>BEST PRACTICES</h2><div class="purpose">The habits of a well-run flower shop.</div></div>
+    <div class="ch-meta">Reference</div>
+  </div>
+  <div class="two-col">
+    <div>
+      <div class="panel bp"><span class="tag">CUSTOMER DATA</span>One customer, one dossier. Search before creating; keep contact details current.</div>
+      <div class="panel bp"><span class="tag">INVENTORY</span>Weekly counts, same-day receiving, daily spoilage. Inventory truth is the foundation under every other number.</div>
+      <div class="panel bp"><span class="tag">ORDERS</span>Confirm only what you can explain: quantities checked, shortages documented, delivery details complete.</div>
+      <div class="panel bp"><span class="tag">BACKORDERS</span>The reason field is a promise to the customer. Write reasons a colleague could act on.</div>
+      <div class="panel bp"><span class="tag">RECEIVING</span>Count before signing. Enter what arrived, not what was ordered.</div>
+      <div class="panel bp"><span class="tag">PAYMENTS</span>Record and allocate the same day. Verify the balance after every payment.</div>
+    </div>
+    <div>
+      <div class="panel bp"><span class="tag">REVERSALS</span>Never chase a wrong entry by editing history — reverse it and post the correction. Both stay visible; that is the point.</div>
+      <div class="panel bp"><span class="tag">USER ACCESS</span>Review User Access Control quarterly. Departed staff off; roles matched to duties; least privilege by default.</div>
+      <div class="panel bp"><span class="tag">COMPANY SETTINGS</span>Revisit currency, language, and the report footer whenever your business identity changes.</div>
+      <div class="panel bp"><span class="tag">RECONCILIATION</span>Monthly, before locking the period. Exceptions are cheapest when fresh.</div>
+      <div class="panel bp"><span class="tag">EXPORTS</span>Export month-end statements and key reports and archive them — your books deserve backups outside the app too.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ 30 GLOSSARY ═══════════ -->
+<div class="page chapter" id="ch30">
+  <div class="ch-open">
+    <div class="ch-num">30</div>
+    <div class="ch-title"><h2>GLOSSARY</h2><div class="purpose">Plain-language definitions.</div></div>
+    <div class="ch-meta">Reference</div>
+  </div>
+  <dl class="gloss">
+    <dt>Accounts Payable</dt><dd>Money you owe vendors for goods received.</dd>
+    <dt>Accounts Receivable</dt><dd>Money customers owe you for orders.</dd>
+    <dt>Active Company</dt><dd>The company whose data you are currently working in.</dd>
+    <dt>Backorder</dt><dd>The portion of an order line that exceeds available stock.</dd>
+    <dt>Balance Due</dt><dd>Order grand total minus amount paid.</dd>
+    <dt>Branch</dt><dd>A physical location belonging to a company.</dd>
+    <dt>COGS</dt><dd>Cost of Goods Sold — the stem cost consumed by a delivered order.</dd>
+    <dt>Confirmed</dt><dd>Order status: a committed sale, ready for scheduling/production.</dd>
+    <dt>Credit</dt><dd>One side of a journal entry (e.g., revenue earned).</dd>
+    <dt>Customer Statement</dt><dd>A period summary of a customer's orders, payments, and balance.</dd>
+    <dt>Debit</dt><dd>The other side of a journal entry (e.g., a receivable created).</dd>
+    <dt>Delivered</dt><dd>Final lifecycle status; stamps delivery time and records COGS.</dd>
+    <dt>Draft</dt><dd>An order being written up; not yet a commitment.</dd>
+    <dt>General Ledger</dt><dd>The book of all journal entries — your accounting record.</dd>
+    <dt>In Design</dt><dd>Order status: a designer is building the arrangement.</dd>
+    <dt>Inventory Adjustment</dt><dd>A recorded correction to stock (spoilage, shrinkage, counts).</dd>
+    <dt>Journal Entry</dt><dd>A balanced debit/credit record of one financial event.</dd>
+    <dt>Margin</dt><dd>Revenue minus COGS.</dd>
+    <dt>Order Number</dt><dd>The customer-facing BLM- identifier of an order.</dd>
+    <dt>Out for Delivery</dt><dd>Order status: with a driver.</dd>
+    <dt>Posting</dt><dd>Writing an entry into the general ledger.</dd>
+    <dt>Purchase Order (PO)</dt><dd>A commitment to buy from a vendor; the receiving reference.</dd>
+    <dt>Ready</dt><dd>Order status: finished and awaiting dispatch.</dd>
+    <dt>Reconciliation</dt><dd>Periodic proof that records and books agree.</dd>
+    <dt>Refund</dt><dd>Making good a delivered order; reverses its financial effect.</dd>
+    <dt>Reversal</dt><dd>A matching opposite entry that corrects posted history without erasing it.</dd>
+    <dt>Scheduled</dt><dd>Order status: planned into a production day.</dd>
+    <dt>SKU</dt><dd>Stock Keeping Unit — the unique code for a stocked item.</dd>
+    <dt>Spoilage</dt><dd>Stock lost to perishability.</dd>
+    <dt>Viewer</dt><dd>A read-only company role.</dd>
+    <dt>Weighted Average Cost</dt><dd>Blended per-unit cost across all receipts of a SKU.</dd>
+  </dl>
+</div>
+
+<!-- ═══════════ 31 QUICK REFERENCE ═══════════ -->
+<div class="page chapter" id="ch31">
+  <div class="ch-open">
+    <div class="ch-num">31</div>
+    <div class="ch-title"><h2>QUICK REFERENCE</h2><div class="purpose">For experienced users in a hurry.</div></div>
+    <div class="ch-meta">Reference</div>
+  </div>
+  <div class="two-col">
+    <div>
+      <div class="card"><h4>Order status</h4>
+        <table class="t" style="margin:0;font-size:8.8pt">
+          <tr><td>Draft</td><td>quote; shortages may be undocumented</td></tr>
+          <tr><td>Confirmed</td><td>committed; shortages documented</td></tr>
+          <tr><td>Scheduled</td><td>planned</td></tr>
+          <tr><td>In Design</td><td>in production</td></tr>
+          <tr><td>Ready</td><td>awaiting dispatch</td></tr>
+          <tr><td>Out for Delivery</td><td>with driver</td></tr>
+          <tr><td>Delivered</td><td>final; needs zero balance; COGS records</td></tr>
+          <tr><td>Cancelled</td><td>final; auto-reverses posted sale</td></tr>
+          <tr><td>Refunded</td><td>final; delivered orders only</td></tr>
+        </table></div>
+      <div class="card"><h4>Backorder</h4>
+        <table class="t" style="margin:0;font-size:8.8pt">
+          <tr><td>Detected</td><td>ordered &gt; available (per line)</td></tr>
+          <tr><td>Quantity</td><td>always calculated, never typed</td></tr>
+          <tr><td>Draft</td><td>reason optional</td></tr>
+          <tr><td>Confirm</td><td>reason required per line; "Other" needs detail</td></tr>
+          <tr><td>Resolved</td><td>reduce qty within stock → card &amp; fields removed</td></tr>
+        </table></div>
+      <div class="card"><h4>Payments</h4>
+        <table class="t" style="margin:0;font-size:8.8pt">
+          <tr><td>Record</td><td>Receivables → customer → amount → allocate</td></tr>
+          <tr><td>Rule</td><td>paid amount ≤ grand total</td></tr>
+          <tr><td>Deliver</td><td>requires zero balance</td></tr>
+          <tr><td>Fix wrong entry</td><td>reversal, never silent edits</td></tr>
+        </table></div>
+    </div>
+    <div>
+      <div class="card"><h4>Inventory adjustments</h4>
+        <table class="t" style="margin:0;font-size:8.8pt">
+          <tr><td>Spoilage</td><td>reduce qty; reason spoiled/expired</td></tr>
+          <tr><td>Shrinkage</td><td>reduce qty; reason loss/damage</td></tr>
+          <tr><td>Count fix</td><td>set to physical count</td></tr>
+          <tr><td>Cadence</td><td>spoilage daily · counts weekly</td></tr>
+        </table></div>
+      <div class="card"><h4>Roles at a glance</h4>
+        <table class="t" style="margin:0;font-size:8.8pt">
+          <tr><td>Owner</td><td>everything</td></tr>
+          <tr><td>Admin</td><td>everything except ownership</td></tr>
+          <tr><td>Manager</td><td>operations + purchasing + payments</td></tr>
+          <tr><td>Sales</td><td>customers, orders, payments</td></tr>
+          <tr><td>Designer</td><td>orders + inventory</td></tr>
+          <tr><td>Accountant</td><td>payments + finance + exports</td></tr>
+          <tr><td>Dispatcher / Driver</td><td>deliveries</td></tr>
+          <tr><td>Viewer</td><td>read-only</td></tr>
+        </table></div>
+      <div class="card"><h4>Navigation</h4>
+        <table class="t" style="margin:0;font-size:8.8pt">
+          <tr><td>Today's work</td><td>Dashboard</td></tr>
+          <tr><td>All orders</td><td>Orders (+ pipeline filters)</td></tr>
+          <tr><td>Money in</td><td>Receivables</td></tr>
+          <tr><td>Money out</td><td>Purchasing</td></tr>
+          <tr><td>The books</td><td>Finance</td></tr>
+          <tr><td>Stock</td><td>Inventory</td></tr>
+          <tr><td>People &amp; config</td><td>Settings</td></tr>
+        </table></div>
+    </div>
+  </div>
+  <p style="margin-top:22px;text-align:center;color:var(--muted);font-size:9pt">BloomPro Studio · User Handbook · 2026 Edition · © 2026 AF Strategic Technologies LLC</p>
+</div>
