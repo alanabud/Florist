@@ -6,6 +6,7 @@ import { Truck, Sparkles, Clock, CheckCircle2, ChevronRight, AlertCircle, Play }
 import styles from './TodayOperationsPanel.module.css';
 import { useI18n } from '../../i18n/I18nProvider';
 import { localizeError } from '../../i18n/localizedError';
+import { writeAuditLog } from '../../services/auditService';
 
 export const TodayOperationsPanel: React.FC = () => {
   const { t } = useI18n();
@@ -32,9 +33,24 @@ export const TodayOperationsPanel: React.FC = () => {
     o.status !== 'refunded'
   );
 
+  // Audit a successful status transition (same shape as the Orders page) —
+  // written only AFTER the awaited mutation resolves, never on failure.
+  const auditStatusChange = async (id: string, newStatus: string) => {
+    const oldStatus = orders.find(o => o.id === id)?.status || null;
+    await writeAuditLog({
+      actor: 'Admin',
+      action: 'ORDER_STATUS_CHANGE',
+      entityType: 'order',
+      entityId: id,
+      before: oldStatus ? { status: oldStatus } : null,
+      after: { status: newStatus },
+    });
+  };
+
   const handleStartProduction = async (id: string) => {
     try {
       await updateOrderStatus(id, 'in_design');
+      await auditStatusChange(id, 'in_design');
       addToast(t('dashboard.movedToDesign', { order: id.substring(0, 8).toUpperCase() }), 'success');
     } catch (e) {
       addToast(localizeError(e, t, 'dashboard.moveToDesignFailed'), 'error');
@@ -44,6 +60,7 @@ export const TodayOperationsPanel: React.FC = () => {
   const handleCompleteProduction = async (id: string) => {
     try {
       await updateOrderStatus(id, 'ready');
+      await auditStatusChange(id, 'ready');
       addToast(t('dashboard.readyForCourier', { order: id.substring(0, 8).toUpperCase() }), 'success');
     } catch (e) {
       addToast(localizeError(e, t, 'dashboard.readyForCourierFailed'), 'error');
@@ -53,6 +70,7 @@ export const TodayOperationsPanel: React.FC = () => {
   const handleMarkDelivered = async (id: string) => {
     try {
       await updateOrderStatus(id, 'delivered');
+      await auditStatusChange(id, 'delivered');
       addToast(t('dashboard.orderDelivered', { order: id.substring(0, 8).toUpperCase() }), 'success');
     } catch (e) {
       addToast(localizeError(e, t, 'dashboard.markDeliveredFailed'), 'error');
@@ -222,6 +240,7 @@ export const TodayOperationsPanel: React.FC = () => {
                         } else if (order.status === 'ready') {
                           try {
                             await updateOrderStatus(order.id, 'out_for_delivery');
+                            await auditStatusChange(order.id, 'out_for_delivery');
                             addToast(t('dashboard.dispatchedToCourier', { order: order.id.substring(0, 8).toUpperCase() }), 'success');
                           } catch (e) {
                             addToast(localizeError(e, t, 'dashboard.dispatchFailed'), 'error');

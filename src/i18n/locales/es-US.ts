@@ -776,6 +776,7 @@ export const esUS = {
   },
   "orders": {
     "posting": "Contabilizando…",
+    "inDesign": "En diseño",
     "guards": {
       "notFound": "Pedido no encontrado",
       "terminalStatus": "No se puede cambiar el estado de un pedido terminal ({status}).",

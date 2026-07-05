@@ -6,6 +6,7 @@ import { AlertTriangle, UserPlus, ShieldCheck } from 'lucide-react';
 import styles from './ActionRequiredPanel.module.css';
 import { useI18n } from '../../i18n/I18nProvider';
 import { localizeError } from '../../i18n/localizedError';
+import { writeAuditLog } from '../../services/auditService';
 
 export const ActionRequiredPanel: React.FC = () => {
   const { t } = useI18n();
@@ -67,7 +68,17 @@ export const ActionRequiredPanel: React.FC = () => {
 
   const handleConfirmOrder = async (orderId: string) => {
     try {
+      const oldStatus = unconfirmedOrders.find(o => o.id === orderId)?.status || null;
       await updateOrderStatus(orderId, 'confirmed');
+      // Audit only after successful persistence (same shape as the Orders page).
+      await writeAuditLog({
+        actor: 'Admin',
+        action: 'ORDER_STATUS_CHANGE',
+        entityType: 'order',
+        entityId: orderId,
+        before: oldStatus ? { status: oldStatus } : null,
+        after: { status: 'confirmed' },
+      });
       addToast(t('dashboard.orderConfirmed'), 'success');
     } catch (e) {
       addToast(localizeError(e, t, 'dashboard.confirmOrderFailed'), 'error');

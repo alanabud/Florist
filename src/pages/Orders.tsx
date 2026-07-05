@@ -419,7 +419,7 @@ export const Orders: React.FC = () => {
                         >
                           <option value="draft">Draft</option>
                           <option value="confirmed">Confirmed</option>
-                          <option value="preparing">Preparing</option>
+                          <option value="in_design">{t('orders.inDesign')}</option>
                           <option value="out_for_delivery">{t('orders.outForDelivery')}</option>
                           <option value="delivered">Delivered</option>
                           <option value="cancelled">Cancelled</option>

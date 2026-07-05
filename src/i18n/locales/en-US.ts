@@ -780,6 +780,7 @@ export const enUS = {
   },
   orders: {
     posting: "Posting…",
+    inDesign: "In Design",
     guards: {
       notFound: "Order not found",
       terminalStatus: "Cannot change status of a terminal {status} order.",

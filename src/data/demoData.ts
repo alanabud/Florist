@@ -15,7 +15,8 @@ export const DEMO_INVENTORY = [
 ];
 
 const generateRecentOrders = () => {
-  const statuses = ['draft', 'confirmed', 'preparing', 'out_for_delivery', 'delivered', 'cancelled'];
+  // 'in_design' (not 'preparing') — must stay inside the OrderStatus vocabulary.
+  const statuses = ['draft', 'confirmed', 'in_design', 'out_for_delivery', 'delivered', 'cancelled'];
   const orders = [];
   const now = new Date();
   
@@ -29,7 +30,7 @@ const generateRecentOrders = () => {
 
     let status = statuses[Math.floor(Math.random() * statuses.length)];
     if (i <= 5) status = 'out_for_delivery';
-    if (i > 5 && i <= 10) status = 'preparing';
+    if (i > 5 && i <= 10) status = 'in_design';
     
     const total = Math.floor(Math.random() * 150) + 50;
     const subtotal = Math.round(total * 0.85 * 100) / 100;

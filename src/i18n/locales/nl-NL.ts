@@ -776,6 +776,7 @@ export const nlNL = {
   },
   "orders": {
     "posting": "Boeken…",
+    "inDesign": "In ontwerp",
     "guards": {
       "notFound": "Bestelling niet gevonden",
       "terminalStatus": "De status van een afgesloten bestelling ({status}) kan niet worden gewijzigd.",

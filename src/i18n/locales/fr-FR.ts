@@ -776,6 +776,7 @@ export const frFR = {
   },
   "orders": {
     "posting": "Comptabilisation…",
+    "inDesign": "En création",
     "guards": {
       "notFound": "Commande introuvable",
       "terminalStatus": "Impossible de modifier le statut d'une commande terminale ({status}).",

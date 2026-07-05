@@ -106,6 +106,17 @@ export function normalizeOrder(order: any): Order {
     reversalReason: order.reversalReason || '',
     reversalDate: order.reversalDate || '',
     hasBackorder: !!order.hasBackorder,
+    // COGS linkage must survive too (P3.3-DEF-3): dropping these made the
+    // form's COGS panel/reversal blind to posted COGS on store-loaded orders.
+    cogsPosted: order.cogsPosted === true,
+    cogsReversed: order.cogsReversed === true,
+    cogsJournalEntryId: order.cogsJournalEntryId || '',
+    cogsReversalJournalEntryId: order.cogsReversalJournalEntryId || '',
+    cogsReversalReason: order.cogsReversalReason || '',
+    cogsAmount: order.cogsAmount ?? 0,
+    cogsPostedAt: order.cogsPostedAt ?? null,
+    cogsReversedAt: order.cogsReversedAt ?? null,
+    cogsSnapshot: order.cogsSnapshot || [],
     revenueAccount: order.revenueAccount || '4000-Sales',
     arAccount: order.arAccount || '1200-AR',
     cashAccount: order.cashAccount || '1010-Cash',
