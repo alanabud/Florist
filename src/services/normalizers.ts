@@ -97,6 +97,15 @@ export function normalizeOrder(order: any): Order {
     taxJurisdiction: order.taxJurisdiction || 'Local',
     taxRate: order.taxRate !== undefined ? parseFloat(order.taxRate) : 0.08875,
     glPostingStatus: order.glPostingStatus || 'unposted',
+    // GL linkage + reversal audit fields MUST survive normalization: dropping
+    // journalEntryId made the store's copy lose the posted-JE link, so the
+    // cancel/refund reversal gate (order.journalEntryId) never fired and
+    // cancelled orders silently kept their posted revenue (P3.2-DEF-2).
+    journalEntryId: order.journalEntryId || '',
+    reversalJournalEntryId: order.reversalJournalEntryId || '',
+    reversalReason: order.reversalReason || '',
+    reversalDate: order.reversalDate || '',
+    hasBackorder: !!order.hasBackorder,
     revenueAccount: order.revenueAccount || '4000-Sales',
     arAccount: order.arAccount || '1200-AR',
     cashAccount: order.cashAccount || '1010-Cash',
