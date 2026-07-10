@@ -26,12 +26,14 @@ export const OrderMaintenanceForm: React.FC<OrderMaintenanceFormProps> = ({ isOp
   const { t } = useI18n();
   const addToast = useToastStore((s) => s.addToast);
   const { role, user } = useAuthStore();
-  const { orders, products, inventory, fetchInventory, addOrder, updateOrderDetails, deleteOrder, modalPayload, postOrderFinancialsAction } = useAdminStore();
+  const { orders, products, inventory, customers, fetchInventory, fetchCustomers, addOrder, updateOrderDetails, deleteOrder, modalPayload, postOrderFinancialsAction } = useAdminStore();
   const fetchJournalEntries = useFinanceStore((s) => s.fetchJournalEntries);
 
-  // Availability data for backorder detection — load once if not present yet.
+  // Availability data for backorder detection + customer directory for
+  // customerId linkage — load once if not present yet.
   React.useEffect(() => {
     if (isOpen && inventory.length === 0) fetchInventory();
+    if (isOpen && customers.length === 0) fetchCustomers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
@@ -61,9 +63,17 @@ export const OrderMaintenanceForm: React.FC<OrderMaintenanceFormProps> = ({ isOp
       const normalized = normalizeOrder(values);
       // Recalculate totals
       const totals = calculateOrderTotals(normalized);
+      // Customer linkage (P3.4-DEF-1): payment allocation and statements match
+      // orders by customerId, but the form captures the customer by NAME. When
+      // the entered name exactly matches a customer dossier, link its real id;
+      // otherwise keep the existing/default id (walk-in behavior unchanged).
+      const matchedCustomer = customers.find(
+        (c) => (c.name || '').trim().toLowerCase() === (normalized.customerName || '').trim().toLowerCase()
+      );
       const finalOrder = {
         ...normalized,
         ...totals,
+        customerId: matchedCustomer?.id || normalized.customerId || 'c1',
         hasBackorder: orderHasBackorder(normalized.lineItems || []),
       };
 
