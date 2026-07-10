@@ -18,6 +18,7 @@ import {
   Scale
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
+import { useCompany } from '../../context/CompanyContext';
 import { useI18n } from '../../i18n/I18nProvider';
 import { buildInfo, buildLabel } from '../../config/buildInfo';
 import styles from './Sidebar.module.css';
@@ -61,11 +62,15 @@ const navGroups = [
 
 export const Sidebar: React.FC = () => {
   const { role } = useAuthStore();
+  const { userRole } = useCompany();
   const { t } = useI18n();
 
   const filteredGroups = navGroups.map(group => {
     const items = group.items.filter(item => {
-      if (role === 'staff') {
+      // Effective role: the ACTIVE COMPANY membership role wins; the global
+      // role is only a fallback (P3.4-DEF-2 — gating on the global role hid
+      // business modules from legitimate company admins).
+      if ((userRole || role) === 'staff') {
         if (
           item.id === 'finance' || 
           item.id === 'receivables' || 

@@ -3,6 +3,7 @@ import { useAdminStore } from '../store/adminStore';
 import { useFinanceStore } from '../store/financeStore';
 import { useToastStore } from '../store/toastStore';
 import { useAuthStore } from '../store/authStore';
+import { useCompany } from '../context/CompanyContext';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
 import { EmptyState } from '../components/ui/EmptyState';
@@ -43,6 +44,7 @@ export const AccountsReceivable: React.FC = () => {
 
   const { journalEntries, fetchJournalEntries } = useFinanceStore();
   const { role, user } = useAuthStore();
+  const { userRole: companyRole } = useCompany();
   const addToast = useToastStore(s => s.addToast);
 
   const [activeTab, setActiveTab] = useState<'open_ar' | 'aging' | 'payments' | 'statements' | 'collections' | 'gl'>('open_ar');
@@ -261,8 +263,11 @@ export const AccountsReceivable: React.FC = () => {
     );
   });
 
-  // Access denied for staff roles
-  if (role === 'staff') {
+  // Access denied for non-finance roles. The ACTIVE COMPANY membership role is
+  // authoritative (P3.4-DEF-2: gating on the global role denied legitimate
+  // company admins whose legacy global role is 'staff').
+  const effectiveRole = companyRole || role;
+  if (effectiveRole === 'staff' || effectiveRole === 'viewer') {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '80vh', textAlign: 'center', padding: '2rem' }}>
         <Landmark size={64} style={{ color: '#EF4444', marginBottom: '1.5rem' }} />
