@@ -307,7 +307,16 @@ export const postOrderFinancials = async (
       };
     };
 
-    const total = orderData.total || 0;
+    // The debit base MUST equal the sum of the credit components (revenue +
+    // delivery + tax), or the entry cannot balance. The legacy `total` field is
+    // a stale summary (it tracks the delivery fee when a line has no unit
+    // price) and diverges from the real order total once a line carries a
+    // price — which threw "Journal entry must balance" on every priced order
+    // (P3.4-DEF-3). Derive the base from the same components we credit.
+    const revenueBase = Math.round(
+      ((orderData.subtotal || 0) + (orderData.deliveryFee || 0) + (orderData.taxes || 0)) * 100
+    ) / 100;
+    const total = revenueBase;
     const amountPaid = orderData.amountPaid || 0;
     const balanceDue = Math.round((total - amountPaid) * 100) / 100;
 
