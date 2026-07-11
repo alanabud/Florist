@@ -8,6 +8,7 @@ import { validateOrder } from '../../../services/validators';
 import { writeAuditLog } from '../../../services/auditService';
 import { reverseCOGSForOrder } from '../../../services/financeService';
 import { useAuthStore } from '../../../store/authStore';
+import { useCompany } from '../../../context/CompanyContext';
 import { normalizeOrder } from '../../../services/normalizers';
 import {
   BACKORDER_REASON_CODES, getAvailableQtyForLine, applyBackorderDerivation,
@@ -26,7 +27,8 @@ export const OrderMaintenanceForm: React.FC<OrderMaintenanceFormProps> = ({ isOp
   const { t } = useI18n();
   const addToast = useToastStore((s) => s.addToast);
   const { role, user } = useAuthStore();
-  const { orders, products, inventory, customers, fetchInventory, fetchCustomers, addOrder, updateOrderDetails, deleteOrder, modalPayload, postOrderFinancialsAction } = useAdminStore();
+  const { userRole: companyRole } = useCompany();
+  const { orders, products, inventory, customers, fetchInventory, fetchCustomers, addOrder, updateOrderDetails, updateOrderStatus, deleteOrder, modalPayload, postOrderFinancialsAction } = useAdminStore();
   const fetchJournalEntries = useFinanceStore((s) => s.fetchJournalEntries);
 
   // Availability data for backorder detection + customer directory for
@@ -138,7 +140,25 @@ export const OrderMaintenanceForm: React.FC<OrderMaintenanceFormProps> = ({ isOp
         const orderId = finalOrder.id;
         const oldOrder = orders.find((o) => o.id === orderId);
 
-        await updateOrderDetails(orderId, finalOrder);
+        // Status transitions must run through the guarded path (P3.5-DEF-1: a
+        // form save that changed status bypassed lifecycle guards AND the
+        // cancel/refund GL reversal + delivered COGS side effects). The form
+        // also never writes finance-pipeline-owned fields on edit — they
+        // belong to the posting/reversal/COGS services, and writing the form's
+        // stale copies would clobber what updateOrderStatus just recorded.
+        const {
+          status: newStatus,
+          deliveredTime: _dt, glPostingStatus: _gl, journalEntryId: _je,
+          reversalJournalEntryId: _rj, reversalReason: _rr, reversalDate: _rd,
+          cogsPosted: _c1, cogsReversed: _c2, cogsJournalEntryId: _c3,
+          cogsReversalJournalEntryId: _c4, cogsReversalReason: _c5,
+          cogsAmount: _c6, cogsPostedAt: _c7, cogsReversedAt: _c8, cogsSnapshot: _c9,
+          ...editableFields
+        } = finalOrder as Record<string, any>;
+        if (oldOrder && newStatus !== oldOrder.status) {
+          await updateOrderStatus(orderId, newStatus); // throws on invalid transitions
+        }
+        await updateOrderDetails(orderId, editableFields);
 
         // Audit Trail
         await writeAuditLog({
@@ -813,7 +833,8 @@ export const OrderMaintenanceForm: React.FC<OrderMaintenanceFormProps> = ({ isOp
               }
             };
 
-            const canReverse = cogsPosted && !cogsReversed && (role === 'admin' || role === 'owner');
+            const effectiveRole = companyRole || role; // company membership role wins (P3.5)
+            const canReverse = cogsPosted && !cogsReversed && (effectiveRole === 'admin' || effectiveRole === 'owner');
 
             return (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.5rem', border: '1px solid #E8EAE6', borderRadius: '12px', padding: '1rem', background: '#FAFAF8' }}>

@@ -31,7 +31,7 @@ import { useI18n } from '../i18n/I18nProvider';
 import styles from './FinanceAdmin.module.css';
 
 export const FinanceAdmin: React.FC = () => {
-  const { selectedCompany, companySettings } = useCompany();
+  const { selectedCompany, companySettings, userRole } = useCompany();
   const { t, language } = useI18n();
   const { 
     journalEntries, 
@@ -44,6 +44,9 @@ export const FinanceAdmin: React.FC = () => {
   } = useFinanceStore();
 
   const { role, user } = useAuthStore();
+  // Effective role: active company membership wins (P3.5 — the Reverse button
+  // gated on the global role, hiding it from legitimate company admins).
+  const effectiveRole = userRole || role;
   const { setActiveModal } = useAdminStore();
   const addToast = useToastStore(s => s.addToast);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -999,7 +1002,7 @@ export const FinanceAdmin: React.FC = () => {
                                   <span style={{ marginLeft: '0.5rem', background: '#E0F2FE', color: '#0369A1', fontSize: '0.7rem', padding: '0.15rem 0.4rem', borderRadius: '4px', fontWeight: 600 }}>REVERSAL ENTRY</span>
                                 )}
                               </div>
-                              {je.status === 'posted' && !je.reversalOf && (role === 'admin' || role === 'owner') && (
+                              {je.status === 'posted' && !je.reversalOf && (effectiveRole === 'admin' || effectiveRole === 'owner') && (
                                 <AsyncActionButton
                                   onClick={() => handleReverse(je.id!)}
                                   pendingLabel={t('financeadmin.reversing')}
