@@ -336,8 +336,8 @@ export const PurchasingConsole: React.FC = () => {
                   {purchaseOrders
                     .filter(po => matchesSearch(po.id) || matchesSearch(po.vendorName) || matchesSearch(po.status))
                     .map(po => {
-                      const totalQty = po.lines.reduce((sum, l) => sum + l.quantityOrdered, 0);
-                      const receivedQty = po.lines.reduce((sum, l) => sum + (l.quantityReceived || 0), 0);
+                      const totalQty = (po.lines || []).reduce((sum, l) => sum + l.quantityOrdered, 0);
+                      const receivedQty = (po.lines || []).reduce((sum, l) => sum + (l.quantityReceived || 0), 0);
                       return (
                         <tr key={po.id}>
                           <td style={{ fontWeight: 600 }}>{po.id}</td>
@@ -404,8 +404,8 @@ export const PurchasingConsole: React.FC = () => {
                   {inventoryReceipts
                     .filter(rec => matchesSearch(rec.id) || matchesSearch(rec.poNumber) || matchesSearch(rec.vendorName))
                     .map(rec => {
-                      const accepted = rec.lines.reduce((sum, l) => sum + (l.quantityAccepted || 0), 0);
-                      const exception = rec.lines.reduce((sum, l) => sum + (l.quantityDamaged || 0) + (l.quantityRejected || 0), 0);
+                      const accepted = (rec.lines || []).reduce((sum, l) => sum + (l.quantityAccepted || 0), 0);
+                      const exception = (rec.lines || []).reduce((sum, l) => sum + (l.quantityDamaged || 0) + (l.quantityRejected || 0), 0);
                       return (
                         <tr key={rec.id}>
                           <td style={{ fontWeight: 600 }}>{rec.id}</td>
@@ -548,7 +548,7 @@ export const PurchasingConsole: React.FC = () => {
                   {vendorPayments
                     .filter(p => matchesSearch(p.id) || matchesSearch(p.vendorName) || matchesSearch(p.paymentMethod))
                     .map(p => {
-                      const applied = p.allocations.reduce((sum, a) => sum + a.amountApplied, 0);
+                      const applied = (p.allocations || []).reduce((sum, a) => sum + a.amountApplied, 0);
                       return (
                         <tr key={p.id}>
                           <td style={{ fontWeight: 600 }}>{p.paymentNumber}</td>
