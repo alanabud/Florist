@@ -1,4 +1,4 @@
-import { collection, doc, setDoc, updateDoc, getDoc, addDoc } from 'firebase/firestore';
+import { collection, doc, setDoc, updateDoc, getDoc, getDocs, query, where, addDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAdminStore, type InventoryReceipt, type InventoryReceiptLine, type PurchaseOrder, type InventoryItem, type InventoryTransaction } from '../store/adminStore';
 import { getNextSequenceNumber } from './sequenceService';
@@ -94,10 +94,20 @@ export async function receivePurchaseOrder(
   for (const line of linesWithNetCost) {
     if (line.quantityAccepted <= 0) continue;
 
-    const itemRef = doc(db, INVENTORY_COLLECTION, line.itemId);
-    const itemSnap = await getDoc(itemRef);
-    if (itemSnap.exists()) {
-      const itemData = itemSnap.data() as InventoryItem;
+    // Resolve the inventory record by SKU (P3.6-DEF-3): the PO line's itemId is
+    // the PRODUCT id, not the inventory document id, so doc(inventory, itemId)
+    // targeted a nonexistent doc — the read/update was rules-denied and the
+    // entire receipt failed (no inventory increase, no WAC update, no GRNI).
+    if (!line.sku) continue;
+    const invMatch = await getDocs(query(
+      collection(db, INVENTORY_COLLECTION),
+      where('companyId', '==', companyId),
+      where('sku', '==', line.sku)
+    ));
+    if (!invMatch.empty) {
+      const itemDoc = invMatch.docs[0];
+      const itemRef = itemDoc.ref;
+      const itemData = itemDoc.data() as InventoryItem;
       const currentQty = itemData.quantity || 0;
       const currentCost = itemData.unitCost || 0;
       const newQty = currentQty + line.quantityAccepted;
@@ -114,9 +124,9 @@ export async function receivePurchaseOrder(
       };
 
       await updateDoc(itemRef, itemUpdates);
-      
-      // Update local store
-      useAdminStore.getState().updateInventoryItem(line.itemId, itemUpdates);
+
+      // Update local store keyed by the real inventory doc id.
+      useAdminStore.getState().updateInventoryItem(itemDoc.id, itemUpdates);
     }
   }
 
