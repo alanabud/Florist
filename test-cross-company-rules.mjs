@@ -134,6 +134,13 @@ await allow('Effective owner self-syncs membership role to owner (repair path)',
 await deny('Owner cannot accidentally self-demote (must stay owner)', () => updateDoc(doc(ownerDb, `companies/${COMPANY_A}/members/globalOwner`), { role: 'admin' }));
 await allow("Admin still updates ANOTHER member's role (dropdown flow)", () => updateDoc(doc(aDb, `companies/${COMPANY_A}/members/userViewer`), { role: 'sales', updatedAt: new Date().toISOString(), updatedBy: 'userA' }));
 
+console.log('\n[9] Sequences: non-existent counter is readable so the atomic increment can run (P3.6-DEF-1)');
+await allow('Signed-in member reads a NOT-YET-EXISTENT sequence counter', () => getDoc(doc(aDb, `sequences/${COMPANY_A}_purchaseOrders`)));
+await allow('Staff creates a company sequence counter with companyId', () => setDoc(doc(aDb, `sequences/${COMPANY_A}_vendors`), { currentValue: 10001, companyId: COMPANY_A }));
+await allow('Staff increments own-company sequence counter', () => updateDoc(doc(aDb, `sequences/${COMPANY_A}_vendors`), { currentValue: 10002 }));
+await deny('Sequence create spoofing another company companyId is denied', () => setDoc(doc(aDb, `sequences/spoof_seq`), { currentValue: 1, companyId: COMPANY_B }));
+await deny('Guest cannot read a sequence counter', () => getDoc(doc(unauthDb, `sequences/${COMPANY_A}_vendors`)));
+
 await testEnv.cleanup();
 
 console.log('\n==================================================');

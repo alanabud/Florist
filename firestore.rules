@@ -372,7 +372,13 @@ service cloud.firestore {
       allow update, delete: if false;
     }
     match /sequences/{seqId} {
-      allow read: if canReadCompanyDoc();
+      // Read must succeed for a not-yet-existent counter: the atomic increment
+      // transaction reads before it writes, and canReadCompanyDoc() dereferences
+      // resource.data.companyId, which is null for a missing doc (this denied
+      // the very first increment and broke all AP creation — P3.6-DEF-1). A
+      // monotonic integer counter is non-sensitive; writes stay company-scoped
+      // and staff-gated, so numbering integrity is unaffected.
+      allow read: if isSignedIn();
       allow create: if canCreateCompanyDoc() && isCompanyStaff(request.resource.data.companyId);
       allow update: if canUpdateCompanyDoc() && isCompanyStaff(resource.data.companyId);
       allow delete: if false;
