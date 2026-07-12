@@ -62,8 +62,15 @@ export async function createPurchaseOrder(
     updatedAt: now,
   };
 
+  // Firestore rejects undefined values (P3.6-DEF-2: leaving Expected Delivery
+  // blank sent expectedDeliveryDate: undefined and setDoc threw, blocking PO
+  // creation). Strip any undefined optional fields before the write.
+  const sanitizedPO = Object.fromEntries(
+    Object.entries(newPO).filter(([, v]) => v !== undefined)
+  ) as typeof newPO;
+
   const docRef = doc(db, PO_COLLECTION, sequenceId);
-  await setDoc(docRef, newPO);
+  await setDoc(docRef, sanitizedPO);
 
   await writeAuditLog({
     companyId,
@@ -112,13 +119,15 @@ export async function updatePurchaseOrder(
 
   const totals = calculatePOTotals(lines, taxAmount, freightAmount, discountAmount);
 
-  const cleanUpdates = {
-    ...updates,
-    lines: totals.lines,
-    subtotal: totals.subtotal,
-    totalCost: totals.totalCost,
-    updatedAt: now,
-  };
+  const cleanUpdates = Object.fromEntries(
+    Object.entries({
+      ...updates,
+      lines: totals.lines,
+      subtotal: totals.subtotal,
+      totalCost: totals.totalCost,
+      updatedAt: now,
+    }).filter(([, v]) => v !== undefined) // Firestore rejects undefined (P3.6-DEF-2)
+  );
 
   await updateDoc(poRef, cleanUpdates);
 
