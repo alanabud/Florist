@@ -16,7 +16,14 @@ const SEQUENCE_CONFIG = {
  * Uses a Firestore transaction to ensure atomic increment and prevent duplicate numbers.
  */
 export async function getNextSequenceNumber(type: SequenceType): Promise<string> {
-  const sequenceDocRef = doc(db, 'sequences', type);
+  // Sequences are COMPANY-SCOPED (P3.6-DEF-1): the legacy global
+  // sequences/{type} doc carried no companyId, so the security rules —
+  // which correctly require company membership on the doc's companyId —
+  // denied every increment, breaking vendor/PO/receipt/bill/payment creation.
+  // Scoped ids also give each company its own numbering, as multi-tenant
+  // numbering should behave.
+  const companyId = localStorage.getItem('bloompro-selected-company') || 'DEFAULT_COMPANY';
+  const sequenceDocRef = doc(db, 'sequences', `${companyId}_${type}`);
   const config = SEQUENCE_CONFIG[type];
 
   return runTransaction(db, async (transaction) => {
@@ -30,7 +37,7 @@ export async function getNextSequenceNumber(type: SequenceType): Promise<string>
       }
     }
 
-    transaction.set(sequenceDocRef, { currentValue: nextVal }, { merge: true });
+    transaction.set(sequenceDocRef, { currentValue: nextVal, companyId }, { merge: true });
     return `${config.prefix}-${nextVal}`;
   });
 }
