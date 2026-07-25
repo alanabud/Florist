@@ -1,5 +1,8 @@
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+// See pdfExportService: v5 requires applyPlugin for doc.autoTable (P3.8-DEF-1).
+import { applyPlugin } from 'jspdf-autotable';
+
+applyPlugin(jsPDF);
 import * as XLSX from 'xlsx-js-style';
 import type { ReconciliationRun, ReconciliationException } from './reconciliationTypes';
 

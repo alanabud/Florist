@@ -1,5 +1,11 @@
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+// jspdf-autotable v5 no longer patches jsPDF on bare import — the side-effect
+// import left doc.autoTable undefined, so EVERY PDF export threw
+// "r.autoTable is not a function" (P3.8-DEF-1). applyPlugin restores the
+// prototype method the 18 call sites (and doc.lastAutoTable) rely on.
+import { applyPlugin } from 'jspdf-autotable';
+
+applyPlugin(jsPDF);
 import { type Order, type InventoryItem, type Customer, type SubscriptionItem, type EventItem } from '../store/adminStore';
 import { type Product } from '../data/products';
 
