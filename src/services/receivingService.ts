@@ -3,6 +3,7 @@ import { db } from '../firebase/config';
 import { useAdminStore, type InventoryReceipt, type InventoryReceiptLine, type PurchaseOrder, type InventoryItem, type InventoryTransaction } from '../store/adminStore';
 import { getNextSequenceNumber } from './sequenceService';
 import { writeAuditLog } from './auditService';
+import { LocalizedError } from '../i18n/localizedError';
 import { postJournalEntry, type JournalLine, type JournalEntry } from './financeService';
 
 const RECEIPTS_COLLECTION = 'inventoryReceipts';
@@ -70,6 +71,20 @@ export async function receivePurchaseOrder(
       totalAcceptedCost += lineTotal;
       totalAcceptedQty += acceptedQty;
     }
+  }
+
+  // An all-zero receipt is never a real intake: it would burn a receipt number
+  // and file an empty record while appearing to succeed (P3.9 — the modal
+  // closed with no inventory, cost, or GRNI effect). Reject it with a reason
+  // the operator can act on.
+  const anyReceivedUnits = receiptData.lines.some(l => (l.quantityReceived || 0) > 0);
+  if (!anyReceivedUnits) {
+    throw new LocalizedError('purchasing.guards.receiptNoQuantity',
+      'Enter at least one received quantity before posting this receipt.');
+  }
+  if (totalAcceptedQty <= 0) {
+    throw new LocalizedError('purchasing.guards.receiptAllRejected',
+      'Every received unit is marked damaged or rejected — nothing would be added to inventory.');
   }
 
   // Calculate Net Received Unit Cost per item for WAC

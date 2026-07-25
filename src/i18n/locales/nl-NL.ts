@@ -876,6 +876,16 @@ export const nlNL = {
     "deliveryEligibility": "Delivery Eligibility",
     "fulfillmentStatus": "Fulfillment Status"
   },
+  "purchasing": {
+    "receiptPosted": "Voorraadontvangst vastgelegd. Voorraden en gemiddelde kosten bijgewerkt.",
+    "receiptFailed": "Kan de voorraadontvangst niet vastleggen.",
+    "guards": {
+      "selectPo": "Selecteer een inkooporder om te ontvangen.",
+      "noItems": "Deze inkooporder bevat geen artikelen om te ontvangen.",
+      "receiptNoQuantity": "Voer minstens één ontvangen aantal in voordat u deze ontvangst vastlegt.",
+      "receiptAllRejected": "Alle ontvangen eenheden zijn beschadigd of afgekeurd — er wordt niets aan de voorraad toegevoegd."
+    }
+  },
   "purchasingconsole": {
     "toast": {
       "poCancelled": "Inkooporder {id} succesvol geannuleerd.",

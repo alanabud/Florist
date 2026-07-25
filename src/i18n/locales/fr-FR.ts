@@ -876,6 +876,16 @@ export const frFR = {
     "deliveryEligibility": "Delivery Eligibility",
     "fulfillmentStatus": "Fulfillment Status"
   },
+  "purchasing": {
+    "receiptPosted": "Réception d'inventaire enregistrée. Stocks et coûts moyens mis à jour.",
+    "receiptFailed": "Impossible d'enregistrer la réception d'inventaire.",
+    "guards": {
+      "selectPo": "Sélectionnez un bon de commande à réceptionner.",
+      "noItems": "Ce bon de commande ne contient aucun article à réceptionner.",
+      "receiptNoQuantity": "Saisissez au moins une quantité reçue avant d'enregistrer cette réception.",
+      "receiptAllRejected": "Toutes les unités reçues sont endommagées ou refusées — rien ne serait ajouté à l'inventaire."
+    }
+  },
   "purchasingconsole": {
     "toast": {
       "poCancelled": "Bon de commande {id} annulé avec succès.",

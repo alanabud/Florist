@@ -24,7 +24,7 @@ interface PaymentMaintenanceFormProps {
 export const PaymentMaintenanceForm: React.FC<PaymentMaintenanceFormProps> = ({ isOpen, onClose }) => {
   const { t } = useI18n();
   const addToast = useToastStore((s) => s.addToast);
-  const { customers, orders, modalPayload, fetchPayments, fetchOrders, updatePaymentDetails } = useAdminStore();
+  const { customers, orders, modalPayload, fetchPayments, fetchOrders, fetchCustomers, updatePaymentDetails } = useAdminStore();
   const fetchJournalEntries = useFinanceStore((s) => s.fetchJournalEntries);
 
   const [activeTab, setActiveTab] = useState<'payment' | 'allocation' | 'method' | 'gl'>('payment');
@@ -50,6 +50,16 @@ export const PaymentMaintenanceForm: React.FC<PaymentMaintenanceFormProps> = ({ 
   const isReadOnly = formValues.glPostingStatus === 'posted' || formValues.glPostingStatus === 'reversed';
 
   // Load modal payload
+  // The customer picker and open-order allocation grid read from the store, so
+  // a session that never visited Customers/Orders saw an EMPTY picker and could
+  // not record a payment at all (P3.9). Load both when the modal opens.
+  useEffect(() => {
+    if (!isOpen) return;
+    if (customers.length === 0) fetchCustomers();
+    if (orders.length === 0) fetchOrders();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+
   useEffect(() => {
     if (isOpen) {
       // Intended: reset form active tab to 'payment' when the modal is opened.
@@ -409,7 +419,7 @@ export const PaymentMaintenanceForm: React.FC<PaymentMaintenanceFormProps> = ({ 
                 >
                   <option value="">{t('maintenance.selectCustomer')}</option>
                   {customers.map(c => (
-                    <option key={c.id} value={c.id}>{c.name} (AR Bal: $${(c.arBalance || 0).toFixed(2)})</option>
+                    <option key={c.id} value={c.id}>{c.name} (AR Bal: ${(c.arBalance || 0).toFixed(2)})</option>
                   ))}
                 </select>
               )}

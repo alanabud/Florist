@@ -880,6 +880,16 @@ export const enUS = {
     deliveryEligibility: "Delivery Eligibility",
     fulfillmentStatus: "Fulfillment Status"
   },
+  purchasing: {
+    receiptPosted: "Inventory receipt recorded. Stock counts and average costs updated.",
+    receiptFailed: "Couldn't post the inventory receipt.",
+    guards: {
+      selectPo: "Select a Purchase Order to receive against.",
+      noItems: "This Purchase Order has no items to receive.",
+      receiptNoQuantity: "Enter at least one received quantity before posting this receipt.",
+      receiptAllRejected: "Every received unit is marked damaged or rejected — nothing would be added to inventory."
+    }
+  },
   purchasingconsole: {
     toast: {
       poCancelled: "Purchase Order {id} cancelled successfully.",

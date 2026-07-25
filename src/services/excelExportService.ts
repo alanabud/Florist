@@ -331,6 +331,38 @@ function createStyledWorkbook(options?: ExportOptions): XLSX.WorkBook {
   return wb;
 }
 
+/**
+ * Company identity sheet for data exports (P3.9).
+ *
+ * PDF exports carry the company name and the configured report footer, but
+ * spreadsheet exports arrived anonymous — an exported file couldn't be traced
+ * back to the company that produced it. The DATA sheets stay a clean grid
+ * (row 1 = headers, so freeze-pane and auto-filter keep working for analysis);
+ * identity lives here and in the workbook properties instead.
+ */
+function addReportInfoSheet(wb: XLSX.WorkBook, title: string, options?: ExportOptions) {
+  const brandName = options?.companyName || 'BloomPro Studio';
+  const locale = options?.locale || 'en-US';
+  const langLabels = LABELS[locale] || LABELS['en-US'];
+  const rows: (string | number)[][] = [
+    [brandName],
+    [title],
+    [],
+    [langLabels.generated, getFormattedDateTime(new Date(), locale)],
+    [langLabels.preparedBy, brandName],
+  ];
+  if (options?.currencyCode) rows.push(['Currency', options.currencyCode]);
+  if (options?.reportFooterText) rows.push([], [options.reportFooterText]);
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{ wch: 28 }, { wch: 48 }];
+  const brandRef = XLSX.utils.encode_cell({ r: 0, c: 0 });
+  if (ws[brandRef]) ws[brandRef].s = titleStyle;
+  const titleRef = XLSX.utils.encode_cell({ r: 1, c: 0 });
+  if (ws[titleRef]) ws[titleRef].s = { font: { bold: true, sz: 14, color: { rgb: SAGE_DARK_RGB }, name: 'Calibri' } };
+  XLSX.utils.book_append_sheet(wb, ws, 'Report Info');
+}
+
 function downloadWorkbook(wb: XLSX.WorkBook, filename: string) {
   XLSX.writeFile(wb, filename);
 }
@@ -514,6 +546,7 @@ export function exportOrdersExcel(orders: Order[], filename?: string, options?: 
   const locale = options?.locale || 'en-US';
   const langLabels = LABELS[locale] || LABELS['en-US'];
 
+  addReportInfoSheet(wb, 'Orders Report', options);
   addSheet(wb, [
     [langLabels.orderId, langLabels.customer, 'Items', langLabels.status, langLabels.total, langLabels.paymentStatus, langLabels.dueDate, langLabels.createdDate],
     ...orders.map(o => [
@@ -533,6 +566,8 @@ export function exportInventoryExcel(inventory: InventoryItem[], filename?: stri
   const locale = options?.locale || 'en-US';
   const langLabels = LABELS[locale] || LABELS['en-US'];
 
+  addReportInfoSheet(wb, 'Inventory Report', options);
+
   addSheet(wb, [
     [langLabels.sku, langLabels.item, langLabels.category, langLabels.onHand, 'Reserved', langLabels.available, 'Reorder Point', langLabels.unitCost, langLabels.supplier, 'Status'],
     ...inventory.map(i => [
@@ -550,6 +585,8 @@ export function exportCustomersExcel(customers: Customer[], options?: ExportOpti
   const locale = options?.locale || 'en-US';
   const langLabels = LABELS[locale] || LABELS['en-US'];
 
+  addReportInfoSheet(wb, 'Customers Report', options);
+
   addSheet(wb, [
     [langLabels.name, langLabels.email, langLabels.phone, 'Type', langLabels.tier, 'Total Orders', langLabels.lifetimeValue, langLabels.openBalance],
     ...customers.map(c => [
@@ -565,6 +602,8 @@ export function exportProductsExcel(products: Product[], filename?: string, opti
   const wb = createStyledWorkbook(options);
   const locale = options?.locale || 'en-US';
   const langLabels = LABELS[locale] || LABELS['en-US'];
+
+  addReportInfoSheet(wb, 'Products Report', options);
 
   addSheet(wb, [
     [langLabels.sku, 'Product Name', langLabels.category, langLabels.price, 'Stock Status', 'Product Status', 'Cost', 'Margin %', langLabels.supplier],
@@ -583,6 +622,8 @@ export function exportSubscriptionsExcel(subscriptions: SubscriptionItem[], file
   const wb = createStyledWorkbook(options);
   const locale = options?.locale || 'en-US';
   const langLabels = LABELS[locale] || LABELS['en-US'];
+
+  addReportInfoSheet(wb, 'Subscriptions Report', options);
 
   addSheet(wb, [
     ['Customer Name', 'Product Name', langLabels.frequency, langLabels.nextDelivery, langLabels.monthlyValue, langLabels.status, 'Failed Payment Count', 'Preferred Colors'],

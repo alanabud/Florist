@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FormModal } from '../../ui/FormModal';
 import { useAdminStore } from '../../../store/adminStore';
+import { localizeError } from '../../../i18n/localizedError';
 import { useToastStore } from '../../../store/toastStore';
 import { receivePurchaseOrder } from '../../../services/receivingService';
 import modalStyles from '../../ui/FormModal.module.css';
@@ -97,18 +98,18 @@ export const InventoryReceiptForm: React.FC<InventoryReceiptFormProps> = ({ isOp
     if (isSubmitting) return;
 
     if (!poId) {
-      addToast('Please select a Purchase Order to receive.', 'error');
+      addToast(t('purchasing.guards.selectPo'), 'error');
       return;
     }
 
     if (lines.length === 0) {
-      addToast('No items to receive.', 'error');
+      addToast(t('purchasing.guards.noItems'), 'error');
       return;
     }
 
     const noQtyReceived = lines.every(l => l.quantityReceived <= 0);
     if (noQtyReceived) {
-      addToast('Please enter a received quantity greater than zero for at least one item.', 'error');
+      addToast(t('purchasing.guards.receiptNoQuantity'), 'error');
       return;
     }
 
@@ -131,11 +132,11 @@ export const InventoryReceiptForm: React.FC<InventoryReceiptFormProps> = ({ isOp
       };
 
       await receivePurchaseOrder(receiptPayload, 'Admin');
-      addToast('Inventory receipt recorded and accrued. Stock counts and average costs updated.', 'success');
+      addToast(t('purchasing.receiptPosted'), 'success');
       onClose();
     } catch (e: any) {
       console.error(e);
-      addToast(e.message || 'Failed to post inventory receipt.', 'error');
+      addToast(localizeError(e, t, 'purchasing.receiptFailed'), 'error');
     } finally {
       setIsSubmitting(false);
     }

@@ -876,6 +876,16 @@ export const esUS = {
     "deliveryEligibility": "Delivery Eligibility",
     "fulfillmentStatus": "Fulfillment Status"
   },
+  "purchasing": {
+    "receiptPosted": "Recepción de inventario registrada. Existencias y costos promedio actualizados.",
+    "receiptFailed": "No se pudo registrar la recepción de inventario.",
+    "guards": {
+      "selectPo": "Selecciona una orden de compra para recibir.",
+      "noItems": "Esta orden de compra no tiene artículos para recibir.",
+      "receiptNoQuantity": "Introduce al menos una cantidad recibida antes de registrar esta recepción.",
+      "receiptAllRejected": "Todas las unidades recibidas están dañadas o rechazadas: no se añadiría nada al inventario."
+    }
+  },
   "purchasingconsole": {
     "toast": {
       "poCancelled": "Orden de compra {id} cancelada correctamente.",
