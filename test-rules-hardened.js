@@ -1,8 +1,9 @@
 import fs from 'fs';
 import { initializeApp } from 'firebase/app';
 import {
-  getFirestore, doc, setDoc, getDoc, getDocs, collection, addDoc, setLogLevel
+  getFirestore, doc, setDoc, getDoc, getDocs, collection, addDoc, deleteDoc, query, where, setLogLevel
 } from 'firebase/firestore';
+import { getAuth, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 
 // 1. Read environment variables from .env
 const envContent = fs.readFileSync('.env', 'utf8');
@@ -318,6 +319,13 @@ async function runTests() {
     return addDoc(collection(db, 'sequences'), { currentValue: 1 });
   });
 
+  // ── Clean up the guest-checkout fixture this run created ──────────────
+  // These assertions must run as an UNAUTHENTICATED guest (they verify the
+  // storefront-checkout rule), and a guest cannot delete. Without this pass the
+  // suite left one permanent QA_ORDER_RULES_TEST_* order in the PRODUCTION
+  // database on every gate run — 88 had accumulated before this was found.
+  await cleanupTestArtifacts();
+
   console.log('----------------------------------------');
   if (failedTests > 0) {
     console.error(`❌ QA Test Run Failed: ${failedTests} test(s) failed.`);
@@ -325,6 +333,38 @@ async function runTests() {
   } else {
     console.log('✅ QA Test Run Succeeded: All security boundaries are correctly enforced!');
     process.exit(0);
+  }
+}
+
+/**
+ * Delete the QA_ORDER_RULES_TEST_* order(s) this suite creates as a guest.
+ * Requires SMOKE_AUTH_EMAIL / SMOKE_AUTH_PASSWORD (already supplied by the
+ * verify:prod gate). Cleanup failure is reported but never fails the run —
+ * this suite's job is asserting rules, not housekeeping.
+ */
+async function cleanupTestArtifacts() {
+  const email = process.env.SMOKE_AUTH_EMAIL;
+  const password = process.env.SMOKE_AUTH_PASSWORD;
+  if (!email || !password) {
+    console.warn('⚠️  Cleanup skipped: set SMOKE_AUTH_EMAIL/SMOKE_AUTH_PASSWORD to remove test fixtures.');
+    return;
+  }
+  try {
+    const auth = getAuth();
+    await signInWithEmailAndPassword(auth, email, password);
+    const companyId = 'DEFAULT_COMPANY';
+    const snap = await getDocs(query(collection(db, 'orders'), where('companyId', '==', companyId)));
+    const stale = snap.docs.filter(d =>
+      /^QA_ORDER_RULES_TEST/.test(d.id) || /QA Guest Tester/i.test(d.data().customerName || '')
+    );
+    let removed = 0;
+    for (const d of stale) {
+      try { await deleteDoc(doc(db, 'orders', d.id)); removed++; } catch { /* leave it; reported below */ }
+    }
+    console.log(`🧹 Cleanup: removed ${removed}/${stale.length} QA rules-test order(s) from ${companyId}.`);
+    await signOut(auth);
+  } catch (e) {
+    console.warn(`⚠️  Cleanup failed (non-fatal): ${e.code || e.message}`);
   }
 }
 
