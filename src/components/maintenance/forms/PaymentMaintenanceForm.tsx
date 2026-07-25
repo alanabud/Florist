@@ -50,13 +50,17 @@ export const PaymentMaintenanceForm: React.FC<PaymentMaintenanceFormProps> = ({ 
   const isReadOnly = formValues.glPostingStatus === 'posted' || formValues.glPostingStatus === 'reversed';
 
   // Load modal payload
-  // The customer picker and open-order allocation grid read from the store, so
-  // a session that never visited Customers/Orders saw an EMPTY picker and could
-  // not record a payment at all (P3.9). Load both when the modal opens.
+  // The customer picker and the open-order allocation grid read from the store.
+  // Refresh BOTH on every open — not just when empty (P3.9): a cached list is
+  // wrong in two ways that both misdirect money. A customer created in another
+  // session is missing from the picker, and a cached arBalance / order
+  // balanceDue means the operator allocates against a balance that has since
+  // moved (another payment, a cancellation, an edit). Payment allocation must
+  // read current balances, so the two reads on open are the correct trade.
   useEffect(() => {
     if (!isOpen) return;
-    if (customers.length === 0) fetchCustomers();
-    if (orders.length === 0) fetchOrders();
+    fetchCustomers();
+    fetchOrders();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
