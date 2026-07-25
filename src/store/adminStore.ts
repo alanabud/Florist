@@ -1026,7 +1026,9 @@ export const useAdminStore = create<AdminState>()(
 
         // Backordered lines must carry a reason before the order leaves draft
         // (mirrors the order-form confirm gate for the status-dropdown path).
-        if (oldStatus === 'draft' && status !== 'draft') {
+        // Abandoning an order (cancel/refund) never requires documenting a
+        // shortage — see backorderService.validateBackorderLines (P3.9).
+        if (oldStatus === 'draft' && status !== 'draft' && status !== 'cancelled' && status !== 'refunded') {
           const unreasoned = (order.lineItems || []).some((l) =>
             (l.backorderedQty || 0) > 0 &&
             (!l.backorderReasonCode || (l.backorderReasonCode === 'other' && !(l.backorderReasonText || '').trim()))

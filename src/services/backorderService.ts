@@ -87,7 +87,11 @@ export function validateBackorderLines(
   lineItems: Array<Record<string, any>>,
   targetStatus: string
 ): BackorderIssue[] {
-  if (targetStatus === 'draft') return [];
+  // Drafts are forgiving, and ABANDONING an order never requires documenting a
+  // shortage (P3.9: the gate blocked draft -> cancelled, so an order with an
+  // undocumented shortage could not be cancelled at all). The reason is a
+  // promise to the customer — it only matters when the order goes forward.
+  if (targetStatus === 'draft' || targetStatus === 'cancelled' || targetStatus === 'refunded') return [];
   const issues: BackorderIssue[] = [];
   lineItems.forEach((line, index) => {
     if ((line.backorderedQty || 0) <= 0) return;

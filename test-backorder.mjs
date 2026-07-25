@@ -31,7 +31,7 @@ function applyBackorderDerivation(line, products, inventory) {
   return { ...line, backorderedQty };
 }
 function validateBackorderLines(lineItems, targetStatus) {
-  if (targetStatus === 'draft') return [];
+  if (targetStatus === 'draft' || targetStatus === 'cancelled' || targetStatus === 'refunded') return [];
   const issues = [];
   lineItems.forEach((line, index) => {
     if ((line.backorderedQty || 0) <= 0) return;
@@ -77,6 +77,8 @@ const normalLine = {};
 assert(validateBackorderLines([boLineNoReason], 'draft').length === 0, 'draft saves are allowed without a reason (gentle warning only)');
 assert(validateBackorderLines([boLineNoReason], 'confirmed').length === 1, 'confirm blocked when a backordered line has no reason');
 assert(validateBackorderLines([boLineNoReason], 'scheduled').length === 1, 'any non-draft status requires the reason');
+assert(validateBackorderLines([boLineNoReason], 'cancelled').length === 0, 'CANCELLING never requires a backorder reason (abandoned order)');
+assert(validateBackorderLines([boLineNoReason], 'refunded').length === 0, 'REFUNDING never requires a backorder reason');
 assert(validateBackorderLines([boLineOtherNoText], 'confirmed')[0]?.code === 'missing_other_text', 'reason "other" requires free text');
 assert(validateBackorderLines([boLineOtherOk], 'confirmed').length === 0, 'reason "other" with text passes');
 assert(validateBackorderLines([boLineReason, normalLine], 'confirmed').length === 0, 'reasoned backorder + normal line passes');
