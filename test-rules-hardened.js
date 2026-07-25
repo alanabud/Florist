@@ -36,8 +36,23 @@ const db = getFirestore(app);
 // case below intentionally triggers a denied operation. Assertions are unaffected.
 setLogLevel('silent');
 
-const rand = Math.floor(Math.random() * 90000) + 10000;
+// Run identity: every fixture this process creates is owned by exactly this
+// RUN_ID, so cleanup targets only its own records — never a broad QA/TEST/SMOKE
+// name sweep, which could delete a concurrent run's (or a human's) data.
+const RUN_ID = `${Date.now().toString(36)}${Math.floor(Math.random() * 1e6).toString(36)}`;
+const rand = RUN_ID;
 const testOrderId = `QA_ORDER_RULES_TEST_${rand}`;
+
+/**
+ * Explicit ownership manifest. A fixture is registered the moment its creating
+ * assertion SUCCEEDS, so cleanup knows exactly what this run put in production.
+ */
+const OWNED_FIXTURES = [];
+const own = (collectionName, docId) => {
+  if (!OWNED_FIXTURES.some(f => f.collectionName === collectionName && f.docId === docId)) {
+    OWNED_FIXTURES.push({ collectionName, docId });
+  }
+};
 const testOrderNumber = `BLM-QA${rand}`;
 const testEmail = `qa-test-${rand}@example.com`;
 const testTrackingId = `${testOrderNumber.toLowerCase()}_${testEmail.toLowerCase()}`;
@@ -53,9 +68,12 @@ console.log('----------------------------------------');
 
 let failedTests = 0;
 
-async function assertSucceeds(name, action) {
+async function assertSucceeds(name, action, ownsFixture) {
   try {
     await action();
+    // Register ownership ONLY on a confirmed write — a denied attempt leaves
+    // nothing behind, and claiming it would make cleanup chase a phantom.
+    if (ownsFixture) own(ownsFixture.collectionName, ownsFixture.docId);
     console.log(`✅ [PASS] ${name}`);
   } catch (error) {
     console.error(`❌ [FAIL] ${name} (Expected success but got error)`);
@@ -122,7 +140,7 @@ async function runTests() {
       companyId: 'DEFAULT_COMPANY',
       createdAt: new Date().toISOString()
     });
-  });
+  }, { collectionName: 'orders', docId: testOrderId });
 
   // 2. Guest reads the created order (Denied)
   await assertFails('Guest reads order document', () => {
@@ -157,7 +175,7 @@ async function runTests() {
       companyId: 'DEFAULT_COMPANY',
       updatedAt: new Date().toISOString()
     });
-  });
+  }, { collectionName: 'publicOrderTracking', docId: testTrackingId });
 
   // 6. Guest creates tracking doc under mismatched ID (Denied)
   await assertFails('Guest creates publicOrderTracking with mismatched document ID', () => {
@@ -319,53 +337,128 @@ async function runTests() {
     return addDoc(collection(db, 'sequences'), { currentValue: 1 });
   });
 
-  // ── Clean up the guest-checkout fixture this run created ──────────────
-  // These assertions must run as an UNAUTHENTICATED guest (they verify the
-  // storefront-checkout rule), and a guest cannot delete. Without this pass the
-  // suite left one permanent QA_ORDER_RULES_TEST_* order in the PRODUCTION
-  // database on every gate run — 88 had accumulated before this was found.
-  await cleanupTestArtifacts();
-
-  console.log('----------------------------------------');
-  if (failedTests > 0) {
-    console.error(`❌ QA Test Run Failed: ${failedTests} test(s) failed.`);
-    process.exit(1);
-  } else {
-    console.log('✅ QA Test Run Succeeded: All security boundaries are correctly enforced!');
-    process.exit(0);
-  }
 }
 
 /**
- * Delete the QA_ORDER_RULES_TEST_* order(s) this suite creates as a guest.
- * Requires SMOKE_AUTH_EMAIL / SMOKE_AUTH_PASSWORD (already supplied by the
- * verify:prod gate). Cleanup failure is reported but never fails the run —
- * this suite's job is asserting rules, not housekeeping.
+ * Entry point. Cleanup runs in `finally` so this run's production fixtures are
+ * removed even when an assertion throws, and its result is fatal: the process
+ * exits nonzero if any owned fixture survives. Assertion failures and cleanup
+ * failures are reported separately so a green suite with dirty cleanup can
+ * never be mistaken for success.
  */
-async function cleanupTestArtifacts() {
-  const email = process.env.SMOKE_AUTH_EMAIL;
-  const password = process.env.SMOKE_AUTH_PASSWORD;
-  if (!email || !password) {
-    console.warn('⚠️  Cleanup skipped: set SMOKE_AUTH_EMAIL/SMOKE_AUTH_PASSWORD to remove test fixtures.');
-    return;
-  }
+async function main() {
+  let cleanupFailures = 0;
   try {
-    const auth = getAuth();
-    await signInWithEmailAndPassword(auth, email, password);
-    const companyId = 'DEFAULT_COMPANY';
-    const snap = await getDocs(query(collection(db, 'orders'), where('companyId', '==', companyId)));
-    const stale = snap.docs.filter(d =>
-      /^QA_ORDER_RULES_TEST/.test(d.id) || /QA Guest Tester/i.test(d.data().customerName || '')
-    );
-    let removed = 0;
-    for (const d of stale) {
-      try { await deleteDoc(doc(db, 'orders', d.id)); removed++; } catch { /* leave it; reported below */ }
-    }
-    console.log(`🧹 Cleanup: removed ${removed}/${stale.length} QA rules-test order(s) from ${companyId}.`);
-    await signOut(auth);
+    await runTests();
   } catch (e) {
-    console.warn(`⚠️  Cleanup failed (non-fatal): ${e.code || e.message}`);
+    console.error('❌ QA Test Run threw before completing:', e?.message || e);
+    failedTests++;
+  } finally {
+    cleanupFailures = await cleanupOwnedFixtures();
   }
+
+  console.log('----------------------------------------');
+  if (failedTests > 0 || cleanupFailures > 0) {
+    if (failedTests > 0) console.error(`❌ QA Test Run Failed: ${failedTests} test(s) failed.`);
+    if (cleanupFailures > 0) {
+      console.error(`❌ QA Test Run Failed: production fixture cleanup did not complete (${cleanupFailures} issue(s)).`);
+      console.error('   The gate is RED because this run left data in production.');
+    }
+    process.exit(1);
+  }
+  console.log('✅ QA Test Run Succeeded: All security boundaries are correctly enforced, and this run left no production fixtures.');
+  process.exit(0);
 }
 
-runTests();
+/**
+ * FAIL-CLOSED cleanup of this run's own fixtures.
+ *
+ * This suite writes to PRODUCTION (it must, to assert the guest-checkout rule)
+ * and runs unauthenticated, so it cannot delete what it creates without
+ * signing in afterwards. Cleanup is therefore mandatory, not best-effort:
+ * missing credentials, a failed sign-in, a failed delete, or any fixture still
+ * present afterwards all FAIL THE RUN. A "green gate that left pollution" is
+ * exactly the failure class that let 88 junk orders accumulate.
+ *
+ * Deletion is by exact owned document id only — never a QA/TEST/SMOKE name
+ * sweep, which could destroy a concurrent run's or a human's records.
+ *
+ * @returns {Promise<number>} count of cleanup failures (0 = clean)
+ */
+async function cleanupOwnedFixtures() {
+  if (OWNED_FIXTURES.length === 0) {
+    console.log('🧹 Cleanup: this run created no production fixtures — nothing to remove.');
+    return 0;
+  }
+  const email = process.env.SMOKE_AUTH_EMAIL;
+  const password = process.env.SMOKE_AUTH_PASSWORD;
+  const manifest = OWNED_FIXTURES.map(f => `${f.collectionName}/${f.docId}`).join(', ');
+
+  if (!email || !password) {
+    console.error(`❌ [CLEANUP] SMOKE_AUTH_EMAIL/SMOKE_AUTH_PASSWORD are required to remove this run's production fixtures.`);
+    console.error(`   Leaked fixtures (${OWNED_FIXTURES.length}): ${manifest}`);
+    return 1;
+  }
+
+  const auth = getAuth();
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch (e) {
+    console.error(`❌ [CLEANUP] Authentication failed (${e.code || e.message}) — cannot remove this run's fixtures.`);
+    console.error(`   Leaked fixtures (${OWNED_FIXTURES.length}): ${manifest}`);
+    return 1;
+  }
+
+  let failures = 0;
+  for (const f of OWNED_FIXTURES) {
+    try {
+      await deleteDoc(doc(db, f.collectionName, f.docId));
+    } catch (e) {
+      console.error(`❌ [CLEANUP] Delete failed for ${f.collectionName}/${f.docId}: ${e.code || e.message}`);
+      failures++;
+    }
+  }
+
+  // Independent post-cleanup verification: a successful delete CALL is not
+  // proof — absence from the datastore is. Verify by LISTING the collection
+  // and checking the id is gone, rather than by getDoc: for company-scoped
+  // docs the read rule dereferences resource.data.companyId, which is null for
+  // a deleted document, so a get returns permission-denied and cannot
+  // distinguish "removed" from "unreadable". A query returns rows that exist.
+  let remaining = 0;
+  for (const f of OWNED_FIXTURES) {
+    try {
+      const snap = await getDocs(query(
+        collection(db, f.collectionName),
+        where('companyId', '==', 'DEFAULT_COMPANY')
+      ));
+      if (snap.docs.some(d => d.id === f.docId)) {
+        console.error(`❌ [CLEANUP] Fixture STILL PRESENT after cleanup: ${f.collectionName}/${f.docId}`);
+        remaining++;
+      }
+    } catch (listErr) {
+      // Some collections deny list but allow public get (publicOrderTracking).
+      try {
+        const one = await getDoc(doc(db, f.collectionName, f.docId));
+        if (one.exists()) {
+          console.error(`❌ [CLEANUP] Fixture STILL PRESENT after cleanup: ${f.collectionName}/${f.docId}`);
+          remaining++;
+        }
+      } catch (getErr) {
+        console.error(`❌ [CLEANUP] Could not verify removal of ${f.collectionName}/${f.docId} (list: ${listErr.code || listErr.message}; get: ${getErr.code || getErr.message}).`);
+        remaining++;
+      }
+    }
+  }
+
+  await signOut(auth).catch(() => {});
+
+  if (failures === 0 && remaining === 0) {
+    console.log(`🧹 Cleanup: removed and verified ${OWNED_FIXTURES.length}/${OWNED_FIXTURES.length} owned fixture(s) [run ${RUN_ID}] — post-cleanup owned-fixture count = 0.`);
+    return 0;
+  }
+  console.error(`❌ [CLEANUP] ${failures} delete failure(s), ${remaining} fixture(s) still present [run ${RUN_ID}].`);
+  return failures + remaining;
+}
+
+main();
