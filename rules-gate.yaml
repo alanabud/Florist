@@ -1,0 +1,151 @@
+name: Firestore Rules Gate
+
+# Runs BloomPro's two Firestore security-rules suites against the Firestore
+# emulator on a normal CI runner. The suites cannot execute in the local
+# agent sandbox (the emulator's rules endpoint fails there with an HTTP-2
+# 500), so this workflow IS the rules gate for the deploy: both suites must
+# be green here before firestore.rules may be deployed.
+#
+# Suites (repo root; each prints a per-assertion tally and exits non-zero
+# on any failure):
+#   firebase emulators:exec --only firestore --project florist-rules-test "node test-guest-order-rules.mjs"
+#   firebase emulators:exec --only firestore --project florist-rules-test "node test-cross-company-rules.mjs"
+#
+# Every run also reports its per-suite verdict back onto the branch's pull
+# request as a comment (updated in place), including the suites' own
+# summary lines, so the gate evidence lives next to PR #1.
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - fix/certification-blockers
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  rules-gate:
+    name: Firestore rules suites (emulator)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out the branch
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17 (Firestore emulator runtime)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies (firebase-tools + @firebase/rules-unit-testing)
+        run: npm ci
+
+      - name: Suite 1 - guest-order lifecycle rules
+        id: guest
+        shell: bash
+        run: |
+          set -o pipefail
+          npx --no-install firebase emulators:exec --only firestore --project florist-rules-test "node test-guest-order-rules.mjs" 2>&1 | tee guest-rules.log
+
+      - name: Suite 2 - cross-company isolation rules
+        id: xcompany
+        if: always()
+        shell: bash
+        run: |
+          set -o pipefail
+          npx --no-install firebase emulators:exec --only firestore --project florist-rules-test "node test-cross-company-rules.mjs" 2>&1 | tee xcompany-rules.log
+
+      - name: Upload suite logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rules-gate-logs
+          path: |
+            guest-rules.log
+            xcompany-rules.log
+          if-no-files-found: warn
+
+      - name: Report results (job summary + PR comment)
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          GUEST_OUTCOME: ${{ steps.guest.outcome }}
+          XCOMPANY_OUTCOME: ${{ steps.xcompany.outcome }}
+        with:
+          script: |
+            const fs = require('fs');
+            const read = (p) => { try { return fs.readFileSync(p, 'utf8'); } catch { return ''; } };
+            const analyze = (log) => {
+              const lines = log.split('\n');
+              const checks = lines.filter((l) => l.includes('✅')).length;
+              const crosses = lines.filter((l) => l.includes('❌')).length;
+              const summary = lines.filter((l) => /assertions passed|FAILED/.test(l)).pop() || '(no suite summary line found in log)';
+              return { checks, crosses, summary: summary.trim() };
+            };
+            const guest = analyze(read('guest-rules.log'));
+            const xcomp = analyze(read('xcompany-rules.log'));
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const verdict = (outcome, a) => outcome === 'success'
+              ? `✅ PASS - ${a.summary}`
+              : `❌ FAIL (step outcome: ${outcome}) - ${a.summary}`;
+            const body = [
+              '<!-- rules-gate-report -->',
+              '## 🔐 Firestore Rules Gate - CI result',
+              '',
+              `**Run:** ${runUrl}`,
+              `**Commit:** ${context.sha}`,
+              '',
+              '| Suite | Verdict | Assertions ✅ / ❌ |',
+              '|---|---|---|',
+              `| Guest-order lifecycle (\`test-guest-order-rules.mjs\`) | ${verdict(process.env.GUEST_OUTCOME, guest)} | ${guest.checks} / ${guest.crosses} |`,
+              `| Cross-company isolation (\`test-cross-company-rules.mjs\`) | ${verdict(process.env.XCOMPANY_OUTCOME, xcomp)} | ${xcomp.checks} / ${xcomp.crosses} |`,
+              '',
+              (process.env.GUEST_OUTCOME === 'success' && process.env.XCOMPANY_OUTCOME === 'success')
+                ? '**Gate verdict: ✅ PASS** - both suites green; the rules gate for the deploy is satisfied.'
+                : '**Gate verdict: ❌ NOT PASSED** - see the run logs before deploying rules.',
+            ].join('\n');
+            if (process.env.GITHUB_STEP_SUMMARY) {
+              fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, body + '\n');
+            }
+            // Find the PR this run belongs to: direct on pull_request events,
+            // otherwise the open PR whose head is this branch.
+            let prNumber = context.issue.number;
+            if (!prNumber) {
+              const head = `${context.repo.owner}:${context.ref.replace('refs/heads/', '')}`;
+              const { data: prs } = await github.rest.pulls.list({
+                owner: context.repo.owner, repo: context.repo.repo, state: 'open', head,
+              });
+              if (prs.length > 0) prNumber = prs[0].number;
+            }
+            if (!prNumber) {
+              core.info('No open PR found for this run; report written to job summary only.');
+              return;
+            }
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner, repo: context.repo.repo, issue_number: prNumber, per_page: 100,
+            });
+            const existing = comments.find((c) => c.body && c.body.includes('<!-- rules-gate-report -->'));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner, repo: context.repo.repo, comment_id: existing.id, body,
+              });
+              core.info(`Updated rules-gate comment ${existing.id} on PR #${prNumber}.`);
+            } else {
+              const created = await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo, issue_number: prNumber, body,
+              });
+              core.info(`Created rules-gate comment ${created.data.id} on PR #${prNumber}.`);
+            }
