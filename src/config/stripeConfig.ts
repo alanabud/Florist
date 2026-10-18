@@ -40,6 +40,13 @@ export const isStripeConfigured = (): boolean =>
  *                     'paid') so the store can be tried end to end until
  *                     Alan's real Stripe keys arrive. Alan can force demo
  *                     OFF by setting VITE_PAYMENTS_DEMO_MODE=false.
+ *                     Spark rework (2026-10-18): demo availability is
+ *                     gated on THIS client-visible config only — the
+ *                     confirmation runs client-side under a strict
+ *                     Firestore-rules quarantine because the free Spark
+ *                     plan has no Cloud Functions (the functions-side
+ *                     PAYMENTS_DEMO_MODE gate remains in the retained
+ *                     functions code for the future Blaze path).
  *  - 'unconfigured' — no key AND demo explicitly disabled: checkout shows
  *                     a "payments not configured" notice and cannot
  *                     complete. Nothing silently falls back to a mock.

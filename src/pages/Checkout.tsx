@@ -109,8 +109,9 @@ export const Checkout: React.FC = () => {
       //      customer returns here with the cart intact and the order
       //      simply stays pending.
       //    - 'demo': route to the simulated hosted page, which confirms
-      //      through the confirmDemoPayment function into the distinct
-      //      'demo_paid' state (never 'paid').
+      //      client-side under the Firestore-rules quarantine (Spark
+      //      rework — no Cloud Functions on the free plan) into the
+      //      distinct 'demo_paid' state (never 'paid').
       //    - 'unconfigured': no key and demo disabled — refuse rather
       //      than silently falling back to any mock behaviour.
       if (PAYMENTS_MODE === 'demo') {
@@ -127,6 +128,15 @@ export const Checkout: React.FC = () => {
           deliveryFee,
           taxes,
           total,
+          // Tracking-doc fields for the client-side demo confirmation
+          // (Spark rework): normalized forms derived exactly as
+          // createGuestOrder derives them.
+          orderNumberNormalized: result.orderNumber.toLowerCase().trim(),
+          senderEmailNormalized: orderData.senderEmail.toLowerCase().trim(),
+          recipientFirstName: (orderData.recipientName ?? '').split(' ')[0],
+          recipientCity: orderData.recipientCity,
+          recipientState: orderData.recipientState,
+          deliveryDate: orderData.deliveryDate,
         });
         navigate(`/demo-checkout/${result.orderId}`);
         return;
