@@ -31,3 +31,9 @@ Ensure the following domains are added to your authorized domains in the Firebas
 4. **Role Assignment**: The very first user to authenticate will be assigned the `owner` role. Subsequent users will be assigned the `staff` role.
 
 *Note: You must explicitly enable these providers in the Firebase Console before testing.*
+
+## License
+
+MIT License — see [LICENSE](LICENSE) for the full text.
+
+Copyright (c) 2026 Alam Fernandez. All rights reserved.

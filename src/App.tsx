@@ -29,20 +29,10 @@ import { PurchasingConsole } from './pages/PurchasingConsole';
 import { ReconciliationCenter } from './pages/ReconciliationCenter';
 import { TrackDelivery } from './pages/TrackDelivery';
 import { ToastContainer } from './components/ui/Toast';
-import { useI18n } from './i18n/I18nProvider';
-
-// Placeholder pages for about/contact
-const SimplePage = ({ title }: { title: string }) => (
-  <div style={{ maxWidth: '800px', margin: '4rem auto', textAlign: 'center', padding: '0 2rem' }}>
-    <h1 style={{ fontSize: '3rem', marginBottom: '2rem' }}>{title}</h1>
-    <p style={{ fontSize: '1.125rem', color: '#64748b', lineHeight: '1.8' }}>
-      This page is part of our upcoming content expansion. Check back soon for our full {title.toLowerCase()} details.
-    </p>
-  </div>
-);
+import { AboutPage, ContactPage, FaqPage, DeliveryPage, TermsPage, PrivacyPage } from './pages/InfoPages';
+import { DemoCheckout } from './pages/DemoCheckout';
 
 function App() {
-  const { t } = useI18n();
   return (
     <Router>
       <Routes>
@@ -58,11 +48,20 @@ function App() {
           <Route path="/track-order" element={<TrackOrder />} />
           <Route path="/track-delivery/:publicTrackingToken" element={<TrackDelivery />} />
           <Route path="/order-confirmation/:trackingLookupId" element={<OrderConfirmation />} />
-          <Route path="/about" element={<SimplePage title={t('landing.footer.ourStory')} />} />
-          <Route path="/contact" element={<SimplePage title={t('common.contactUs')} />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/faq" element={<FaqPage />} />
+          <Route path="/delivery" element={<DeliveryPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
         </Route>
 
         <Route path="/admin/login" element={<Login />} />
+
+        {/* Simulated hosted payment page (demo mode only — Checkout
+            routes here solely while PAYMENTS_MODE is 'demo'; once a real
+            Stripe key exists this page is unreachable from the flow). */}
+        <Route path="/demo-checkout/:orderId" element={<DemoCheckout />} />
         
         {/* Admin/Dashboard Routes */}
         <Route path="/admin" element={<ProtectedRoute />}>

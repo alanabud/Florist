@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
+import { useCartStore } from '../store/cartStore';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { CheckCircle2, ShoppingBag, Calendar, MapPin, ArrowRight } from 'lucide-react';
@@ -15,17 +16,28 @@ interface ConfirmationData {
   city: string;
   state: string;
   itemsSummary: string;
+  /** 'demo' when the tracking doc was created by the demo payment flow. */
+  paymentMode?: string;
 }
 
 export const OrderConfirmation: React.FC = () => {
   const { t } = useI18n();
   const { trackingLookupId } = useParams<{ trackingLookupId: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const clearCart = useCartStore(state => state.clearCart);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
   const [order, setOrder] = useState<ConfirmationData | null>(null);
 
   useEffect(() => {
+    // Arriving from Stripe's hosted checkout (success URL carries the
+    // session_id) means the purchase just completed — the cart has done
+    // its job. Direct tracking lookups leave the cart untouched.
+    if (searchParams.get('session_id')) {
+      clearCart();
+    }
+
     const fetchConfirmation = async () => {
       if (!trackingLookupId) {
         setError(true);
@@ -35,13 +47,19 @@ export const OrderConfirmation: React.FC = () => {
 
       try {
         const docRef = doc(db, 'publicOrderTracking', trackingLookupId);
-        const docSnap = await getDoc(docRef);
-
-        if (docSnap.exists()) {
-          setOrder(docSnap.data() as ConfirmationData);
-        } else {
-          setError(true);
+        // The tracking document is created by the Stripe webhook when the
+        // payment is confirmed, which can land a few seconds after Stripe
+        // redirects back here — poll briefly before declaring it missing.
+        for (let attempt = 0; attempt < 8; attempt++) {
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            setOrder(docSnap.data() as ConfirmationData);
+            setIsLoading(false);
+            return;
+          }
+          await new Promise(resolve => setTimeout(resolve, 1500));
         }
+        setError(true);
       } catch (err) {
         console.error("Failed to load confirmation details:", err);
         setError(true);
@@ -51,7 +69,7 @@ export const OrderConfirmation: React.FC = () => {
     };
 
     fetchConfirmation();
-  }, [trackingLookupId]);
+  }, [trackingLookupId, searchParams, clearCart]);
 
   if (isLoading) {
     return (
@@ -91,6 +109,10 @@ export const OrderConfirmation: React.FC = () => {
             <p className={styles.subtitle}>
               {t('orderconfirmation.orderConfirmedMessage')}
             </p>
+            {(order.paymentMode === 'demo' ||
+              (searchParams.get('session_id') ?? '').startsWith('demo_')) && (
+              <p className={styles.demoNotice}>{t('orderconfirmation.demoNotice')}</p>
+            )}
           </div>
 
           <div className={styles.orderNumberBox}>

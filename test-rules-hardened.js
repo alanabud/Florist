@@ -100,9 +100,60 @@ async function assertFails(name, action) {
 
 async function runTests() {
   // 1. Guest creates valid order (Allowed)
-  await assertSucceeds('Guest creates valid order document', () => {
+  // UPDATED 2026-10-18 for the Stripe-hardened rules: a guest order may
+  // ONLY be created in the pending state (status 'pending_payment',
+  // paymentStatus 'pending'); it becomes confirmed/paid exclusively via
+  // the Stripe webhook (Admin SDK). The pre-hardening version of this
+  // test created the order already 'confirmed'/'paid' — that is exactly
+  // what the rules now deny (see test 1b). Emulator coverage of the full
+  // lifecycle lives in test-guest-order-rules.mjs.
+  await assertSucceeds('Guest creates valid PENDING order document', () => {
     return setDoc(doc(db, 'orders', testOrderId), {
       id: testOrderId,
+      orderNumber: testOrderNumber,
+      orderNumberNormalized: testOrderNumber.toLowerCase(),
+      senderEmailNormalized: testEmail.toLowerCase(),
+      customerId: 'guest',
+      customerName: 'QA Guest Tester',
+      customerEmail: testEmail,
+      recipientName: 'Recipient QA',
+      recipientPhone: '123-456-7890',
+      recipientAddress: '123 QA St',
+      recipientCity: 'QATown',
+      recipientState: 'NY',
+      recipientZip: '10001',
+      deliveryType: 'standard',
+      deliveryDate: '2026-06-15',
+      senderName: 'QA Guest Tester',
+      senderEmail: testEmail,
+      cardMessage: 'Hello QA message',
+      items: [
+        {
+          productId: 'prod-rose',
+          name: 'Classic Red Roses',
+          price: 59.99,
+          quantity: 1,
+          imageUrl: 'https://example.com/rose.jpg',
+          isCustom: false
+        }
+      ],
+      subtotal: 59.99,
+      taxes: 5.32,
+      deliveryFee: 9.99,
+      total: 75.30,
+      status: 'pending_payment',
+      paymentStatus: 'pending',
+      glPostingStatus: 'unposted',
+      companyId: 'DEFAULT_COMPANY',
+      createdAt: new Date().toISOString()
+    });
+  }, { collectionName: 'orders', docId: testOrderId });
+
+  // 1b. Guest creates an order already confirmed/paid (Denied — the old
+  // mock-checkout pattern the hardened rules exist to prevent)
+  await assertFails('Guest creates order already confirmed/paid', () => {
+    return setDoc(doc(db, 'orders', `${testOrderId}_PAID`), {
+      id: `${testOrderId}_PAID`,
       orderNumber: testOrderNumber,
       orderNumberNormalized: testOrderNumber.toLowerCase(),
       senderEmailNormalized: testEmail.toLowerCase(),
@@ -140,7 +191,7 @@ async function runTests() {
       companyId: 'DEFAULT_COMPANY',
       createdAt: new Date().toISOString()
     });
-  }, { collectionName: 'orders', docId: testOrderId });
+  });
 
   // 2. Guest reads the created order (Denied)
   await assertFails('Guest reads order document', () => {
@@ -157,8 +208,12 @@ async function runTests() {
     return setDoc(doc(db, 'orders', testOrderId), { status: 'preparing' }, { merge: true });
   });
 
-  // 5. Guest creates valid tracking doc (Allowed)
-  await assertSucceeds('Guest creates valid publicOrderTracking document', () => {
+  // 5. Guest creates tracking doc (Denied)
+  // UPDATED 2026-10-18 for the Stripe-hardened rules: guests may no
+  // longer create publicOrderTracking documents — an unpaid order must
+  // not be able to present a public "order placed" page. Tracking docs
+  // are created by the Stripe webhook (Admin SDK) or by staff (test 5b).
+  await assertFails('Guest creates publicOrderTracking document', () => {
     return setDoc(doc(db, 'publicOrderTracking', testTrackingId), {
       orderNumber: testOrderNumber,
       orderNumberNormalized: testOrderNumber.toLowerCase(),
@@ -175,6 +230,40 @@ async function runTests() {
       companyId: 'DEFAULT_COMPANY',
       updatedAt: new Date().toISOString()
     });
+  });
+
+  // 5b. Staff (smoke user) creates the tracking fixture that test 7 reads.
+  // Uses the same SMOKE_AUTH_* credentials cleanup requires; the suite is
+  // fail-closed without them anyway. Signs back out so the remaining
+  // assertions run unauthenticated, as guests.
+  await assertSucceeds('Staff (smoke user) creates publicOrderTracking fixture for read test', async () => {
+    const email = process.env.SMOKE_AUTH_EMAIL;
+    const password = process.env.SMOKE_AUTH_PASSWORD;
+    if (!email || !password) {
+      throw new Error('SMOKE_AUTH_EMAIL/SMOKE_AUTH_PASSWORD are required to seed the tracking fixture.');
+    }
+    const auth = getAuth();
+    await signInWithEmailAndPassword(auth, email, password);
+    try {
+      await setDoc(doc(db, 'publicOrderTracking', testTrackingId), {
+        orderNumber: testOrderNumber,
+        orderNumberNormalized: testOrderNumber.toLowerCase(),
+        senderEmailNormalized: testEmail.toLowerCase(),
+        status: 'placed',
+        deliveryDate: '2026-06-15',
+        recipientFirstName: 'Recipient',
+        city: 'QATown',
+        state: 'NY',
+        itemsSummary: '1x Classic Red Roses',
+        timeline: [
+          { status: 'placed', label: 'Order Placed', timestamp: new Date().toISOString() }
+        ],
+        companyId: 'DEFAULT_COMPANY',
+        updatedAt: new Date().toISOString()
+      });
+    } finally {
+      await signOut(auth);
+    }
   }, { collectionName: 'publicOrderTracking', docId: testTrackingId });
 
   // 6. Guest creates tracking doc under mismatched ID (Denied)

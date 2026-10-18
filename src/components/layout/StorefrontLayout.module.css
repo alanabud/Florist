@@ -310,6 +310,20 @@
 @media (max-width: 768px) {
   .headerContainer {
     width: calc(100% - 32px);
+    /* The desktop gaps (2rem + 1.25rem) plus the non-shrinking logo
+       overflowed small phones by ~30px, pushing the cart button
+       off-screen (found in the 2026-10-18 mobile QA pass). */
+    gap: 0.75rem;
+  }
+  .logo {
+    font-size: 1.15rem;
+    flex-shrink: 1;
+    min-width: 0;
+    white-space: nowrap;
+  }
+  .actions {
+    gap: 0.5rem;
+    flex-shrink: 0;
   }
   .headerLang,
   .headerUser {

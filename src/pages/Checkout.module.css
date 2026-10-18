@@ -319,3 +319,29 @@
     padding: 1.5rem;
   }
 }
+
+/* Demo-mode banner + payment-cancelled notice (2026-10-18). The demo
+   banner must be unmissable: demo mode never processes a real payment. */
+.demoBanner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  background: #fef3c7;
+  border: 1.5px solid #d97706;
+  color: #92400e;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  border-radius: 0.5rem;
+  padding: 0.625rem 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.cancelNotice {
+  background: #eef4ee;
+  border: 1px solid #b7cfba;
+  color: #37503c;
+  font-size: 0.9rem;
+  border-radius: 0.5rem;
+  padding: 0.625rem 0.875rem;
+  margin-bottom: 1rem;
+}

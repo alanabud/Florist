@@ -1,19 +1,25 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useCartStore } from '../store/cartStore';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
-import { ChevronRight, Lock } from 'lucide-react';
+import { ChevronRight, Lock, AlertTriangle } from 'lucide-react';
 import { getTaxConfigForState, STATE_TAX_RATES } from '../data/taxConfig';
 import { createGuestOrder } from '../services/publicOrderService';
+import { startStripeCheckout } from '../services/stripeCheckoutService';
+import { PAYMENTS_MODE } from '../config/stripeConfig';
+import { stashDemoOrderSummary } from '../services/demoCheckoutService';
 import styles from './Checkout.module.css';
 import { useI18n } from '../i18n/I18nProvider';
 
 export const Checkout: React.FC = () => {
   const { t } = useI18n();
   const navigate = useNavigate();
-  const { items, getSubtotal, getTaxableSubtotal, clearCart } = useCartStore();
+  const [searchParams] = useSearchParams();
+  const paymentCancelled = searchParams.get('payment') === 'cancelled';
+  const { items, getSubtotal, getTaxableSubtotal } = useCartStore();
   const [step, setStep] = useState(1);
+  const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
   const [formData, setFormData] = useState({
     // Recipient
     recipientName: '',
@@ -30,10 +36,8 @@ export const Checkout: React.FC = () => {
     senderEmail: '',
     // Gift Note
     cardMessage: '',
-    // Payment
-    cardNumber: '',
-    expiry: '',
-    cvc: '',
+    // Payment is collected by Stripe's hosted checkout — no card fields
+    // are ever collected by this app.
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -49,7 +53,14 @@ export const Checkout: React.FC = () => {
       nextStep();
       return;
     }
-    
+    if (isSubmittingPayment) return; // ignore double-submits
+
+    // Enter the submitting state BEFORE the order-creation write —
+    // previously it was only set after createGuestOrder resolved, so
+    // the button gave no feedback during the write and a second click
+    // could create a duplicate order (found in click-through QA,
+    // 2026-10-18).
+    setIsSubmittingPayment(true);
     try {
       const subtotal = getSubtotal();
       const taxableSubtotal = getTaxableSubtotal();
@@ -89,12 +100,47 @@ export const Checkout: React.FC = () => {
         total,
       };
 
+      // 1. Create the order in its PENDING payment state.
       const result = await createGuestOrder(orderData);
-      clearCart();
-      navigate(`/order-confirmation/${result.trackingLookupId}`);
+      // 2. Hand off to the active payments mode (see stripeConfig.ts —
+      //    the mode is derived fail-closed from key presence):
+      //    - 'stripe': redirect to Stripe's hosted checkout. The order
+      //      is marked paid ONLY by the Stripe webhook; on cancel the
+      //      customer returns here with the cart intact and the order
+      //      simply stays pending.
+      //    - 'demo': route to the simulated hosted page, which confirms
+      //      through the confirmDemoPayment function into the distinct
+      //      'demo_paid' state (never 'paid').
+      //    - 'unconfigured': no key and demo disabled — refuse rather
+      //      than silently falling back to any mock behaviour.
+      if (PAYMENTS_MODE === 'demo') {
+        stashDemoOrderSummary({
+          orderId: result.orderId,
+          orderNumber: result.orderNumber,
+          trackingLookupId: result.trackingLookupId,
+          items: orderData.items.map(item => ({
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price,
+          })),
+          subtotal,
+          deliveryFee,
+          taxes,
+          total,
+        });
+        navigate(`/demo-checkout/${result.orderId}`);
+        return;
+      }
+      if (PAYMENTS_MODE !== 'stripe') {
+        setIsSubmittingPayment(false);
+        alert(t('checkout.paymentsNotConfigured'));
+        return;
+      }
+      await startStripeCheckout(result.orderId);
     } catch (error) {
       console.error("Failed to process checkout", error);
-      alert("Checkout failed. Please try again.");
+      setIsSubmittingPayment(false);
+      alert(t(PAYMENTS_MODE === 'demo' ? 'checkout.demoStartFailed' : 'checkout.stripeStartFailed'));
     }
   };
 
@@ -133,6 +179,17 @@ export const Checkout: React.FC = () => {
 
       <div className={styles.container}>
         <div className={styles.mainContent}>
+          {PAYMENTS_MODE === 'demo' && (
+            <div className={styles.demoBanner}>
+              <AlertTriangle size={18} />
+              <span>
+                <strong>{t('checkout.demoBannerTitle')}</strong> — {t('checkout.demoBannerBody')}
+              </span>
+            </div>
+          )}
+          {paymentCancelled && (
+            <div className={styles.cancelNotice}>{t('checkout.paymentCancelled')}</div>
+          )}
           {/* Breadcrumbs */}
           <div className={styles.breadcrumbs}>
             <span className={step >= 1 ? styles.activeStep : ''}>{t('checkout.stepRecipient')}</span>
@@ -275,28 +332,37 @@ export const Checkout: React.FC = () => {
                 </div>
               )}
 
-              {/* Step 4: Payment Mock UI */}
+              {/* Step 4: Payment. In 'stripe' mode the customer is sent to
+                  Stripe's hosted page (card details never touch this
+                  app); in 'demo' mode they go to the labeled simulated
+                  page instead; in 'unconfigured' mode checkout cannot
+                  complete and says so. */}
               {step === 4 && (
                 <div className={styles.stepContent}>
                   <h2>{t('checkout.payment')}</h2>
-                  <div className={styles.paymentMock}>
-                    <div className={styles.formGroup} style={{ gridColumn: '1 / -1' }}>
-                      <label>{t('checkout.cardNumber')}</label>
-                      <input required name="cardNumber" placeholder="0000 0000 0000 0000" value={formData.cardNumber} onChange={handleInputChange} />
+                  {PAYMENTS_MODE === 'stripe' && <p>{t('checkout.stripeSecureNote')}</p>}
+                  {PAYMENTS_MODE === 'demo' && (
+                    <div className={styles.demoBanner}>
+                      <AlertTriangle size={18} />
+                      <span>
+                        <strong>{t('checkout.demoBannerTitle')}</strong> — {t('checkout.demoBannerBody')}
+                      </span>
                     </div>
-                    <div className={styles.formGroup}>
-                      <label>{t('checkout.expiryDate')}</label>
-                      <input required name="expiry" placeholder="MM/YY" value={formData.expiry} onChange={handleInputChange} />
-                    </div>
-                    <div className={styles.formGroup}>
-                      <label>{t('checkout.cvc')}</label>
-                      <input required name="cvc" placeholder="123" value={formData.cvc} onChange={handleInputChange} />
-                    </div>
-                  </div>
+                  )}
+                  {PAYMENTS_MODE === 'unconfigured' && <p>{t('checkout.paymentsNotConfigured')}</p>}
                   <div className={styles.btnRow}>
                     <Button type="button" variant="ghost" onClick={prevStep}>{t('checkout.back')}</Button>
-                    <Button type="submit" size="lg" className={styles.submitBtn}>
-                      {t('checkout.payAmount').replace('{amount}', total.toFixed(2))}
+                    <Button
+                      type="submit"
+                      size="lg"
+                      className={styles.submitBtn}
+                      disabled={isSubmittingPayment || PAYMENTS_MODE === 'unconfigured'}
+                    >
+                      {isSubmittingPayment
+                        ? t('checkout.redirectingToPayment')
+                        : PAYMENTS_MODE === 'demo'
+                          ? t('checkout.payDemo').replace('{amount}', `$${total.toFixed(2)}`)
+                          : t('checkout.payWithStripe').replace('{amount}', total.toFixed(2))}
                     </Button>
                   </div>
                 </div>

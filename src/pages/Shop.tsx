@@ -19,6 +19,8 @@ export const Shop: React.FC = () => {
   const { products } = useAdminStore();
   const [searchParams, setSearchParams] = useSearchParams();
   const occasionFilter = searchParams.get('occasion') || 'all';
+  const categoryFilter = searchParams.get('category') || 'all';
+  const filterParam = searchParams.get('filter') || '';
   const searchQueryParam = searchParams.get('search') || '';
   const deliveryFilter = searchParams.get('delivery') || 'all';
   
@@ -68,6 +70,17 @@ export const Shop: React.FC = () => {
       result = result.filter(p => p.occasions.includes(occasionFilter));
     }
 
+    // Category links (main nav "Plants", homepage collection cards) land on
+    // /shop?category=X — this filter used to be missing entirely, so every
+    // category link showed all products (2026-10-17 certification audit).
+    if (categoryFilter !== 'all') {
+      result = result.filter(p => p.category === categoryFilter);
+    }
+
+    if (filterParam === 'bestsellers') {
+      result = result.filter(p => p.isBestSeller);
+    }
+
     if (selectedColor !== 'all') {
       result = result.filter(p => p.colors.includes(selectedColor));
     }
@@ -99,7 +112,7 @@ export const Shop: React.FC = () => {
     }
 
     return result;
-  }, [occasionFilter, selectedColor, activeSort, searchQueryParam, deliveryFilter, products]);
+  }, [occasionFilter, categoryFilter, filterParam, selectedColor, activeSort, searchQueryParam, deliveryFilter, products]);
 
   const allColors = Array.from(new Set(products.flatMap(p => p.colors)));
 
@@ -116,7 +129,7 @@ export const Shop: React.FC = () => {
     <div className={styles.shopContainer}>
       <div className={styles.shopHeader}>
         <div className={styles.headerContent}>
-          <h1>{searchQueryParam ? t('shop.resultsFor').replace('{query}', searchQueryParam) : occasionFilter !== 'all' ? occasionFilter : t('shop.allArrangements')}</h1>
+          <h1>{searchQueryParam ? t('shop.resultsFor').replace('{query}', searchQueryParam) : occasionFilter !== 'all' ? occasionFilter : categoryFilter !== 'all' ? categoryFilter : filterParam === 'bestsellers' ? t('landing.footer.bestSellers') : t('shop.allArrangements')}</h1>
           <p>{t('shop.handcraftedWithLoveAndDeliveredFreshToYourDoor')}</p>
         </div>
       </div>
@@ -250,6 +263,8 @@ export const Shop: React.FC = () => {
                 <p>{t('shop.tryAdjustingYourFiltersOrBrowsingOurFullCollection')}</p>
                 <Button onClick={() => { 
                   searchParams.delete('occasion');
+                  searchParams.delete('category');
+                  searchParams.delete('filter');
                   searchParams.delete('search');
                   searchParams.delete('delivery');
                   setSearchParams(searchParams);

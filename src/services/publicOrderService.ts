@@ -29,22 +29,42 @@ export interface GuestOrderData {
   total: number;
 }
 
+/**
+ * Guest checkout order lifecycle (changed by the Stripe integration,
+ * certification fix pass 2026-10-18):
+ *
+ *  1. The client creates the order here in a PENDING state
+ *     (status 'pending_payment', paymentStatus 'pending'). No money has
+ *     moved, so the order must NOT present itself as confirmed or paid.
+ *  2. The client asks the `createStripeCheckoutSession` Cloud Function
+ *     for a Stripe-hosted Checkout Session and redirects the customer to
+ *     Stripe, where the card is entered (card data never touches this
+ *     app or Firestore).
+ *  3. ONLY the Stripe webhook (Admin SDK, server-side) may flip the
+ *     order to status 'confirmed' / paymentStatus 'paid', and it also
+ *     creates the public tracking document at that moment — so an unpaid
+ *     order never gets a public "order placed" tracking page.
+ */
 export const createGuestOrder = async (orderData: GuestOrderData) => {
   try {
     // 1. Generate unique order tracking number
     const generatedNum = Math.floor(Math.random() * 90000) + 10000;
     const orderNumber = `BLM-${generatedNum}`;
 
-    // 2. Normalize tracking number and sender email
+    // 2. Normalize tracking number and sender email. The tracking lookup
+    // id is derived deterministically here and re-derived identically by
+    // the payment webhook when it creates the tracking document.
     const orderNumberNormalized = orderNumber.toLowerCase().trim();
     const senderEmailNormalized = orderData.senderEmail.toLowerCase().trim();
     const trackingLookupId = `${orderNumberNormalized}_${senderEmailNormalized}`;
 
-    // 3. Write protected full order to 'orders' collection. Pre-allocate the
-    // doc ref so the stored id equals the Firestore document id — admin-side
-    // mutations (edit/delete/status/GL post) key off order.id, and a fabricated
-    // 'ord-…' id would make them target a nonexistent document. Note: the
-    // guest-create rules allowlist 'id' but not 'documentId', so only id is set.
+    // 3. Write the order to 'orders' in its PENDING state. Pre-allocate
+    // the doc ref so the stored id equals the Firestore document id —
+    // admin-side mutations (edit/delete/status/GL post) key off order.id,
+    // and a fabricated 'ord-…' id would make them target a nonexistent
+    // document. Note: the guest-create rules allowlist 'id' but not
+    // 'documentId', so only id is set. 'companyId' is required by the
+    // guest-create rules and was previously missing from this payload.
     const orderRef = doc(collection(db, 'orders'));
     const fullOrderPayload = {
       ...orderData,
@@ -52,10 +72,11 @@ export const createGuestOrder = async (orderData: GuestOrderData) => {
       orderNumber,
       orderNumberNormalized,
       senderEmailNormalized,
+      companyId: 'DEFAULT_COMPANY',
       customerId: 'guest',
       customerName: orderData.senderName || 'Guest Customer',
-      status: 'confirmed', // checkout directly confirms the order
-      paymentStatus: 'paid', // guest checkout is pre-paid in this flow
+      status: 'pending_payment', // becomes 'confirmed' only via the Stripe webhook
+      paymentStatus: 'pending', // becomes 'paid' only on confirmed payment
       glPostingStatus: 'unposted', // GL postings isolated for admin execution
       createdAt: new Date().toISOString(), // Use ISO string to match existing model structure
       deliveryDate: orderData.deliveryDate,
@@ -64,45 +85,13 @@ export const createGuestOrder = async (orderData: GuestOrderData) => {
     await setDoc(orderRef, fullOrderPayload);
     const orderId = orderRef.id;
 
-    // 4. Create timeline array
-    const timeline = [
-      {
-        status: 'placed',
-        label: 'Order Placed',
-        timestamp: new Date().toISOString(),
-      }
-    ];
-
-    // 5. Create items summary description
-    const itemsSummary = orderData.items
-      .map(item => `${item.quantity}x ${item.name}`)
-      .join(', ');
-
-    // 6. Write sanitized customer-safe tracking document to 'publicOrderTracking'
-    const trackingRef = doc(db, 'publicOrderTracking', trackingLookupId);
-    const trackingPayload = {
-      orderNumber,
-      orderNumberNormalized,
-      senderEmailNormalized,
-      status: 'placed', // placed, preparing, out_for_delivery, delivered, cancelled
-      deliveryDate: orderData.deliveryDate,
-      recipientFirstName: orderData.recipientName.split(' ')[0], // Sanitized name
-      city: orderData.recipientCity,
-      state: orderData.recipientState,
-      itemsSummary,
-      timeline,
-      updatedAt: new Date().toISOString()
-    };
-
-    await setDoc(trackingRef, trackingPayload);
-
     return {
       orderId, // full order Firestore ID
-      trackingLookupId, // sanitized lookup ID
+      trackingLookupId, // sanitized lookup ID (tracking doc is created by the webhook on payment)
       orderNumber, // readable BLM-XXXXX tracking code
     };
   } catch (error) {
-    console.error('Failed to create guest order & tracking record:', error);
+    console.error('Failed to create guest order:', error);
     throw error;
   }
 };

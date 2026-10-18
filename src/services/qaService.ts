@@ -1,6 +1,7 @@
 import { useAdminStore } from '../store/adminStore';
 import { useFinanceStore } from '../store/financeStore';
 import { calculateOrderTotals } from './orderCalculationService';
+import { isDemoOrder } from './demoOrder';
 import { generateExceptionSuggestedFix } from './reconciliation/reconciliationAiService';
 import type { ReconciliationException, ExceptionModule } from './reconciliation/reconciliationTypes';
 import { collection, addDoc, serverTimestamp, getDocs, query, orderBy, limit, where } from 'firebase/firestore';
@@ -213,7 +214,9 @@ export const runAutomatedQAChecks = async (): Promise<QAResult[]> => {
 
   // 9. Payment Status vs Balance Due Alignment
   const paymentInconsistencies = orders.filter(
-    o => (o.status === 'delivered' || o.paymentStatus === 'paid') && (o.balanceDue !== undefined && o.balanceDue > 0)
+    // Demo orders legitimately carry a full balance due (no real payment
+    // exists to apply), so they are not payment/balance inconsistencies.
+    o => !isDemoOrder(o) && (o.status === 'delivered' || o.paymentStatus === 'paid') && (o.balanceDue !== undefined && o.balanceDue > 0)
   );
   const paymentAlignPassed = paymentInconsistencies.length === 0;
   results.push({

@@ -1,3 +1,14 @@
+// Local licensed floral photography (same assets the homepage uses).
+// Used where the previous remote (Unsplash) assignments were blank or
+// showed the wrong subject in the 2026-10-17 certification audit.
+import pinkRosesImg from '../assets/flowers/pink_roses.jpg';
+import whiteRosesImg from '../assets/flowers/white_roses.jpg';
+// Catalog photographs created for the certification fix pass (2026-10-18)
+// for the three products whose remote photos showed the wrong subject.
+import wildflowerBasketImg from '../assets/flowers/wildflower_basket.jpg';
+import forestFernImg from '../assets/flowers/forest_fern.jpg';
+import whiteDaisiesImg from '../assets/flowers/white_daisies.jpg';
+
 export interface Occasion {
   id: string;
   name: string;
@@ -58,7 +69,10 @@ export interface Product {
 export const OCCASIONS: Occasion[] = [
   { id: '1', name: 'Birthday', color: '#fdf5f5', imageUrl: 'https://images.unsplash.com/photo-1591886960571-74d43a9d4166?q=80&w=600&auto=format&fit=crop' },
   { id: '2', name: 'Anniversary', color: '#f9ecec', imageUrl: 'https://images.unsplash.com/photo-1563241527-3004b7be0ffd?q=80&w=600&auto=format&fit=crop' },
-  { id: '3', name: 'Sympathy', color: '#eef2ec', imageUrl: 'https://images.unsplash.com/photo-1508611116238-6b83f05f426c?q=80&w=600&auto=format&fit=crop' },
+  // Sympathy previously pointed at the same remote photo as the White
+  // Elegance Lily, which rendered broken/blank in the audit — now uses
+  // the local white-roses photograph.
+  { id: '3', name: 'Sympathy', color: '#eef2ec', imageUrl: whiteRosesImg },
   { id: '4', name: 'Just Because', color: '#f1e5d1', imageUrl: 'https://images.unsplash.com/photo-1562690868-60bbe7293e94?q=80&w=600&auto=format&fit=crop' },
 ];
 
@@ -87,7 +101,8 @@ export const PRODUCTS: Product[] = [
     category: 'Luxury',
     occasions: ['Anniversary', 'Birthday', 'Wedding'],
     colors: ['Pink', 'Blush'],
-    imageUrl: 'https://images.unsplash.com/photo-1562690868-60bbe7293e94?q=80&w=800&auto=format&fit=crop',
+    // Was a red-rose photo in the audit; now the local pink-roses photograph.
+    imageUrl: pinkRosesImg,
     isBestSeller: true,
     isSameDay: false,
     isTaxable: true,
@@ -103,7 +118,10 @@ export const PRODUCTS: Product[] = [
     category: 'Sympathy',
     occasions: ['Sympathy', 'Thank You'],
     colors: ['White', 'Green'],
-    imageUrl: 'https://images.unsplash.com/photo-1508611116238-6b83f05f426c?q=80&w=800&auto=format&fit=crop',
+    // Was blank in the audit (same broken remote photo as the old Sympathy
+    // card). Now the local white-roses photograph — white blooms, though a
+    // dedicated lily photograph is still the ideal asset for this product.
+    imageUrl: whiteRosesImg,
     isBestSeller: false,
     isSameDay: true,
     isTaxable: true,
@@ -119,7 +137,8 @@ export const PRODUCTS: Product[] = [
     category: 'Seasonal',
     occasions: ['Birthday', 'Just Because'],
     colors: ['Yellow', 'Orange', 'Green'],
-    imageUrl: 'https://images.unsplash.com/photo-1591886960571-74d43a9d4166?q=80&w=800&auto=format&fit=crop',
+    // Was a pink/white roses photo — now the local wildflower basket photo.
+    imageUrl: wildflowerBasketImg,
     isBestSeller: true,
     isSameDay: true,
     isTaxable: true,
@@ -311,7 +330,8 @@ export const PRODUCTS: Product[] = [
     category: 'Plants',
     occasions: ['Thank You', 'Just Because'],
     colors: ['Green'],
-    imageUrl: 'https://images.unsplash.com/photo-1485955900006-10f4d324d411?q=80&w=800&auto=format&fit=crop',
+    // Was a succulent in a pot — now the local Boston fern photo.
+    imageUrl: forestFernImg,
     isBestSeller: false,
     isSameDay: true,
     isTaxable: true,
@@ -343,7 +363,8 @@ export const PRODUCTS: Product[] = [
     category: 'Seasonal',
     occasions: ['Just Because'],
     colors: ['White', 'Yellow'],
-    imageUrl: 'https://images.unsplash.com/photo-1560717845-968823efbee1?q=80&w=800&auto=format&fit=crop',
+    // Was a food photo — now the local white daisies photo.
+    imageUrl: whiteDaisiesImg,
     isBestSeller: true,
     isSameDay: true,
     isTaxable: true,

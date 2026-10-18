@@ -9,6 +9,19 @@ import { Check, ChevronRight, ChevronLeft } from 'lucide-react';
 import styles from './CustomBouquet.module.css';
 import { useI18n } from '../i18n/I18nProvider';
 
+// Explicit occasion → i18n key map. Do NOT derive these keys by
+// lower-casing the display name: 'Just Because' maps to the camelCase
+// locale key `justBecause`, and the derived `justbecause` key does not
+// exist, so the raw key was rendered to customers (2026-10-17 audit).
+const OCCASION_I18N_KEYS: Record<string, string> = {
+  'Birthday': 'birthday',
+  'Anniversary': 'anniversary',
+  'Sympathy': 'sympathy',
+  'Wedding': 'wedding',
+  'Romance': 'romance',
+  'Just Because': 'justBecause',
+};
+
 const STEPS = [
   { id: 'occasion', title: 'Occasion' },
   { id: 'palette', title: 'Color Palette' },
@@ -90,7 +103,7 @@ export const CustomBouquet: React.FC = () => {
             <h2>{t('custombouquet.whatsOccasion')}</h2>
             <div className={styles.grid}>
               {['Birthday', 'Anniversary', 'Sympathy', 'Wedding', 'Romance', 'Just Because'].map(occ => {
-                const occKey = occ.toLowerCase().replace(' ', '');
+                const occKey = OCCASION_I18N_KEYS[occ];
                 return (
                   <Card 
                     key={occ}
@@ -222,7 +235,7 @@ export const CustomBouquet: React.FC = () => {
             <Card className={styles.reviewCard}>
               <div className={styles.reviewRow}>
                 <span>{t('custombouquet.occasionLabel')}</span>
-                <strong>{state.occasion ? t(`custombouquet.${state.occasion.toLowerCase().replace(' ', '')}`) : ''}</strong>
+                <strong>{state.occasion ? t(`custombouquet.${OCCASION_I18N_KEYS[state.occasion] ?? state.occasion}`) : ''}</strong>
               </div>
               <div className={styles.reviewRow}>
                 <span>{t('custombouquet.paletteLabel')}</span>

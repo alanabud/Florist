@@ -5,6 +5,7 @@ import { useFinanceStore } from '../../store/financeStore';
 import { Sparkles, Hammer, Target, ShieldCheck } from 'lucide-react';
 import styles from './CommandSummary.module.css';
 import { useI18n } from '../../i18n/I18nProvider';
+import { isDemoOrder } from '../../services/demoOrder';
 
 interface CommandSummaryProps {
   onOpenModal: (type: AdminModal) => void;
@@ -76,13 +77,13 @@ export const CommandSummary: React.FC<CommandSummaryProps> = ({ onOpenModal }) =
   const lowStock = inventory.filter(i => i.quantity <= i.reorderPoint);
 
   // Target orders completed logic
-  const todaysCompletedCount = todaysOrders.filter(o => !['draft', 'cancelled', 'refunded'].includes(o.status)).length;
+  const todaysCompletedCount = todaysOrders.filter(o => !['draft', 'cancelled', 'refunded'].includes(o.status) && !isDemoOrder(o)).length;
   const targetOrders = 39;
   const progressPercent = Math.min(100, Math.round((todaysCompletedCount / targetOrders) * 100));
 
   // Compute live cash collected avoiding double counting
   const paidOrCompletedOrderTotals = orders
-    .filter(o => !['draft', 'cancelled', 'refunded'].includes(o.status))
+    .filter(o => !['draft', 'cancelled', 'refunded'].includes(o.status) && !isDemoOrder(o))
     .reduce((sum, o) => sum + (o.amountPaid !== undefined ? o.amountPaid : 0), 0);
 
   const standaloneCash = journalEntries.reduce((total, entry) => {

@@ -180,8 +180,17 @@ async function runTests() {
   }
 
   // Test Case 9: i18n locale files verification
+  // NOTE (fixed 2026-10-18): the original check used content.includes('delivery:'),
+  // which only matches UNQUOTED object keys (en-US style: `delivery: {`). The
+  // other three locales quote their keys (`"delivery": {`), so the substring
+  // `delivery:` never appears in them (the text is `delivery":`) and the check
+  // failed even though the delivery namespace is present in all four files.
+  // The namespace is verified with a quote-tolerant pattern plus a known
+  // nested key (dispatchHub) so the check still fails if the namespace is
+  // genuinely removed.
   const auditI18nKeys = () => {
     const locales = ['en-US.ts', 'es-US.ts', 'fr-FR.ts', 'nl-NL.ts'];
+    const namespacePattern = /"?delivery"?\s*:\s*\{/;
     let keysFound = true;
     for (const locale of locales) {
       const filePath = path.join('src', 'i18n', 'locales', locale);
@@ -191,7 +200,7 @@ async function runTests() {
         continue;
       }
       const content = fs.readFileSync(filePath, 'utf8');
-      if (!content.includes('delivery:') && !content.includes('delivery: {')) {
+      if (!namespacePattern.test(content) || !content.includes('dispatchHub')) {
         console.error(`❌ delivery namespace missing in: ${filePath}`);
         keysFound = false;
       }

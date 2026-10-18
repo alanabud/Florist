@@ -13,6 +13,7 @@ import { ModuleErrorState } from '../components/ui/ModuleErrorState';
 import { AsyncActionButton } from '../components/ui/AsyncActionButton';
 import { useCompany } from '../context/CompanyContext';
 import { useI18n } from '../i18n/I18nProvider';
+import { isDemoOrder } from '../services/demoOrder';
 import { localizeError } from '../i18n/localizedError';
 import styles from '../components/layout/AdminList.module.css';
 
@@ -385,6 +386,11 @@ export const Orders: React.FC = () => {
                       <span className={styles.statusBadge} style={{ background: order.paymentStatus === 'paid' ? '#DEF7EC' : '#FDE8E8', color: order.paymentStatus === 'paid' ? '#03543F' : '#9B1C1C', fontSize: '0.7rem', fontWeight: 600 }}>
                         {(order.paymentStatus || 'unpaid').toUpperCase()}
                       </span>
+                      {isDemoOrder(order) && (
+                        <span className={styles.statusBadge} style={{ background: '#FEF3C7', color: '#92400E', border: '1px solid #D97706', fontSize: '0.7rem', fontWeight: 700, marginLeft: '0.375rem' }}>
+                          {t('orders.demoBadge')}
+                        </span>
+                      )}
                     </td>
                     <td style={{ padding: '1.125rem 1.5rem', fontSize: '0.8125rem', color: '#4b5563' }}>{order.assignedStaffId || 'Unassigned'}</td>
                     <td style={{ padding: '1.125rem 1.5rem' }}>
@@ -394,7 +400,9 @@ export const Orders: React.FC = () => {
                     </td>
                     <td style={{ padding: '1.125rem 1.5rem', textAlign: 'right' }} onClick={(e) => e.stopPropagation()}>
                       <div style={{ display: 'inline-flex', gap: '0.5rem', alignItems: 'center' }}>
-                        {order.glPostingStatus === 'unposted' && (
+                        {/* Demo orders never post to the ledger: no real
+                            money moved, so there is nothing to post. */}
+                        {order.glPostingStatus === 'unposted' && !isDemoOrder(order) && (
                           <AsyncActionButton
                             className={styles.actionBtn}
                             pendingLabel={t('orders.posting')}
