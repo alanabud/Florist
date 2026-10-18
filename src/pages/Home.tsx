@@ -8,6 +8,7 @@ import { useAdminStore } from '../store/adminStore';
 import { useCartStore } from '../store/cartStore';
 import { useToastStore } from '../store/toastStore';
 import { useI18n } from '../i18n/I18nProvider';
+import { SITE_CONFIG } from '../config/siteConfig';
 import styles from './Home.module.css';
 
 // Local licensed floral photography
@@ -293,10 +294,6 @@ export const Home: React.FC = () => {
       <section className={styles.reviewsSection}>
         <div className={styles.reviewsHeader}>
           <h2>{t('landing.reviews.title')}</h2>
-          <div className={styles.stars}>
-            {[1, 2, 3, 4, 5].map(i => <Star key={i} fill="currentColor" color="var(--color-warning)" size={20} />)}
-            <span>{t('landing.reviews.countText')}</span>
-          </div>
         </div>
         <div className={styles.reviewsGrid}>
           {[
@@ -328,14 +325,20 @@ export const Home: React.FC = () => {
       <section className={styles.igSection}>
         <div className={styles.igHeader}>
           <Camera size={24} />
-          <h2>@BloomProStudio</h2>
-          <Button variant="ghost">{t('landing.ig.follow')}</Button>
+          <h2>{SITE_CONFIG.instagramHandle}</h2>
+          {/* Was a dead button with no action (2026-10-17 audit) — now links
+              to the configured Instagram profile. */}
+          <a href={SITE_CONFIG.instagramUrl} target="_blank" rel="noreferrer">
+            <Button variant="ghost">{t('landing.ig.follow')}</Button>
+          </a>
         </div>
+        {/* Local floral photography — the previous remote stock photos were
+            irrelevant (a telephone handset, a lamp storefront) or broken. */}
         <div className={styles.igGrid}>
-          <img src="https://images.unsplash.com/photo-1534073828943-f801091bb18c?q=80&w=400&auto=format&fit=crop" alt="IG 1" loading="lazy" />
-          <img src="https://images.unsplash.com/photo-1502977249166-e81148925f13?q=80&w=400&auto=format&fit=crop" alt="IG 2" loading="lazy" />
-          <img src="https://images.unsplash.com/photo-1528698827591-e19ccd7bc23d?q=80&w=400&auto=format&fit=crop" alt="IG 3" loading="lazy" />
-          <img src="https://images.unsplash.com/photo-1490750967868-88cb44cb271b?q=80&w=400&auto=format&fit=crop" alt="IG 4" loading="lazy" />
+          <img src={pinkRoses} alt="IG 1" loading="lazy" />
+          <img src={mixedPastel} alt="IG 2" loading="lazy" />
+          <img src={redRoses} alt="IG 3" loading="lazy" />
+          <img src={whiteRoses} alt="IG 4" loading="lazy" />
         </div>
       </section>
 
@@ -375,7 +378,7 @@ export const Home: React.FC = () => {
           </div>
         </div>
         <div className={styles.footerBottom}>
-          <p>&copy; {new Date().getFullYear()} BloomPro Studio. {t('landing.footer.rightsReserved')}</p>
+          <p>&copy; {new Date().getFullYear()} Alam Fernandez. {t('landing.footer.rightsReserved')}</p>
         </div>
       </footer>
     </div>

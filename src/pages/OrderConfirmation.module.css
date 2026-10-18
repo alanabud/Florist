@@ -265,3 +265,17 @@
     flex-direction: column;
   }
 }
+
+/* Demo-order notice on the confirmation (receipt) screen — a demo
+   confirmation must never read like a real paid receipt. */
+.demoNotice {
+  background: #fef3c7;
+  border: 1.5px solid #d97706;
+  color: #92400e;
+  font-weight: 700;
+  font-size: 0.9rem;
+  border-radius: 0.5rem;
+  padding: 0.625rem 0.875rem;
+  margin: 1rem auto 0;
+  max-width: 32rem;
+}

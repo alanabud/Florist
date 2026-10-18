@@ -1,0 +1,9 @@
+# Compiled output and dependencies for Cloud Functions
+lib/
+node_modules/
+*.log
+
+# Local emulator/test secrets — never commit
+.secret.local
+.env
+.env.*

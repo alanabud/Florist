@@ -96,10 +96,15 @@ service cloud.firestore {
     }
 
     function isValidGuestOrderCreate() {
+      // Stripe integration (2026-10-18): a guest order is created PENDING
+      // and may only become confirmed/paid via the Stripe webhook
+      // (Admin SDK, which bypasses these rules). Previously this function
+      // REQUIRED 'confirmed'/'paid' at create time — that forced the
+      // client to declare an order paid before any charge existed.
       return request.auth == null
         && request.resource.data.companyId == "DEFAULT_COMPANY"
-        && request.resource.data.status == 'confirmed'
-        && request.resource.data.paymentStatus == 'paid'
+        && request.resource.data.status == 'pending_payment'
+        && request.resource.data.paymentStatus == 'pending'
         && request.resource.data.glPostingStatus == 'unposted'
         && request.resource.data.customerId == 'guest'
         && guestSafeOrderFields();
@@ -394,9 +399,13 @@ service cloud.firestore {
     match /publicOrderTracking/{trackingId} {
       allow get: if true;
       allow list: if false;
-      allow create: if (request.auth != null && isCompanyStaff(request.resource.data.companyId)) || (
-        request.auth == null && request.resource.data.companyId == "DEFAULT_COMPANY" && isValidPublicTrackingCreate(trackingId)
-      );
+      // Stripe integration (2026-10-18): tracking documents are created
+      // by the Stripe webhook (Admin SDK) when payment is confirmed, or
+      // by staff. Guests can no longer create tracking documents — an
+      // unpaid order must not be able to present a public "order placed"
+      // page. (isValidPublicTrackingCreate is retained above for staff
+      // tooling/reference.)
+      allow create: if request.auth != null && isCompanyStaff(request.resource.data.companyId);
       allow update, delete: if isCompanyStaff(resource.data.companyId);
     }
 

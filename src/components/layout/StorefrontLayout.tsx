@@ -169,13 +169,15 @@ export const StorefrontLayout: React.FC = () => {
             <div>
               <h4>{t('landing.footer.policies')}</h4>
               <Link to="/admin/login" style={{ fontWeight: 600, color: 'var(--color-sage-dark)' }}>{t('storefront.staffLogin')}</Link>
-              <Link to="/about">{t('landing.footer.terms')}</Link>
-              <Link to="/about">{t('landing.footer.privacy')}</Link>
+              <Link to="/terms">{t('landing.footer.terms')}</Link>
+              <Link to="/privacy">{t('landing.footer.privacy')}</Link>
+              <Link to="/delivery">{t('landing.footer.deliveryPolicy')}</Link>
+              <Link to="/faq">{t('landing.footer.faq')}</Link>
             </div>
           </div>
         </div>
         <div className={styles.footerBottom}>
-          <p>&copy; {new Date().getFullYear()} BloomPro Florals. {t('landing.footer.rightsReserved')}</p>
+          <p>&copy; {new Date().getFullYear()} Alam Fernandez. {t('landing.footer.rightsReserved')}</p>
         </div>
       </footer>
     </div>

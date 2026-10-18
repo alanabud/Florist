@@ -8,6 +8,7 @@ import { exportDetailedExcel } from '../services/excelExportService';
 import { BarChart3, TrendingUp, Receipt, Download, FileText, DollarSign, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { PRODUCT_RECIPES } from '../services/cogsService';
 import { useCompany } from '../context/CompanyContext';
+import { isDemoOrder } from '../services/demoOrder';
 import { useI18n } from '../i18n/I18nProvider';
 import styles from '../components/layout/AdminList.module.css';
 
@@ -33,13 +34,17 @@ export const Reports: React.FC = () => {
     fetchOrders();
   }, [fetchJournalEntries, fetchOrders]);
 
-  const totalRevenue = orders.reduce((s, o) => s + o.total, 0);
-  const deliveredOrders = orders.filter(o => o.status === 'delivered').length;
+  // Sales reporting excludes demo orders (paymentStatus 'demo_paid'):
+  // they are checkout try-outs, not sales. Every figure and export in
+  // this page derives from reportableOrders.
+  const reportableOrders = orders.filter(o => !isDemoOrder(o));
+  const totalRevenue = reportableOrders.reduce((s, o) => s + o.total, 0);
+  const deliveredOrders = reportableOrders.filter(o => o.status === 'delivered').length;
 
   const handleExportPDF = () => {
     try {
       const revenue = totalRevenue;
-      const ordersCount = orders.length;
+      const ordersCount = reportableOrders.length;
       const aov = ordersCount > 0 ? revenue / ordersCount : 0;
       const taxCollected = getTotalTaxPayable();
       const cashBalance = getTotalCash() + revenue; // Include current order cash simulation
@@ -63,7 +68,7 @@ export const Reports: React.FC = () => {
         accountsReceivable,
         inventoryValue,
         ledger,
-        orders,
+        orders: reportableOrders,
         inventory,
         products
       }, {
@@ -82,7 +87,7 @@ export const Reports: React.FC = () => {
   const handleExportExcel = () => {
     try {
       const revenue = totalRevenue;
-      const ordersCount = orders.length;
+      const ordersCount = reportableOrders.length;
       const aov = ordersCount > 0 ? revenue / ordersCount : 0;
       const taxCollected = getTotalTaxPayable();
       const cashBalance = getTotalCash() + revenue;
@@ -106,7 +111,7 @@ export const Reports: React.FC = () => {
         accountsReceivable,
         inventoryValue,
         ledger,
-        orders,
+        orders: reportableOrders,
         inventory,
         products,
         customers
@@ -124,7 +129,7 @@ export const Reports: React.FC = () => {
   };
 
   // --- Calculations for Profitability & Margin Analytics ---
-  const deliveredOrdersList = orders.filter(o => o.status === 'delivered');
+  const deliveredOrdersList = reportableOrders.filter(o => o.status === 'delivered');
   const deliveredRevenue = deliveredOrdersList.reduce((sum, o) => sum + (o.subtotal || 0) + (o.deliveryFee || 0), 0);
   const totalCOGS = deliveredOrdersList.reduce((sum, o) => sum + (o.cogsAmount || 0), 0);
   const grossMarginDollars = deliveredRevenue - totalCOGS;
@@ -233,7 +238,7 @@ export const Reports: React.FC = () => {
   const reportCards = [
     {
       title: t('reports.salesSummary'),
-      description: `${orders.length} total orders · ${formatCurrency(totalRevenue, companySettings?.baseCurrencyCode || 'USD')} gross revenue`,
+      description: `${reportableOrders.length} total orders · ${formatCurrency(totalRevenue, companySettings?.baseCurrencyCode || 'USD')} gross revenue`,
       icon: DollarSign,
       iconBg: '#D1FAE5',
       iconColor: '#065F46',
@@ -241,7 +246,7 @@ export const Reports: React.FC = () => {
     },
     {
       title: 'Order Fulfillment',
-      description: `${deliveredOrders} delivered · ${orders.filter(o => o.status === 'in_design').length} in production`,
+      description: `${deliveredOrders} delivered · ${reportableOrders.filter(o => o.status === 'in_design').length} in production`,
       icon: Receipt,
       iconBg: '#DBEAFE',
       iconColor: '#1E40AF',

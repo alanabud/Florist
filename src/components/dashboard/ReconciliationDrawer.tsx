@@ -6,6 +6,7 @@ import { useFinanceStore } from '../../store/financeStore';
 import { useAdminStore } from '../../store/adminStore';
 import styles from './ReconciliationDrawer.module.css';
 import { useI18n } from '../../i18n/I18nProvider';
+import { isDemoOrder } from '../../services/demoOrder';
 
 interface ReconciliationDrawerProps {
   isOpen: boolean;
@@ -98,8 +99,10 @@ export const ReconciliationDrawer: React.FC<ReconciliationDrawerProps> = ({
   }, [isOpen]);
 
   // Derivations matching Dashboard.tsx logic
+  // Demo orders (paymentStatus 'demo_paid') are excluded from all
+  // reconciliation derivations — no real money moved for them.
   const paidOrCompletedOrders = orders.filter((o) =>
-    !['draft', 'cancelled', 'refunded'].includes(o.status) && o.amountPaid !== undefined && o.amountPaid > 0
+    !['draft', 'cancelled', 'refunded'].includes(o.status) && !isDemoOrder(o) && o.amountPaid !== undefined && o.amountPaid > 0
   );
   
   const paidOrCompletedOrderTotals = paidOrCompletedOrders.reduce(
@@ -149,18 +152,18 @@ export const ReconciliationDrawer: React.FC<ReconciliationDrawerProps> = ({
 
   // Revenue
   const todayPaidOrders = orders.filter((o) => {
-    return isTodayDate(o.createdAt) && !['draft', 'cancelled', 'refunded'].includes(o.status);
+    return isTodayDate(o.createdAt) && !['draft', 'cancelled', 'refunded'].includes(o.status) && !isDemoOrder(o);
   });
   const todayRevenueTotal = todayPaidOrders.reduce((sum, o) => sum + o.total, 0);
 
   const lifetimePaidOrders = orders.filter((o) =>
-    !['draft', 'cancelled', 'refunded'].includes(o.status)
+    !['draft', 'cancelled', 'refunded'].includes(o.status) && !isDemoOrder(o)
   );
   const lifetimeRevenueTotal = lifetimePaidOrders.reduce((sum, o) => sum + o.total, 0);
 
   // Accounts Receivable
   const arOrders = orders.filter((o) =>
-    ['confirmed', 'scheduled', 'in_design', 'ready', 'out_for_delivery'].includes(o.status) && (o.balanceDue !== undefined ? o.balanceDue > 0 : o.total > 0)
+    ['confirmed', 'scheduled', 'in_design', 'ready', 'out_for_delivery'].includes(o.status) && !isDemoOrder(o) && (o.balanceDue !== undefined ? o.balanceDue > 0 : o.total > 0)
   );
   const arAssetTotal = arOrders.reduce((sum, o) => sum + (o.balanceDue !== undefined ? o.balanceDue : o.total), 0);
 
@@ -169,7 +172,7 @@ export const ReconciliationDrawer: React.FC<ReconciliationDrawerProps> = ({
   const netReceivables = arAssetTotal - customerCreditsTotal;
 
   // Tax Liabilities
-  const taxOrders = orders.filter((o) => !['draft', 'cancelled', 'refunded'].includes(o.status));
+  const taxOrders = orders.filter((o) => !['draft', 'cancelled', 'refunded'].includes(o.status) && !isDemoOrder(o));
   const taxLiabilitiesTotal = taxOrders.reduce(
     (sum, o) => sum + (o.taxes !== undefined ? o.taxes : o.total * 0.08875),
     0

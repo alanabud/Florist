@@ -4,6 +4,7 @@ import { useAdminStore } from '../store/adminStore';
 import { useFinanceStore } from '../store/financeStore';
 import { useToastStore } from '../store/toastStore';
 import { restockInventoryAndPostFinancials } from '../services/financeService';
+import { isDemoOrder } from '../services/demoOrder';
 import { useCompany } from '../context/CompanyContext';
 import { useI18n } from '../i18n/I18nProvider';
 import { 
@@ -75,9 +76,11 @@ export const Dashboard: React.FC = () => {
     );
   };
 
+  // Demo orders (paymentStatus 'demo_paid') are excluded from EVERY
+  // financial derivation on this page — no real money moved for them.
   const todaysPaidOrders = orders.filter(o => {
     const orderDate = toDate(o.createdAt);
-    return isToday(orderDate) && !['draft', 'cancelled', 'refunded'].includes(o.status);
+    return isToday(orderDate) && !['draft', 'cancelled', 'refunded'].includes(o.status) && !isDemoOrder(o);
   });
   const todaysRevenue = todaysPaidOrders.reduce((sum, o) => sum + o.total, 0);
   const inProduction = orders.filter(o => o.status === 'in_design').length;
@@ -99,7 +102,8 @@ export const Dashboard: React.FC = () => {
         orderDate.getFullYear() === targetDate.getFullYear() &&
         orderDate.getMonth() === targetDate.getMonth() &&
         orderDate.getDate() === targetDate.getDate() &&
-        !['draft', 'cancelled', 'refunded'].includes(o.status)
+        !['draft', 'cancelled', 'refunded'].includes(o.status) &&
+        !isDemoOrder(o)
       );
     });
     return {
@@ -121,21 +125,22 @@ export const Dashboard: React.FC = () => {
     { name: t('status.refunded'), value: orders.filter(o => o.status === 'refunded').length, color: '#EC4899' },
   ].filter(d => d.value > 0);
 
-  // Unified financial derivations to prevent double-counting
+  // Unified financial derivations to prevent double-counting.
+  // Demo orders are excluded throughout (see isDemoOrder).
   const totalLifetimeRevenue = orders
-    .filter(o => !['draft', 'cancelled', 'refunded'].includes(o.status))
+    .filter(o => !['draft', 'cancelled', 'refunded'].includes(o.status) && !isDemoOrder(o))
     .reduce((sum, o) => sum + o.total, 0);
 
   const arAsset = orders
-    .filter(o => ['confirmed', 'scheduled', 'in_design', 'ready', 'out_for_delivery'].includes(o.status) && (o.balanceDue !== undefined ? o.balanceDue > 0 : o.total > 0))
+    .filter(o => ['confirmed', 'scheduled', 'in_design', 'ready', 'out_for_delivery'].includes(o.status) && !isDemoOrder(o) && (o.balanceDue !== undefined ? o.balanceDue > 0 : o.total > 0))
     .reduce((sum, o) => sum + (o.balanceDue !== undefined ? o.balanceDue : o.total), 0);
 
   const taxLiabilities = orders
-    .filter(o => !['draft', 'cancelled', 'refunded'].includes(o.status))
+    .filter(o => !['draft', 'cancelled', 'refunded'].includes(o.status) && !isDemoOrder(o))
     .reduce((sum, o) => sum + (o.taxes !== undefined ? o.taxes : o.total * 0.08875), 0);
 
   const paidOrCompletedOrderTotals = orders
-    .filter(o => !['draft', 'cancelled', 'refunded'].includes(o.status))
+    .filter(o => !['draft', 'cancelled', 'refunded'].includes(o.status) && !isDemoOrder(o))
     .reduce((sum, o) => sum + (o.amountPaid !== undefined ? o.amountPaid : 0), 0);
 
   const cashAcct = useFinanceStore(s => s.chartOfAccounts.find(a => a.code === '1010'));
