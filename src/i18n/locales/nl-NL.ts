@@ -133,7 +133,6 @@ export const nlNL = {
     },
     "reviews": {
       "title": "Geliefd bij onze klanten",
-      "countText": "4.9/5 gebaseerd op 2.000+ beoordelingen",
       "review1": "Het mooiste arrangement dat ik ooit heb ontvangen. De verpakking was prachtig.",
       "review2": "De klantenservice was uitzonderlijk, en de bezorging op dezelfde dag redde mijn verjaardag!",
       "review3": "Ik ben dol op de aangepaste boeket-bouwer. Het voelde zo persoonlijk en het resultaat was adembenemend."

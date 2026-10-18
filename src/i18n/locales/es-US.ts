@@ -133,7 +133,6 @@ export const esUS = {
     },
     "reviews": {
       "title": "Amado por nuestros clientes",
-      "countText": "4.9/5 basado en más de 2,000 opiniones",
       "review1": "El arreglo más hermoso que he recibido. El empaque fue impresionante.",
       "review2": "El servicio al cliente fue excepcional, ¡y la entrega el mismo día salvó mi aniversario!",
       "review3": "Me encanta el constructor de ramos personalizados. Se sintió muy personal y el resultado fue impresionante."

@@ -133,7 +133,6 @@ export const enUS = {
     },
     reviews: {
       title: "Loved by our customers",
-      countText: "4.9/5 based on 2,000+ reviews",
       review1: "The most beautiful arrangement I have ever received. The packaging was stunning.",
       review2: "Customer service was exceptional, and the same-day delivery saved my anniversary!",
       review3: "I love the custom bouquet builder. It felt so personal and the result was breathtaking."

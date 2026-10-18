@@ -294,10 +294,6 @@ export const Home: React.FC = () => {
       <section className={styles.reviewsSection}>
         <div className={styles.reviewsHeader}>
           <h2>{t('landing.reviews.title')}</h2>
-          <div className={styles.stars}>
-            {[1, 2, 3, 4, 5].map(i => <Star key={i} fill="currentColor" color="var(--color-warning)" size={20} />)}
-            <span>{t('landing.reviews.countText')}</span>
-          </div>
         </div>
         <div className={styles.reviewsGrid}>
           {[

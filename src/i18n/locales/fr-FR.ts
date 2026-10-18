@@ -133,7 +133,6 @@ export const frFR = {
     },
     "reviews": {
       "title": "Apprécié par nos clients",
-      "countText": "4.9/5 basé sur plus de 2 000 avis",
       "review1": "L'arrangement le plus magnifique que j'aie jamais reçu. L'emballage était superbe.",
       "review2": "Le service client était exceptionnel, et la livraison le jour même a sauvé mon anniversaire !",
       "review3": "J'adore le créateur de bouquets personnalisés. C'était si personnel et le résultat était à couper le souffle."
