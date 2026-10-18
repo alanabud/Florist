@@ -9,6 +9,13 @@
  *   - guests may NOT create publicOrderTracking documents at all (tracking
  *     docs are created by the Stripe webhook via the Admin SDK, or by
  *     staff), but may still GET a tracking doc by its exact lookup id;
+ *   - SPARK REWORK (2026-10-18): with no Cloud Functions on the free
+ *     Spark plan, the DEMO confirmation moved client-side under a strict
+ *     rules quarantine (section [6]): the anonymous guest session may
+ *     flip its own PENDING guest order to exactly
+ *     confirmed/'demo_paid' touching only the five confirmation fields,
+ *     and may create the tracking document ONLY in demo-stamped form.
+ *     'paid' remains unreachable for every client, in every path;
  *   - guests still cannot read/list/update/delete orders or touch any
  *     back-office collection;
  *   - company staff keep full order/tracking access; read-only viewers
@@ -110,11 +117,17 @@ await testEnv.withSecurityRulesDisabled(async (ctx) => {
   await setDoc(doc(db, `companies/${COMPANY}/members/staffUser`), { userId: 'staffUser', companyId: COMPANY, role: 'admin', status: 'active' });
   await setDoc(doc(db, `companies/${COMPANY}/members/viewerUser`), { userId: 'viewerUser', companyId: COMPANY, role: 'viewer', status: 'active' });
   await setDoc(doc(db, `publicOrderTracking/${TRACKING_ID}`), trackingDoc());
+  // Section [6] fixtures: a registered-customer order and another
+  // company's guest order, both pending — neither may be demo-confirmed
+  // by the storefront guest session.
+  await setDoc(doc(db, 'orders/customerOrder'), guestOrder({ id: 'customerOrder', customerId: 'user-123' }));
+  await setDoc(doc(db, 'orders/otherCompanyOrder'), guestOrder({ id: 'otherCompanyOrder', companyId: 'OTHER_CO' }));
 });
 
 const guestDb = testEnv.unauthenticatedContext().firestore();
 const staffDb = testEnv.authenticatedContext('staffUser').firestore();
 const viewerDb = testEnv.authenticatedContext('viewerUser').firestore();
+const strangerDb = testEnv.authenticatedContext('randomStranger').firestore();
 
 console.log('\n=== GUEST ORDER LIFECYCLE (STRIPE-HARDENED RULES) ===\n');
 
@@ -139,12 +152,14 @@ await deny('Guest reads an order', () => getDoc(doc(guestDb, 'orders/guestOrder1
 await deny('Guest lists orders', () => getDocs(collection(guestDb, 'orders')));
 await deny('Guest updates an order (self-marks paid)', () =>
   updateDoc(doc(guestDb, 'orders/guestOrder1'), { paymentStatus: 'paid', status: 'confirmed' }));
-await deny('Guest updates an order (self-marks DEMO paid — the flip is server-side only)', () =>
+// A PARTIAL demo flip stays denied: the quarantine (section [6])
+// requires the complete five-field transition, stamps included.
+await deny('Guest updates an order (PARTIAL demo flip — missing demoPayment/paidAt stamps)', () =>
   updateDoc(doc(guestDb, 'orders/guestOrder1'), { paymentStatus: 'demo_paid', status: 'confirmed', paymentProvider: 'demo' }));
 await deny('Guest deletes an order', () => deleteDoc(doc(guestDb, 'orders/guestOrder1')));
 
 console.log('\n[3] Public tracking — webhook/staff create, guest read-by-id only');
-await deny('Guest creates a publicOrderTracking doc (must come from webhook/staff)', () =>
+await deny('Guest creates a publicOrderTracking doc WITHOUT the demo stamp (non-demo stays webhook/staff-only)', () =>
   setDoc(doc(guestDb, 'publicOrderTracking/blm-99999_qa@example.com'), trackingDoc({ orderNumber: 'BLM-99999', orderNumberNormalized: 'blm-99999' })));
 await allow('Guest reads a tracking doc by its exact lookup id', () =>
   getDoc(doc(guestDb, `publicOrderTracking/${TRACKING_ID}`)));
@@ -166,6 +181,57 @@ await allow('Staff creates a tracking doc', () =>
   setDoc(doc(staffDb, 'publicOrderTracking/blm-77777_staff@example.com'), trackingDoc({ orderNumber: 'BLM-77777', orderNumberNormalized: 'blm-77777', senderEmailNormalized: 'staff@example.com' })));
 await deny('Viewer (read-only) creates an order', () =>
   setDoc(doc(viewerDb, 'orders/viewerOrder'), { companyId: COMPANY, status: 'draft', total: 1 }));
+
+console.log('\n[6] Spark demo confirmation — client-side under rules quarantine');
+// The complete, exact transition the demo client performs (mirrors
+// src/services/demoCheckoutService.ts): all five confirmation fields,
+// pinned values, nothing else.
+const demoConfirmPayload = (overrides = {}) => ({
+  status: 'confirmed',
+  paymentStatus: 'demo_paid',
+  paymentProvider: 'demo',
+  demoPayment: true,
+  paidAt: new Date().toISOString(),
+  ...overrides,
+});
+
+await allow('Guest creates pending order demoOrderA (demo-confirm target)', () =>
+  setDoc(doc(guestDb, 'orders/demoOrderA'), guestOrder({ id: 'demoOrderA' })));
+await allow('Guest demo-confirms its OWN pending guest order (complete quarantined transition)', () =>
+  updateDoc(doc(guestDb, 'orders/demoOrderA'), demoConfirmPayload()));
+await deny('Guest demo-confirms the SAME order again (no longer pending)', () =>
+  updateDoc(doc(guestDb, 'orders/demoOrderA'), demoConfirmPayload()));
+
+await allow('Guest creates pending order demoOrderB (abuse-case target)', () =>
+  setDoc(doc(guestDb, 'orders/demoOrderB'), guestOrder({ id: 'demoOrderB' })));
+await deny("Guest 'demo-confirms' with paymentStatus 'paid' instead of 'demo_paid'", () =>
+  updateDoc(doc(guestDb, 'orders/demoOrderB'), demoConfirmPayload({ paymentStatus: 'paid' })));
+await deny('Guest demo-confirms while smuggling a total change into the same update', () =>
+  updateDoc(doc(guestDb, 'orders/demoOrderB'), demoConfirmPayload({ total: 0.01 })));
+await deny('Guest demo-confirms with a PARTIAL field set (no demoPayment/paidAt stamps)', () =>
+  updateDoc(doc(guestDb, 'orders/demoOrderB'), { status: 'confirmed', paymentStatus: 'demo_paid', paymentProvider: 'demo' }));
+await deny('An authenticated stranger demo-confirms the guest order (not the guest session)', () =>
+  updateDoc(doc(strangerDb, 'orders/demoOrderB'), demoConfirmPayload()));
+await deny("Guest demo-confirms a REGISTERED CUSTOMER's order (customerId is not 'guest')", () =>
+  updateDoc(doc(guestDb, 'orders/customerOrder'), demoConfirmPayload()));
+await deny("Guest demo-confirms ANOTHER COMPANY's guest order", () =>
+  updateDoc(doc(guestDb, 'orders/otherCompanyOrder'), demoConfirmPayload()));
+await allow('Guest demo-confirms demoOrderB cleanly after the failed abuse attempts', () =>
+  updateDoc(doc(guestDb, 'orders/demoOrderB'), demoConfirmPayload()));
+
+console.log('\n[7] Spark demo tracking document — demo-stamped create only');
+await allow('Guest creates the DEMO-stamped tracking doc for a demo-confirmed order', () =>
+  setDoc(doc(guestDb, 'publicOrderTracking/blm-55555_qa@example.com'),
+    trackingDoc({ orderNumber: 'BLM-55555', orderNumberNormalized: 'blm-55555', paymentMode: 'demo' })));
+await deny('Guest creates a demo tracking doc whose id does not match its contents', () =>
+  setDoc(doc(guestDb, 'publicOrderTracking/blm-66666_qa@example.com'),
+    trackingDoc({ orderNumber: 'BLM-55555', orderNumberNormalized: 'blm-55555', paymentMode: 'demo' })));
+await deny('Guest creates a demo tracking doc with a non-placed status', () =>
+  setDoc(doc(guestDb, 'publicOrderTracking/blm-77777_qa@example.com'),
+    trackingDoc({ orderNumber: 'BLM-77777', orderNumberNormalized: 'blm-77777', paymentMode: 'demo', status: 'shipped' })));
+await deny('Guest creates a demo tracking doc with a field outside the public allowlist', () =>
+  setDoc(doc(guestDb, 'publicOrderTracking/blm-88888_qa@example.com'),
+    trackingDoc({ orderNumber: 'BLM-88888', orderNumberNormalized: 'blm-88888', paymentMode: 'demo', internalNote: 'smuggled' })));
 
 await testEnv.cleanup();
 

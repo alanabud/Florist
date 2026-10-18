@@ -115,7 +115,7 @@ service cloud.firestore {
         'orderNumber', 'orderNumberNormalized', 'senderEmailNormalized',
         'status', 'deliveryDate', 'recipientFirstName',
         'city', 'state', 'itemsSummary', 'timeline', 'updatedAt',
-        'deliveryWindow', 'trackingMessage', 'companyId'
+        'deliveryWindow', 'trackingMessage', 'companyId', 'paymentMode'
       ];
     }
 
@@ -127,6 +127,68 @@ service cloud.firestore {
         && data.senderEmailNormalized is string
         && data.orderNumber is string
         && data.status == 'placed';
+    }
+
+    // ──────────────────────────────────────────────
+    // SPARK DEMO CONFIRMATION (client-side, rules-quarantined)
+    // ──────────────────────────────────────────────
+    // Spark-plan rework (2026-10-18): the store runs WITHOUT Cloud
+    // Functions (Spark has none), so the DEMO payment confirmation —
+    // previously the server-gated confirmDemoPayment callable — is
+    // performed by the client under this strict quarantine. This is
+    // the ONLY client-writable payment transition in the ruleset:
+    //
+    //   - the caller is the anonymous guest session (request.auth ==
+    //     null), the same identity that created the order — guest
+    //     orders are anonymous by design (customerId 'guest'); the
+    //     unguessable Firestore document id is the capability, and
+    //     staff keep their separate member-gated update path;
+    //   - the order is a storefront guest order still in its PENDING
+    //     state (status 'pending_payment', paymentStatus 'pending');
+    //   - the update touches EXACTLY the five confirmation fields —
+    //     all five required (hasAll), nothing else may change (hasOnly)
+    //     so totals, items, parties and every other field are frozen;
+    //   - the new values are pinned: status 'confirmed',
+    //     paymentStatus 'demo_paid' — NEVER 'paid' — paymentProvider
+    //     'demo', demoPayment true, paidAt an ISO string.
+    //
+    // No path in these rules lets a client write paymentStatus 'paid'
+    // (or any other payment status): creation still requires 'pending'
+    // and this transition still ends at 'demo_paid' only. Real Stripe
+    // confirmation remains webhook-only (Admin SDK) and therefore
+    // requires Cloud Functions (Blaze) — by the owner's choice.
+    function demoPaymentConfirmFields() {
+      return ['status', 'paymentStatus', 'paymentProvider', 'demoPayment', 'paidAt'];
+    }
+
+    function isValidGuestDemoPaymentConfirm() {
+      let diff = request.resource.data.diff(resource.data);
+      return request.auth == null
+        && resource.data.companyId == "DEFAULT_COMPANY"
+        && resource.data.customerId == 'guest'
+        && resource.data.status == 'pending_payment'
+        && resource.data.paymentStatus == 'pending'
+        && diff.affectedKeys().hasAll(demoPaymentConfirmFields())
+        && diff.affectedKeys().hasOnly(demoPaymentConfirmFields())
+        && request.resource.data.status == 'confirmed'
+        && request.resource.data.paymentStatus == 'demo_paid'
+        && request.resource.data.paymentProvider == 'demo'
+        && request.resource.data.demoPayment == true
+        && request.resource.data.paidAt is string;
+    }
+
+    // The demo flow also creates the public tracking document (the
+    // callable used to write it via writeTrackingDoc). A guest may
+    // create one ONLY in its demo-stamped form: the exact public-field
+    // allowlist, the deterministic lookup-id composition, status
+    // 'placed', and paymentMode pinned to 'demo' — the tracking UI
+    // labels such orders as demos (no real payment was processed).
+    // Non-demo tracking documents remain staff/webhook-only.
+    function isValidGuestDemoTrackingCreate(trackingId) {
+      return request.auth == null
+        && request.resource.data.paymentMode == 'demo'
+        && request.resource.data.companyId == "DEFAULT_COMPANY"
+        && isValidPublicTrackingCreate(trackingId);
     }
 
     // ──────────────────────────────────────────────
@@ -219,7 +281,9 @@ service cloud.firestore {
       // Staff-vocabulary gate matches every other business collection —
       // read-only members (viewer) must not be able to create orders.
       allow create: if (canCreateCompanyDoc() && isCompanyStaff(request.resource.data.companyId)) || isValidGuestOrderCreate();
-      allow update: if canUpdateCompanyDoc() && isCompanyStaff(resource.data.companyId);
+      // Staff updates, OR the single quarantined guest demo-payment
+      // confirmation (Spark rework — see isValidGuestDemoPaymentConfirm).
+      allow update: if (canUpdateCompanyDoc() && isCompanyStaff(resource.data.companyId)) || isValidGuestDemoPaymentConfirm();
       allow delete: if canDeleteCompanyDoc();
     }
     
@@ -401,11 +465,14 @@ service cloud.firestore {
       allow list: if false;
       // Stripe integration (2026-10-18): tracking documents are created
       // by the Stripe webhook (Admin SDK) when payment is confirmed, or
-      // by staff. Guests can no longer create tracking documents — an
+      // by staff. Guests cannot create a NON-demo tracking document — an
       // unpaid order must not be able to present a public "order placed"
-      // page. (isValidPublicTrackingCreate is retained above for staff
-      // tooling/reference.)
-      allow create: if request.auth != null && isCompanyStaff(request.resource.data.companyId);
+      // page. Spark rework exception (2026-10-18): with no Cloud
+      // Functions available, the demo flow's client creates the tracking
+      // document in its demo-stamped form only
+      // (isValidGuestDemoTrackingCreate — paymentMode pinned to 'demo',
+      // exact public-field allowlist, deterministic lookup id).
+      allow create: if (request.auth != null && isCompanyStaff(request.resource.data.companyId)) || isValidGuestDemoTrackingCreate(trackingId);
       allow update, delete: if isCompanyStaff(resource.data.companyId);
     }
 

@@ -17,8 +17,9 @@ import styles from './DemoCheckout.module.css';
  * real Stripe keys (PAYMENTS_MODE 'demo' — see src/config/stripeConfig.ts).
  * It is labeled as a demo everywhere it matters, accepts only the two
  * well-known test card numbers, and NEVER transmits the entered card
- * number anywhere: a successful test card triggers the server-side
- * `confirmDemoPayment` callable with just the orderId, and the order
+ * number anywhere: a successful test card triggers the client-side demo
+ * confirmation (rules-quarantined — see demoCheckoutService.ts and
+ * isValidGuestDemoPaymentConfirm in firestore.rules), and the order
  * ends up paymentStatus 'demo_paid' — never 'paid'.
  */
 export const DemoCheckout: React.FC = () => {
@@ -96,7 +97,8 @@ export const DemoCheckout: React.FC = () => {
 
     try {
       setIsProcessing(true);
-      // Only the orderId crosses the wire — never the card number.
+      // The card number never crosses the wire — the confirmation writes
+      // only the order's quarantined demo transition + tracking doc.
       await confirmDemoPayment(orderId);
       navigate(demoSuccessPath(summary), { replace: true });
     } catch (err) {

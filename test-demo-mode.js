@@ -18,10 +18,13 @@
  *       - all four locales carry the demoCheckout namespace, the checkout
  *         demo banner keys, the confirmation demoNotice, and no locale
  *         still ships TODO placeholder copy in the info pages.
- *  3. The demo lifecycle state machine (pending → demo_paid) cannot be
- *     reached from the client: the client service carries only orderId,
- *     and the simulated page accepts exactly the two documented test
- *     cards (mirror-checked against demoCheckoutService.ts constants).
+ *  3. The demo lifecycle state machine (pending → demo_paid) is reached
+ *     from the client ONLY through the rules-quarantined transition
+ *     (Spark rework, 2026-10-18): the client writes exactly the five
+ *     pinned confirmation fields + the demo-stamped tracking doc, the
+ *     rules source carries the quarantine shape, and the simulated page
+ *     accepts exactly the two documented test cards (mirror-checked
+ *     against demoCheckoutService.ts constants).
  *
  * What it does NOT prove: live behavior against Firebase/Stripe — that
  * is covered by the emulator suites (test-guest-order-rules.mjs) and the
@@ -70,7 +73,8 @@ const modeDecl = stripeConfig.slice(modeIdx, modeIdx + 400);
 assert(/PAYMENTS_MODE: PaymentsMode = isStripeConfigured\(\)\s*\?\s*'stripe'/.test(modeDecl),
   'FAIL-CLOSED: a configured Stripe key always wins over demo mode.');
 
-// ── 2b. Server-side demo flip ─────────────────────────────────────────
+// ── 2b. Server-side demo flip (functions retained for the Blaze path;
+// on Spark the same transition is performed client-side — see 2b′) ────
 const fnSrc = read('functions/src/index.ts');
 const demoStart = fnSrc.indexOf('export const confirmDemoPayment');
 assert(demoStart > -1, 'functions expose confirmDemoPayment.');
@@ -88,11 +92,39 @@ assert(fnSrc.includes("freshOrder.paymentStatus === 'demo_paid'"), 'Demo flip is
 const webhookPaidCount = (fnSrc.match(/paymentStatus: 'paid'/g) || []).length;
 assert(webhookPaidCount === 1, "Exactly one code path in functions assigns paymentStatus 'paid' (the Stripe webhook flip).");
 
-// Client service: the confirm call carries only the orderId.
+// ── 2b′. Client-side demo flip (Spark rework) ───────────────────────
+// The demo confirmation no longer calls a Cloud Function: it performs
+// the quarantined Firestore batch directly. These source checks pin
+// the client half of the quarantine contract (the rules half is
+// checked below; the live behavior is proven by the emulator suite).
 const demoSvc = read('src/services/demoCheckoutService.ts');
-assert(demoSvc.includes("httpsCallable<{ orderId: string }, ConfirmDemoResponse>"), 'Client demo confirm sends only the orderId.');
+assert(!demoSvc.includes('httpsCallable'), 'Client demo confirm calls NO Cloud Function (Spark has none).');
+assert(demoSvc.includes('writeBatch'), 'Client demo confirm writes the order flip + tracking doc as one atomic batch.');
+assert(demoSvc.includes("paymentStatus: 'demo_paid'"), "Client demo flip sets paymentStatus 'demo_paid'.");
+assert(!demoSvc.includes("paymentStatus: 'paid'"), "Client demo service NEVER assigns paymentStatus 'paid'.");
+assert(demoSvc.includes("paymentProvider: 'demo'") && demoSvc.includes('demoPayment: true'),
+  'Client demo flip stamps paymentProvider demo + demoPayment true (same field set as the callable wrote).');
+assert(demoSvc.includes("paymentMode: 'demo'"), 'Client demo flip stamps the tracking doc paymentMode demo.');
 assert(demoSvc.includes("success: '4242424242424242'") && demoSvc.includes("decline: '4000000000000002'"),
   'Demo test card constants are the documented success/decline cards.');
+
+// Exact key sets of the two batched writes. The Firestore SDK derives
+// the updateMask from the update object's keys, so these key sets ARE
+// the wire contract the rules quarantine is checked against (proven
+// live by test-guest-order-rules.mjs in CI).
+const extractBlockKeys = (src, marker) => {
+  const start = src.indexOf(marker);
+  assert(start > -1, `demoCheckoutService contains ${marker}.`);
+  const block = src.slice(start, src.indexOf('});', start));
+  return [...block.matchAll(/^ {4}(\w+):/gm)].map((m) => m[1]).sort();
+};
+const orderUpdateKeys = extractBlockKeys(demoSvc, "batch.update(doc(db, 'orders'");
+assert(JSON.stringify(orderUpdateKeys) === JSON.stringify(['demoPayment', 'paidAt', 'paymentProvider', 'paymentStatus', 'status']),
+  `Client order update touches EXACTLY the five quarantined fields (got ${orderUpdateKeys.join(',')}).`);
+const trackingKeys = extractBlockKeys(demoSvc, "batch.set(doc(db, 'publicOrderTracking'");
+const expectedTrackingKeys = ['city', 'companyId', 'deliveryDate', 'itemsSummary', 'orderNumber', 'orderNumberNormalized', 'paymentMode', 'recipientFirstName', 'senderEmailNormalized', 'state', 'status', 'timeline', 'updatedAt'].sort();
+assert(JSON.stringify(trackingKeys) === JSON.stringify(expectedTrackingKeys),
+  `Client tracking doc carries EXACTLY the public allowlist + paymentMode (got ${trackingKeys.join(',')}).`);
 
 // ── 2c. Money surfaces apply the exclusion ────────────────────────────
 // Minimum call counts reflect each file's shape: Dashboard /
@@ -119,12 +151,27 @@ assert(ordersPage.includes('isDemoOrder(order)') && ordersPage.includes('orders.
 assert(ordersPage.includes("glPostingStatus === 'unposted' && !isDemoOrder(order)"),
   'Admin Orders hides the Post-to-Ledger action for demo orders.');
 
-// Rules unchanged for guests: demo flip is NOT a client rules allowance.
+// Rules: creation is unchanged (pending only); the demo flip exists
+// ONLY as the quarantined transition (Spark rework). These checks pin
+// its shape so the allowance cannot silently widen: exact pre-state,
+// complete-and-only field set, pinned demo outcome — and 'paid' is
+// never a client-reachable value.
 const rules = read('firestore.rules');
 assert(rules.includes("request.resource.data.status == 'pending_payment'") &&
        rules.includes("request.resource.data.paymentStatus == 'pending'"),
   'Guest order creation still requires the pending state.');
-assert(!rules.includes('demo_paid'), 'Firestore rules contain NO demo_paid allowance — guests cannot self-flip.');
+assert(rules.includes('isValidGuestDemoPaymentConfirm'), 'Rules carry the quarantined guest demo-confirm transition.');
+assert(rules.includes("resource.data.status == 'pending_payment'") &&
+       rules.includes("resource.data.paymentStatus == 'pending'"),
+  'Demo transition requires the order to be in its PENDING state.');
+assert(rules.includes('hasAll(demoPaymentConfirmFields())') &&
+       rules.includes('hasOnly(demoPaymentConfirmFields())'),
+  'Demo transition requires the COMPLETE confirmation field set and NOTHING else.');
+assert(rules.includes("request.resource.data.paymentStatus == 'demo_paid'"),
+  "Demo transition pins the outcome to paymentStatus 'demo_paid'.");
+assert(rules.includes('isValidGuestDemoTrackingCreate') &&
+       rules.includes("request.resource.data.paymentMode == 'demo'"),
+  'Guest tracking creation is allowed ONLY in demo-stamped form.');
 
 // ── 2d. Locales carry the demo copy; no TODO placeholders ship ───────
 for (const loc of ['en-US', 'es-US', 'fr-FR', 'nl-NL']) {
