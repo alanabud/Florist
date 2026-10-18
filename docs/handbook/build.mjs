@@ -40,7 +40,7 @@ await page.pdf({
   headerTemplate: `<div style="width:100%;font-size:7.5px;color:#8a9a8e;font-family:'Segoe UI',Arial,sans-serif;padding:14px 0.85in 0;display:flex;justify-content:space-between;">
       <span>BLOOMPRO STUDIO</span><span>USER HANDBOOK · 2026 EDITION</span></div>`,
   footerTemplate: `<div style="width:100%;font-size:7.5px;color:#8a9a8e;font-family:'Segoe UI',Arial,sans-serif;padding:0 0.85in 12px;display:flex;justify-content:space-between;">
-      <span>© 2026 AF Strategic Technologies LLC</span><span class="pageNumber"></span></div>`,
+      <span>© 2026 Alam Fernandez</span><span class="pageNumber"></span></div>`,
 });
 await browser.close();
 console.log('cover + body rendered.');
