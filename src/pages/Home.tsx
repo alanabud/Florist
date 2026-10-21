@@ -11,12 +11,15 @@ import { useI18n } from '../i18n/I18nProvider';
 import { SITE_CONFIG } from '../config/siteConfig';
 import styles from './Home.module.css';
 
-// Local licensed floral photography
+// Local floral photography. Remainder pass 2026-10-21: the asset files
+// were visually re-verified — "pink_roses.jpg" actually held a red rose
+// (renamed crimson_rose.jpg), "red_roses.jpg" held a castle photo and
+// "white_roses.jpg" a resort-pool photo (both deleted). The collection
+// cards and Instagram strip below now use verified floral images only.
 import heroRoseBouquet from '../assets/storefront/hero-rose-bouquet.jpg';
-import pinkRoses from '../assets/flowers/pink_roses.jpg';
+import crimsonRose from '../assets/flowers/crimson_rose.jpg';
 import mixedPastel from '../assets/flowers/mixed_pastel.jpg';
-import redRoses from '../assets/flowers/red_roses.jpg';
-import whiteRoses from '../assets/flowers/white_roses.jpg';
+import whiteDaisies from '../assets/flowers/white_daisies.jpg';
 
 export const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -171,7 +174,7 @@ export const Home: React.FC = () => {
           <div className={styles.collectionsGrid}>
             <div className={styles.collectionCard} onClick={() => navigate('/shop?category=Roses')}>
               <div className={styles.collectionImageWrapper}>
-                <img src={pinkRoses} alt="Delicate pink rose arrangement" className={styles.collectionImage} />
+                <img src={heroRoseBouquet} alt="Rose arrangement with blush peonies and garden roses" className={styles.collectionImage} />
               </div>
             </div>
             <div className={styles.collectionCard} onClick={() => navigate('/shop?category=Seasonal')}>
@@ -181,12 +184,12 @@ export const Home: React.FC = () => {
             </div>
             <div className={styles.collectionCard} onClick={() => navigate('/shop?category=Romance')}>
               <div className={styles.collectionImageWrapper}>
-                <img src={redRoses} alt="Crimson red rose bouquet" className={styles.collectionImage} />
+                <img src={crimsonRose} alt="Crimson red rose with water droplets" className={styles.collectionImage} />
               </div>
             </div>
             <div className={styles.collectionCard} onClick={() => navigate('/shop?category=Wedding')}>
               <div className={styles.collectionImageWrapper}>
-                <img src={whiteRoses} alt="Elegant white roses and hydrangea" className={styles.collectionImage} />
+                <img src={whiteDaisies} alt="White daisies in a glass vase" className={styles.collectionImage} />
               </div>
             </div>
           </div>
@@ -335,10 +338,10 @@ export const Home: React.FC = () => {
         {/* Local floral photography — the previous remote stock photos were
             irrelevant (a telephone handset, a lamp storefront) or broken. */}
         <div className={styles.igGrid}>
-          <img src={pinkRoses} alt="IG 1" loading="lazy" />
+          <img src={heroRoseBouquet} alt="IG 1" loading="lazy" />
           <img src={mixedPastel} alt="IG 2" loading="lazy" />
-          <img src={redRoses} alt="IG 3" loading="lazy" />
-          <img src={whiteRoses} alt="IG 4" loading="lazy" />
+          <img src={crimsonRose} alt="IG 3" loading="lazy" />
+          <img src={whiteDaisies} alt="IG 4" loading="lazy" />
         </div>
       </section>
 

@@ -894,6 +894,26 @@ export const useAdminStore = create<AdminState>()(
             }
             await setDoc(seedDocRef, { seededAt: new Date().toISOString(), version: 1 });
             snapshot = await getDocs(q);
+          } else if (seedDocSnap.exists() && (seedDocSnap.data()?.version ?? 1) < 2 && !snapshot.empty) {
+            // Seed image refresh (version 2, 2026-10-21 remainder pass):
+            // catalogs seeded from the pre-fix products.ts still carry its
+            // broken/wrong image URLs (404s, a castle photo, a resort-pool
+            // photo) in Firestore, and the storefront renders products_admin
+            // — not the bundled catalog — so fixing products.ts alone never
+            // reached the live pages. Refresh ONLY the imageUrl of the
+            // deterministic demo-seed documents from the current bundled
+            // catalog. Merchant-created products (random addDoc ids) are
+            // never touched, and no field other than imageUrl is written.
+            const byId = new Map(snapshot.docs.map(d => [d.id, d]));
+            for (const prod of PRODUCTS) {
+              const deterministicId = `demo-prod-${companyId}-${prod.id}`;
+              const existing = byId.get(deterministicId);
+              if (existing && existing.data()?.imageUrl !== prod.imageUrl) {
+                await updateDoc(doc(db, 'products_admin', deterministicId), { imageUrl: prod.imageUrl });
+              }
+            }
+            await setDoc(seedDocRef, { imageRefreshedAt: new Date().toISOString(), version: 2 }, { merge: true });
+            snapshot = await getDocs(q);
           }
 
           const parsed = snapshot.docs.map(doc => normalizeProduct({ id: doc.id, ...doc.data() }));

@@ -1,8 +1,20 @@
-// Local licensed floral photography (same assets the homepage uses).
-// Used where the previous remote (Unsplash) assignments were blank or
-// showed the wrong subject in the 2026-10-17 certification audit.
-import pinkRosesImg from '../assets/flowers/pink_roses.jpg';
-import whiteRosesImg from '../assets/flowers/white_roses.jpg';
+// Local floral photography. Remainder pass 2026-10-21: every asset and
+// every remote URL in this file was re-verified (HTTP status + visual
+// subject check). Findings that forced changes:
+//  - assets/flowers/pink_roses.jpg actually contained a RED rose photo —
+//    renamed to crimson_rose.jpg and assigned to the Crimson Love Dozen.
+//  - assets/flowers/white_roses.jpg actually contained a resort-pool photo
+//    and assets/flowers/red_roses.jpg the Burg Eltz castle photo (the same
+//    castle that was wrongly used for Crimson Love Dozen) — both deleted.
+//  - Six Unsplash photo IDs used here return 404 today (p5, p6, p10, p13,
+//    p14, p17) and were replaced with verified-live, subject-checked
+//    imagery already used elsewhere in this app. Where no exact-species
+//    photograph exists in the library, the assignment is marked INTERIM.
+//    seeded Firestore copies of this catalog are refreshed by the seed
+//    version-2 migration in src/store/adminStore.ts (fetchProducts).
+import heroRoseImg from '../assets/storefront/hero-rose-bouquet.jpg';
+import crimsonRoseImg from '../assets/flowers/crimson_rose.jpg';
+import mixedPastelImg from '../assets/flowers/mixed_pastel.jpg';
 // Catalog photographs created for the certification fix pass (2026-10-18)
 // for the three products whose remote photos showed the wrong subject.
 import wildflowerBasketImg from '../assets/flowers/wildflower_basket.jpg';
@@ -69,10 +81,10 @@ export interface Product {
 export const OCCASIONS: Occasion[] = [
   { id: '1', name: 'Birthday', color: '#fdf5f5', imageUrl: 'https://images.unsplash.com/photo-1591886960571-74d43a9d4166?q=80&w=600&auto=format&fit=crop' },
   { id: '2', name: 'Anniversary', color: '#f9ecec', imageUrl: 'https://images.unsplash.com/photo-1563241527-3004b7be0ffd?q=80&w=600&auto=format&fit=crop' },
-  // Sympathy previously pointed at the same remote photo as the White
-  // Elegance Lily, which rendered broken/blank in the audit — now uses
-  // the local white-roses photograph.
-  { id: '3', name: 'Sympathy', color: '#eef2ec', imageUrl: whiteRosesImg },
+  // Sympathy previously pointed at a remote photo that now 404s; the
+  // 2026-10-18 replacement asset turned out to be a resort-pool photo
+  // (deleted 2026-10-21). Now uses the verified local white-daisies photo.
+  { id: '3', name: 'Sympathy', color: '#eef2ec', imageUrl: whiteDaisiesImg },
   { id: '4', name: 'Just Because', color: '#f1e5d1', imageUrl: 'https://images.unsplash.com/photo-1562690868-60bbe7293e94?q=80&w=600&auto=format&fit=crop' },
 ];
 
@@ -101,8 +113,10 @@ export const PRODUCTS: Product[] = [
     category: 'Luxury',
     occasions: ['Anniversary', 'Birthday', 'Wedding'],
     colors: ['Pink', 'Blush'],
-    // Was a red-rose photo in the audit; now the local pink-roses photograph.
-    imageUrl: pinkRosesImg,
+    // The 2026-10-18 replacement asset was actually a red-rose photo.
+    // Now the storefront hero photograph: blush peonies with peach
+    // Juliet roses — the correct subject for this product.
+    imageUrl: heroRoseImg,
     isBestSeller: true,
     isSameDay: false,
     isTaxable: true,
@@ -118,10 +132,11 @@ export const PRODUCTS: Product[] = [
     category: 'Sympathy',
     occasions: ['Sympathy', 'Thank You'],
     colors: ['White', 'Green'],
-    // Was blank in the audit (same broken remote photo as the old Sympathy
-    // card). Now the local white-roses photograph — white blooms, though a
-    // dedicated lily photograph is still the ideal asset for this product.
-    imageUrl: whiteRosesImg,
+    // The 2026-10-18 replacement asset was a resort-pool photo (deleted
+    // 2026-10-21). INTERIM: verified local white-daisies photograph —
+    // white blooms with the right tone; a dedicated lily photograph is
+    // still the ideal asset for this product.
+    imageUrl: whiteDaisiesImg,
     isBestSeller: false,
     isSameDay: true,
     isTaxable: true,
@@ -154,7 +169,10 @@ export const PRODUCTS: Product[] = [
     category: 'Plants',
     occasions: ['Thank You', 'Birthday', 'Romance'],
     colors: ['Purple', 'Dark Red'],
-    imageUrl: 'https://images.unsplash.com/photo-1508110546313-05f48866e4a2?q=80&w=800&auto=format&fit=crop',
+    // Previous Unsplash photo returns 404 (verified 2026-10-21). INTERIM:
+    // verified moody dahlia photograph already used on the homepage — the
+    // dark "midnight velvet" tone fits; a real orchid photo is still owed.
+    imageUrl: 'https://images.unsplash.com/photo-1507290439931-a861b5a38200?q=80&w=800&auto=format&fit=crop',
     isBestSeller: false,
     isSameDay: false,
     isTaxable: true,
@@ -170,7 +188,10 @@ export const PRODUCTS: Product[] = [
     category: 'Seasonal',
     occasions: ['Wedding', 'Anniversary'],
     colors: ['White', 'Blue'],
-    imageUrl: 'https://images.unsplash.com/photo-1559868725-78363737b9d6?q=80&w=800&auto=format&fit=crop',
+    // Previous Unsplash photo returns 404 (verified 2026-10-21). INTERIM:
+    // verified pink double-tulip photograph already used by the bouquet
+    // builder; a real hydrangea photograph is still owed.
+    imageUrl: 'https://images.unsplash.com/photo-1561181286-d3fee7d55364?q=80&w=800&auto=format&fit=crop',
     isBestSeller: false,
     isSameDay: true,
     isTaxable: true,
@@ -186,7 +207,10 @@ export const PRODUCTS: Product[] = [
     category: 'Roses',
     occasions: ['Romance', 'Anniversary'],
     colors: ['Red', 'Green'],
-    imageUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=800&auto=format&fit=crop',
+    // Previous Unsplash photo was Burg Eltz castle — not flowers at all
+    // (visually verified 2026-10-21). Now the local crimson-rose
+    // photograph (the asset previously mislabeled "pink_roses.jpg").
+    imageUrl: crimsonRoseImg,
     isBestSeller: true,
     isSameDay: true,
     isTaxable: true,
@@ -234,7 +258,10 @@ export const PRODUCTS: Product[] = [
     category: 'Luxury',
     occasions: ['Wedding', 'Anniversary', 'Thank You'],
     colors: ['White', 'Green'],
-    imageUrl: 'https://images.unsplash.com/photo-1506456015502-39c288fdb72d?q=80&w=800&auto=format&fit=crop',
+    // Previous Unsplash photo returns 404 (verified 2026-10-21). INTERIM:
+    // verified lush cream garden-rose bouquet photograph (also the
+    // Birthday tile); a real white-orchid display photo is still owed.
+    imageUrl: 'https://images.unsplash.com/photo-1591886960571-74d43a9d4166?q=80&w=800&auto=format&fit=crop',
     isBestSeller: false,
     isSameDay: false,
     isTaxable: true,
@@ -282,7 +309,10 @@ export const PRODUCTS: Product[] = [
     category: 'Seasonal',
     occasions: ['Thank You', 'Birthday'],
     colors: ['Orange', 'Burgundy', 'Yellow'],
-    imageUrl: 'https://images.unsplash.com/photo-1473215234509-54d90ceb7e65?q=80&w=800&auto=format&fit=crop',
+    // Previous Unsplash photo returns 404 (verified 2026-10-21). Now the
+    // verified local wildflower basket — sunflowers carry the warm
+    // autumn-harvest tone (shared with p4 until a dedicated photo exists).
+    imageUrl: wildflowerBasketImg,
     isBestSeller: false,
     isSameDay: true,
     isTaxable: true,
@@ -298,7 +328,10 @@ export const PRODUCTS: Product[] = [
     category: 'Sympathy',
     occasions: ['Sympathy'],
     colors: ['White', 'Green'],
-    imageUrl: 'https://images.unsplash.com/photo-1542458428-1f1cc7d043d8?q=80&w=800&auto=format&fit=crop',
+    // Previous Unsplash photo returns 404 (verified 2026-10-21). Now the
+    // verified local pastel arrangement (roses and peonies — the "rose"
+    // half of this product, in a serene pastel palette).
+    imageUrl: mixedPastelImg,
     isBestSeller: true,
     isSameDay: true,
     isTaxable: true,
@@ -347,7 +380,10 @@ export const PRODUCTS: Product[] = [
     category: 'Luxury',
     occasions: ['Anniversary', 'Birthday'],
     colors: ['Gold', 'Yellow', 'Brown'],
-    imageUrl: 'https://images.unsplash.com/photo-1555239121-f09bf26ea137?q=80&w=800&auto=format&fit=crop',
+    // Previous Unsplash photo returns 404 (verified 2026-10-21). INTERIM:
+    // verified single pink tulip on a warm blush backdrop (shared with
+    // p9); a golden-hour arrangement photograph is still owed.
+    imageUrl: 'https://images.unsplash.com/photo-1520763185298-1b434c919102?q=80&w=800&auto=format&fit=crop',
     isBestSeller: false,
     isSameDay: false,
     isTaxable: true,
