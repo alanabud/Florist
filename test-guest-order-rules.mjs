@@ -233,6 +233,38 @@ await deny('Guest creates a demo tracking doc with a field outside the public al
   setDoc(doc(guestDb, 'publicOrderTracking/blm-88888_qa@example.com'),
     trackingDoc({ orderNumber: 'BLM-88888', orderNumberNormalized: 'blm-88888', paymentMode: 'demo', internalNote: 'smuggled' })));
 
+const token = 'a'.repeat(32);
+await allow('Guest order may carry a trackingToken (confirmation URL does not use the email)', () =>
+  setDoc(doc(guestDb, 'orders/guestOrderToken'), guestOrder({ id: 'guestOrderToken', trackingToken: token })));
+await allow('Guest creates a token-id demo tracking doc', () =>
+  setDoc(doc(guestDb, `publicOrderTracking/blm-42424_${token}`),
+    trackingDoc({
+      orderNumber: 'BLM-42424',
+      orderNumberNormalized: 'blm-42424',
+      paymentMode: 'demo',
+      trackingToken: token,
+      deliveryType: 'pickup',
+      subtotal: 125,
+      deliveryFee: 0,
+      taxes: 0,
+      total: 125,
+    })));
+await deny('Guest creates a token tracking doc whose id does not match the token', () =>
+  setDoc(doc(guestDb, 'publicOrderTracking/blm-42424_' + 'b'.repeat(32)),
+    trackingDoc({
+      orderNumber: 'BLM-42424',
+      orderNumberNormalized: 'blm-42424',
+      paymentMode: 'demo',
+      trackingToken: token,
+    })));
+await allow('Guest creates the hashed demo lookup doc', () =>
+  setDoc(doc(guestDb, 'publicOrderLookup/blm-42424_' + 'c'.repeat(64)), {
+    trackingLookupId: `blm-42424_${token}`,
+    companyId: COMPANY,
+    paymentMode: 'demo',
+  }));
+await deny('Guest lists publicOrderLookup', () => getDocs(collection(guestDb, 'publicOrderLookup')));
+
 await testEnv.cleanup();
 
 console.log('\n==================================================');

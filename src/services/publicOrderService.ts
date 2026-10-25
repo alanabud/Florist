@@ -1,5 +1,15 @@
 import { collection, setDoc, doc } from 'firebase/firestore';
 import { db } from '../firebase/config';
+import {
+  hasDeliveryAddress,
+  hasRecipientContact,
+  isDeliveryMethod,
+  isPastFulfillmentDate,
+  isValidFulfillmentDate,
+  isValidPhone,
+  isValidSender,
+  isValidZip,
+} from './checkoutValidation';
 
 export interface GuestOrderLineItem {
   productId: string;
@@ -45,18 +55,57 @@ export interface GuestOrderData {
  *     creates the public tracking document at that moment — so an unpaid
  *     order never gets a public "order placed" tracking page.
  */
+/** 32 hex chars. The confirmation URL carries this, never the email. */
+export const createTrackingToken = (): string => {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+};
+
+/** Opaque track-order id. SHA-256 of the normalized email, not the email itself. */
+export const emailLookupDocId = async (
+  orderNumberNormalized: string,
+  senderEmailNormalized: string,
+): Promise<string> => {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(senderEmailNormalized));
+  const hash = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+  return `${orderNumberNormalized}_${hash}`;
+};
+
+const assertGuestOrderReady = (orderData: GuestOrderData): void => {
+  if (!isDeliveryMethod(orderData.deliveryType)) {
+    throw new Error('A delivery method is required to place an order.');
+  }
+  if (!isValidFulfillmentDate(orderData.deliveryDate) || isPastFulfillmentDate(orderData.deliveryDate)) {
+    throw new Error('A current or future delivery/pickup date is required to place an order.');
+  }
+  if (!hasRecipientContact(orderData) || !isValidPhone(orderData.recipientPhone)) {
+    throw new Error('A recipient name and valid phone number are required to place an order.');
+  }
+  if (orderData.deliveryType !== 'pickup' && (!hasDeliveryAddress(orderData) || !isValidZip(orderData.recipientZip))) {
+    throw new Error('A full delivery address and valid US ZIP are required to place an order.');
+  }
+  if (!isValidSender(orderData)) {
+    throw new Error('A sender name and a valid email address are required to place an order.');
+  }
+};
+
 export const createGuestOrder = async (orderData: GuestOrderData) => {
   try {
+    assertGuestOrderReady(orderData);
+
     // 1. Generate unique order tracking number
     const generatedNum = Math.floor(Math.random() * 90000) + 10000;
     const orderNumber = `BLM-${generatedNum}`;
 
-    // 2. Normalize tracking number and sender email. The tracking lookup
-    // id is derived deterministically here and re-derived identically by
-    // the payment webhook when it creates the tracking document.
+    // 2. The public confirmation id is order number + an unguessable
+    // token. The sender email is stored on the order for the receipt,
+    // but it is not part of the confirmation URL. Track Order finds the
+    // token through a hashed lookup document.
     const orderNumberNormalized = orderNumber.toLowerCase().trim();
     const senderEmailNormalized = orderData.senderEmail.toLowerCase().trim();
-    const trackingLookupId = `${orderNumberNormalized}_${senderEmailNormalized}`;
+    const trackingToken = createTrackingToken();
+    const trackingLookupId = `${orderNumberNormalized}_${trackingToken}`;
 
     // 3. Write the order to 'orders' in its PENDING state. Pre-allocate
     // the doc ref so the stored id equals the Firestore document id —
@@ -72,6 +121,7 @@ export const createGuestOrder = async (orderData: GuestOrderData) => {
       orderNumber,
       orderNumberNormalized,
       senderEmailNormalized,
+      trackingToken,
       companyId: 'DEFAULT_COMPANY',
       customerId: 'guest',
       customerName: orderData.senderName || 'Guest Customer',
@@ -87,7 +137,8 @@ export const createGuestOrder = async (orderData: GuestOrderData) => {
 
     return {
       orderId, // full order Firestore ID
-      trackingLookupId, // sanitized lookup ID (tracking doc is created by the webhook on payment)
+      trackingLookupId, // orderNumber_token (email is not in this id)
+      trackingToken,
       orderNumber, // readable BLM-XXXXX tracking code
     };
   } catch (error) {

@@ -8,6 +8,8 @@ import { Card } from '../components/ui/Card';
 import { CheckCircle2, ShoppingBag, Calendar, MapPin, ArrowRight } from 'lucide-react';
 import styles from './OrderConfirmation.module.css';
 import { useI18n } from '../i18n/I18nProvider';
+import { formatFulfillmentDateLong } from '../services/checkoutValidation';
+import { studioPickupDisplayLines } from '../config/siteConfig';
 
 interface ConfirmationData {
   orderNumber: string;
@@ -16,6 +18,11 @@ interface ConfirmationData {
   city: string;
   state: string;
   itemsSummary: string;
+  deliveryType?: string;
+  subtotal?: number;
+  deliveryFee?: number;
+  taxes?: number;
+  total?: number;
   /** 'demo' when the tracking doc was created by the demo payment flow. */
   paymentMode?: string;
 }
@@ -125,17 +132,28 @@ export const OrderConfirmation: React.FC = () => {
             <div className={styles.detailBlock}>
               <MapPin size={20} className={styles.detailIcon} />
               <div>
-                <h3>{t('orderconfirmation.deliveryResidence')}</h3>
-                <p>{t('orderconfirmation.recipientHome').replace('{name}', order.recipientFirstName)}</p>
-                <p>{order.city}, {order.state}</p>
+                {order.deliveryType === 'pickup' ? (
+                  <>
+                    <h3>{t('orderconfirmation.pickupLocation')}</h3>
+                    {studioPickupDisplayLines(t('orderconfirmation.pickupAtStudio')).map((line, index) => (
+                      <p key={`${index}-${line}`}>{line}</p>
+                    ))}
+                  </>
+                ) : (
+                  <>
+                    <h3>{t('orderconfirmation.deliveryResidence')}</h3>
+                    <p>{t('orderconfirmation.recipientHome').replace('{name}', order.recipientFirstName)}</p>
+                    <p>{order.city}, {order.state}</p>
+                  </>
+                )}
               </div>
             </div>
 
             <div className={styles.detailBlock}>
               <Calendar size={20} className={styles.detailIcon} />
               <div>
-                <h3>{t('orderconfirmation.deliveryScheduled')}</h3>
-                <p>{new Date(order.deliveryDate).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                <h3>{order.deliveryType === 'pickup' ? t('orderconfirmation.pickupScheduled') : t('orderconfirmation.deliveryScheduled')}</h3>
+                <p>{formatFulfillmentDateLong(order.deliveryDate) ?? t('orderconfirmation.fulfillmentDatePending')}</p>
               </div>
             </div>
           </div>
@@ -146,6 +164,26 @@ export const OrderConfirmation: React.FC = () => {
               <ShoppingBag size={18} className={styles.itemsIcon} />
               <span className={styles.itemsText}>{order.itemsSummary}</span>
             </div>
+            {typeof order.total === 'number' && (
+              <div className={styles.totalsBlock}>
+                <div className={styles.totalRow}>
+                  <span>{t('checkout.subtotal')}</span>
+                  <span>${(order.subtotal ?? 0).toFixed(2)}</span>
+                </div>
+                <div className={styles.totalRow}>
+                  <span>{t('checkout.delivery')}</span>
+                  <span>${(order.deliveryFee ?? 0).toFixed(2)}</span>
+                </div>
+                <div className={styles.totalRow}>
+                  <span>{t('checkout.taxesEstimated')}</span>
+                  <span>${(order.taxes ?? 0).toFixed(2)}</span>
+                </div>
+                <div className={`${styles.totalRow} ${styles.totalGrand}`}>
+                  <span>{t('checkout.total')}</span>
+                  <span>${order.total.toFixed(2)}</span>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className={styles.emailNotice}>
@@ -155,7 +193,7 @@ export const OrderConfirmation: React.FC = () => {
           <div className={styles.actions}>
             <Button 
               size="lg" 
-              onClick={() => navigate(`/track-order?order=${order.orderNumber}`)}
+              onClick={() => navigate(`/track-order?order=${encodeURIComponent(order.orderNumber)}`)}
               style={{ background: 'linear-gradient(135deg, #4A6B50, #6C8271)', border: 'none', color: '#FFF' }}
             >
               {t('orderconfirmation.trackLiveStatus')} <ArrowRight size={16} style={{ marginLeft: '0.5rem' }} />

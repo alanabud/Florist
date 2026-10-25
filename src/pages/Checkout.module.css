@@ -89,6 +89,18 @@
   color: var(--color-text-main);
 }
 
+.addressHint {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+.fieldError {
+  color: #B3261E;
+  margin: 0 0 1rem;
+}
+
 .formGroup input, .formGroup textarea {
   padding: 0.75rem 1rem;
   border: 1px solid var(--color-border);

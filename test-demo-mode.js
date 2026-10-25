@@ -122,7 +122,7 @@ const orderUpdateKeys = extractBlockKeys(demoSvc, "batch.update(doc(db, 'orders'
 assert(JSON.stringify(orderUpdateKeys) === JSON.stringify(['demoPayment', 'paidAt', 'paymentProvider', 'paymentStatus', 'status']),
   `Client order update touches EXACTLY the five quarantined fields (got ${orderUpdateKeys.join(',')}).`);
 const trackingKeys = extractBlockKeys(demoSvc, "batch.set(doc(db, 'publicOrderTracking'");
-const expectedTrackingKeys = ['city', 'companyId', 'deliveryDate', 'itemsSummary', 'orderNumber', 'orderNumberNormalized', 'paymentMode', 'recipientFirstName', 'senderEmailNormalized', 'state', 'status', 'timeline', 'updatedAt'].sort();
+const expectedTrackingKeys = ['city', 'companyId', 'deliveryDate', 'deliveryFee', 'deliveryType', 'itemsSummary', 'orderNumber', 'orderNumberNormalized', 'paymentMode', 'recipientFirstName', 'senderEmailNormalized', 'state', 'status', 'subtotal', 'taxes', 'timeline', 'total', 'trackingToken', 'updatedAt'].sort();
 assert(JSON.stringify(trackingKeys) === JSON.stringify(expectedTrackingKeys),
   `Client tracking doc carries EXACTLY the public allowlist + paymentMode (got ${trackingKeys.join(',')}).`);
 

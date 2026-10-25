@@ -1,6 +1,7 @@
 import { doc, writeBatch } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { isDemoPaymentsMode } from '../config/stripeConfig';
+import { emailLookupDocId } from './publicOrderService';
 
 /**
  * DEMO checkout client service (certification completion pass 2026-10-18;
@@ -58,6 +59,8 @@ export interface DemoOrderSummary {
   orderId: string;
   orderNumber: string;
   trackingLookupId: string;
+  trackingToken: string;
+  deliveryType: string;
   items: DemoOrderSummaryItem[];
   subtotal: number;
   deliveryFee: number;
@@ -125,6 +128,9 @@ export const confirmDemoPayment = async (orderId: string): Promise<ConfirmDemoRe
   if (!summary) {
     throw new Error('Demo checkout session not found for this order.');
   }
+  if (!summary.trackingToken) {
+    throw new Error('This checkout session predates a store update — please return to checkout and try again.');
+  }
 
   const now = new Date().toISOString();
   const batch = writeBatch(db);
@@ -144,16 +150,29 @@ export const confirmDemoPayment = async (orderId: string): Promise<ConfirmDemoRe
     orderNumber: summary.orderNumber,
     orderNumberNormalized: summary.orderNumberNormalized,
     senderEmailNormalized: summary.senderEmailNormalized,
+    trackingToken: summary.trackingToken,
     status: 'placed',
     deliveryDate: summary.deliveryDate,
+    deliveryType: summary.deliveryType,
     recipientFirstName: summary.recipientFirstName,
     city: summary.recipientCity,
     state: summary.recipientState,
     itemsSummary: summary.items
       .map((item) => `${item.quantity ?? 1}x ${item.name ?? ''}`)
       .join(', '),
+    subtotal: summary.subtotal,
+    deliveryFee: summary.deliveryFee,
+    taxes: summary.taxes,
+    total: summary.total,
     timeline: [{ status: 'placed', label: 'Order Placed', timestamp: now }],
     updatedAt: now,
+    companyId: 'DEFAULT_COMPANY',
+    paymentMode: 'demo',
+  });
+
+  const lookupId = await emailLookupDocId(summary.orderNumberNormalized, summary.senderEmailNormalized);
+  batch.set(doc(db, 'publicOrderLookup', lookupId), {
+    trackingLookupId: summary.trackingLookupId,
     companyId: 'DEFAULT_COMPANY',
     paymentMode: 'demo',
   });

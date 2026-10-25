@@ -299,7 +299,7 @@ export const Shop: React.FC = () => {
                         <span className={styles.productCategory}>{product.category}</span>
                         <h3 className={styles.productName}>{product.name}</h3>
                         <div className={styles.productFooter}>
-                          <span className={styles.productPrice}>${product.price}</span>
+                          <span className={styles.productPrice}>${product.price.toFixed(2)}</span>
                         </div>
                       </div>
                     </Card>

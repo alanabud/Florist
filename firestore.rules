@@ -83,7 +83,7 @@ service cloud.firestore {
         'deliveryType', 'deliveryDate', 'senderName', 'senderEmail',
         'cardMessage', 'items', 'subtotal', 'taxes', 'deliveryFee', 'total', 
         'status', 'createdAt', 'id', 'orderNumber', 'orderNumberNormalized', 
-        'senderEmailNormalized', 'customerId', 'paymentStatus', 'glPostingStatus',
+        'senderEmailNormalized', 'trackingToken', 'customerId', 'paymentStatus', 'glPostingStatus',
         'companyId'
       ])
       && !request.resource.data.keys().hasAny([
@@ -113,8 +113,9 @@ service cloud.firestore {
     function publicTrackingFields() {
       return [
         'orderNumber', 'orderNumberNormalized', 'senderEmailNormalized',
-        'status', 'deliveryDate', 'recipientFirstName',
-        'city', 'state', 'itemsSummary', 'timeline', 'updatedAt',
+        'trackingToken', 'status', 'deliveryDate', 'deliveryType', 'recipientFirstName',
+        'city', 'state', 'itemsSummary', 'subtotal', 'deliveryFee', 'taxes', 'total',
+        'timeline', 'updatedAt',
         'deliveryWindow', 'trackingMessage', 'companyId', 'paymentMode'
       ];
     }
@@ -122,11 +123,18 @@ service cloud.firestore {
     function isValidPublicTrackingCreate(trackingId) {
       let data = request.resource.data;
       return data.keys().hasOnly(publicTrackingFields())
-        && trackingId == data.orderNumberNormalized + '_' + data.senderEmailNormalized
         && data.orderNumberNormalized is string
         && data.senderEmailNormalized is string
         && data.orderNumber is string
-        && data.status == 'placed';
+        && data.status == 'placed'
+        && (
+          trackingId == data.orderNumberNormalized + '_' + data.senderEmailNormalized
+          || (
+            data.trackingToken is string
+            && data.trackingToken.matches('^[0-9a-f]{32}$')
+            && trackingId == data.orderNumberNormalized + '_' + data.trackingToken
+          )
+        );
     }
 
     // ──────────────────────────────────────────────
@@ -473,6 +481,22 @@ service cloud.firestore {
       // (isValidGuestDemoTrackingCreate — paymentMode pinned to 'demo',
       // exact public-field allowlist, deterministic lookup id).
       allow create: if (request.auth != null && isCompanyStaff(request.resource.data.companyId)) || isValidGuestDemoTrackingCreate(trackingId);
+      allow update, delete: if isCompanyStaff(resource.data.companyId);
+    }
+
+    // Hashed order-number + email lookup. The confirmation URL uses the
+    // token id above; this doc lets Track Order find it without putting
+    // the email in any URL. Guests may create only the demo-stamped shape.
+    match /publicOrderLookup/{lookupId} {
+      allow get: if true;
+      allow list: if false;
+      allow create: if request.auth == null
+        && request.resource.data.keys().hasOnly(['trackingLookupId', 'companyId', 'paymentMode'])
+        && request.resource.data.companyId == "DEFAULT_COMPANY"
+        && request.resource.data.paymentMode == 'demo'
+        && request.resource.data.trackingLookupId is string
+        && request.resource.data.trackingLookupId.size() > 0
+        && request.resource.data.trackingLookupId.size() < 200;
       allow update, delete: if isCompanyStaff(resource.data.companyId);
     }
 

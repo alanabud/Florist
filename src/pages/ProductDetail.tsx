@@ -152,7 +152,7 @@ export const ProductDetail: React.FC = () => {
                 <img src={p.imageUrl} alt={p.name} loading="lazy" />
                 <div className={styles.relatedInfo}>
                   <h3>{p.name}</h3>
-                  <span>${p.price}</span>
+                  <span>${p.price.toFixed(2)}</span>
                 </div>
               </Card>
             ))}

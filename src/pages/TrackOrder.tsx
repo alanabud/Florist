@@ -7,6 +7,9 @@ import { Card } from '../components/ui/Card';
 import { Search, MapPin, Calendar, CheckCircle2, ArrowRight } from 'lucide-react';
 import styles from './TrackOrder.module.css';
 import { useI18n } from '../i18n/I18nProvider';
+import { emailLookupDocId } from '../services/publicOrderService';
+import { formatFulfillmentDateLong } from '../services/checkoutValidation';
+import { studioPickupDisplayLines } from '../config/siteConfig';
 
 interface TimelineStep {
   status: string;
@@ -22,6 +25,7 @@ interface TrackingData {
   city: string;
   state: string;
   itemsSummary: string;
+  deliveryType?: string;
   timeline: TimelineStep[];
   updatedAt?: string;
 }
@@ -46,11 +50,18 @@ export const TrackOrder: React.FC = () => {
     try {
       const orderNumberNormalized = orderNumber.toLowerCase().trim();
       const emailNormalized = email.toLowerCase().trim();
-      const lookupId = `${orderNumberNormalized}_${emailNormalized}`;
 
-      // Query the sanitized public tracking collection directly
-      const docRef = doc(db, 'publicOrderTracking', lookupId);
-      const docSnap = await getDoc(docRef);
+      // New orders: hashed lookup, then the token tracking doc (email is
+      // not in that id). Older orders still use orderNumber_email.
+      let docSnap = null;
+      const lookupSnap = await getDoc(doc(db, 'publicOrderLookup', await emailLookupDocId(orderNumberNormalized, emailNormalized)));
+      const trackingLookupId = lookupSnap.exists() ? lookupSnap.data().trackingLookupId : '';
+      if (typeof trackingLookupId === 'string' && trackingLookupId) {
+        docSnap = await getDoc(doc(db, 'publicOrderTracking', trackingLookupId));
+      }
+      if (!docSnap?.exists()) {
+        docSnap = await getDoc(doc(db, 'publicOrderTracking', `${orderNumberNormalized}_${emailNormalized}`));
+      }
 
       if (docSnap.exists()) {
         setTrackingData(docSnap.data() as TrackingData);
@@ -148,15 +159,24 @@ export const TrackOrder: React.FC = () => {
                 <div className={styles.metaItem}>
                   <MapPin size={18} className={styles.metaIcon} />
                   <div>
-                    <h4>{t('trackorder.destination')}</h4>
-                    <p>{t('orderconfirmation.recipientHome').replace('{name}', trackingData.recipientFirstName)} — {trackingData.city}, {trackingData.state}</p>
+                    {trackingData.deliveryType === 'pickup' ? (
+                      <>
+                        <h4>{t('trackorder.pickupLocation')}</h4>
+                        <p>{studioPickupDisplayLines(t('orderconfirmation.pickupAtStudio')).join(' — ')}</p>
+                      </>
+                    ) : (
+                      <>
+                        <h4>{t('trackorder.destination')}</h4>
+                        <p>{t('orderconfirmation.recipientHome').replace('{name}', trackingData.recipientFirstName)} — {trackingData.city}, {trackingData.state}</p>
+                      </>
+                    )}
                   </div>
                 </div>
                 <div className={styles.metaItem}>
                   <Calendar size={18} className={styles.metaIcon} />
                   <div>
-                    <h4>{t('trackorder.deliveryDate')}</h4>
-                    <p>{new Date(trackingData.deliveryDate).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                    <h4>{trackingData.deliveryType === 'pickup' ? t('trackorder.pickupDate') : t('trackorder.deliveryDate')}</h4>
+                    <p>{formatFulfillmentDateLong(trackingData.deliveryDate) ?? t('orderconfirmation.fulfillmentDatePending')}</p>
                   </div>
                 </div>
               </div>

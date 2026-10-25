@@ -7,7 +7,25 @@
     <title>florist</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Boot fallback: if the JS bundle fails before React mounts, this
+           is what the visitor sees instead of an empty white page.
+           React's createRoot replaces this content on mount. -->
+      <div id="boot-fallback" style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:system-ui,-apple-system,sans-serif;color:#4A6B50;background:#FAF9F5;">
+        <p style="font-size:1.125rem;">❁ Loading BloomPro…</p>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      window.setTimeout(function () {
+        var fallback = document.getElementById('boot-fallback');
+        if (fallback) {
+          fallback.innerHTML = '<div style="text-align:center;padding:2rem;">'
+            + '<p style="font-size:1.125rem;margin-bottom:1rem;">BloomPro is taking longer than usual to load.</p>'
+            + '<button onclick="window.location.reload()" style="background:#4A6B50;color:#fff;border:none;border-radius:8px;padding:0.625rem 1.5rem;font-size:1rem;cursor:pointer;">Reload the page</button>'
+            + '</div>';
+        }
+      }, 12000);
+    </script>
   </body>
 </html>

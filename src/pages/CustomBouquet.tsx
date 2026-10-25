@@ -8,6 +8,7 @@ import { Card } from '../components/ui/Card';
 import { Check, ChevronRight, ChevronLeft } from 'lucide-react';
 import styles from './CustomBouquet.module.css';
 import { useI18n } from '../i18n/I18nProvider';
+import { isPastFulfillmentDate, isValidFulfillmentDate, todayIsoDate } from '../services/checkoutValidation';
 
 // Explicit occasion → i18n key map. Do NOT derive these keys by
 // lower-casing the display name: 'Just Because' maps to the camelCase
@@ -73,7 +74,7 @@ export const CustomBouquet: React.FC = () => {
       case 1: return !state.colorPalette;
       case 2: return state.flowers.length === 0;
       case 3: return !state.size || state.budget === 0;
-      case 4: return !state.deliveryDate;
+      case 4: return !isValidFulfillmentDate(state.deliveryDate) || isPastFulfillmentDate(state.deliveryDate);
       default: return false;
     }
   };
@@ -207,8 +208,11 @@ export const CustomBouquet: React.FC = () => {
                 className={styles.input}
                 value={state.deliveryDate}
                 onChange={(e) => updateField('deliveryDate', e.target.value)}
-                min={new Date().toISOString().split('T')[0]}
+                min={todayIsoDate()}
               />
+              {state.deliveryDate && isPastFulfillmentDate(state.deliveryDate) && (
+                <p role="alert" style={{ color: '#B3261E', marginTop: '0.5rem' }}>{t('checkout.deliveryDateInPast')}</p>
+              )}
             </div>
           </div>
         )}

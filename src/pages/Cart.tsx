@@ -20,9 +20,6 @@ export const Cart: React.FC = () => {
   };
 
   const subtotal = getSubtotal();
-  const deliveryEstimate = 9.99;
-  const taxEstimate = subtotal * 0.08875; // 8.875% NYC tax estimate for summary
-  const estimatedTotal = subtotal + deliveryEstimate + taxEstimate;
 
   if (items.length === 0) {
     return (
@@ -102,20 +99,15 @@ export const Cart: React.FC = () => {
                   <span>{t('cart.subtotal')}</span>
                   <span>${subtotal.toFixed(2)}</span>
                 </div>
-                <div className={styles.summaryRow}>
-                  <span>{t('cart.standardDeliveryEst')}</span>
-                  <span>${deliveryEstimate.toFixed(2)}</span>
-                </div>
-                <div className={styles.summaryRow}>
-                  <span>{t('cart.salesTaxEst')}</span>
-                  <span>${taxEstimate.toFixed(2)}</span>
-                </div>
                 <div className={`${styles.summaryRow} ${styles.totalRow}`}>
-                  <span>{t('cart.estimatedTotal')}</span>
-                  <span>${estimatedTotal.toFixed(2)}</span>
+                  <span>{t('cart.totalBeforeDeliveryTaxes')}</span>
+                  <span>${subtotal.toFixed(2)}</span>
                 </div>
               </div>
 
+              <div className={styles.checkoutNotice}>
+                <p>{t('ui.taxesAndDeliveryCalculatedAtCheckout')}</p>
+              </div>
               <div className={styles.checkoutNotice}>
                 <p>{t('cart.checkoutNotice')}</p>
               </div>

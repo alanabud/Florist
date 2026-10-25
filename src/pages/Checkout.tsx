@@ -4,8 +4,20 @@ import { useCartStore } from '../store/cartStore';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { ChevronRight, Lock, AlertTriangle } from 'lucide-react';
-import { getTaxConfigForState, STATE_TAX_RATES } from '../data/taxConfig';
+import { STATE_TAX_RATES } from '../data/taxConfig';
 import { createGuestOrder } from '../services/publicOrderService';
+import {
+  hasDeliveryAddress,
+  hasRecipientContact,
+  isDeliveryMethod,
+  isPastFulfillmentDate,
+  isValidFulfillmentDate,
+  isValidPhone,
+  isValidSender,
+  isValidZip,
+  quoteCheckout,
+  todayIsoDate,
+} from '../services/checkoutValidation';
 import { startStripeCheckout } from '../services/stripeCheckoutService';
 import { PAYMENTS_MODE } from '../config/stripeConfig';
 import { stashDemoOrderSummary } from '../services/demoCheckoutService';
@@ -20,6 +32,7 @@ export const Checkout: React.FC = () => {
   const { items, getSubtotal, getTaxableSubtotal } = useCartStore();
   const [step, setStep] = useState(1);
   const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
+  const [stepError, setStepError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     // Recipient
     recipientName: '',
@@ -29,7 +42,7 @@ export const Checkout: React.FC = () => {
     recipientState: '',
     recipientZip: '',
     // Delivery Details
-    deliveryType: 'standard', // standard, sameday, pickup
+    deliveryType: '', // chosen on the delivery step: standard, sameday, pickup
     deliveryDate: '',
     // Sender/Contact
     senderName: '',
@@ -42,18 +55,87 @@ export const Checkout: React.FC = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    setStepError(null);
   };
 
-  const nextStep = () => setStep(s => Math.min(s + 1, 4));
-  const prevStep = () => setStep(s => Math.max(s - 1, 1));
+  // Address is required only once the customer has chosen delivery.
+  // Pickup keeps name + phone, and does not require street/city/state/ZIP.
+  // Returns the step that should be shown when the check fails.
+  const validateStep = (which: number): number | null => {
+    if (which === 1) {
+      if (!hasRecipientContact(formData)) {
+        setStepError('checkout.recipientContactRequired');
+        return 1;
+      }
+      if (!isValidPhone(formData.recipientPhone)) {
+        setStepError('checkout.recipientPhoneInvalid');
+        return 1;
+      }
+      return null;
+    }
+    if (which === 2) {
+      if (!isDeliveryMethod(formData.deliveryType)) {
+        setStepError('checkout.deliveryMethodRequired');
+        return 2;
+      }
+      if (formData.deliveryType !== 'pickup') {
+        if (!hasDeliveryAddress(formData)) {
+          setStepError('checkout.recipientAddressRequired');
+          return 1;
+        }
+        if (!isValidZip(formData.recipientZip) || !isValidPhone(formData.recipientPhone)) {
+          setStepError('checkout.recipientFormatRequired');
+          return 1;
+        }
+      }
+      if (!isValidFulfillmentDate(formData.deliveryDate)) {
+        setStepError('checkout.deliveryDateRequired');
+        return 2;
+      }
+      if (isPastFulfillmentDate(formData.deliveryDate)) {
+        setStepError('checkout.deliveryDateInPast');
+        return 2;
+      }
+      return null;
+    }
+    if (which === 3) {
+      if (!isValidSender(formData)) {
+        setStepError('checkout.senderDetailsRequired');
+        return 3;
+      }
+      return null;
+    }
+    return null;
+  };
+
+  const continueStep = () => {
+    const failedAt = validateStep(step);
+    if (failedAt !== null) {
+      setStep(failedAt);
+      return;
+    }
+    setStepError(null);
+    setStep(s => Math.min(s + 1, 4));
+  };
+  const prevStep = () => {
+    setStepError(null);
+    setStep(s => Math.max(s - 1, 1));
+  };
 
   const handleCheckoutSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (step < 4) {
-      nextStep();
+      continueStep();
       return;
     }
     if (isSubmittingPayment) return; // ignore double-submits
+    for (const which of [1, 2, 3]) {
+      const failedAt = validateStep(which);
+      if (failedAt !== null) {
+        setStep(failedAt);
+        return;
+      }
+    }
 
     // Enter the submitting state BEFORE the order-creation write —
     // previously it was only set after createGuestOrder resolved, so
@@ -64,15 +146,15 @@ export const Checkout: React.FC = () => {
     try {
       const subtotal = getSubtotal();
       const taxableSubtotal = getTaxableSubtotal();
-      const deliveryFee = formData.deliveryType === 'sameday' ? 19.99 : (formData.deliveryType === 'pickup' ? 0 : 9.99);
-      
-      const taxConfig = getTaxConfigForState(formData.recipientState);
-      let taxableAmount = taxableSubtotal;
-      if (taxConfig.isDeliveryTaxable) {
-        taxableAmount += deliveryFee;
-      }
-      const taxes = taxableAmount * taxConfig.rate;
-      const total = subtotal + deliveryFee + taxes;
+      const quote = quoteCheckout({
+        deliveryType: formData.deliveryType,
+        recipientState: formData.recipientState,
+        subtotal,
+        taxableSubtotal,
+      });
+      const deliveryFee = quote.deliveryFee;
+      const taxes = quote.taxes;
+      const total = quote.total;
 
       const orderData = {
         recipientName: formData.recipientName,
@@ -131,6 +213,8 @@ export const Checkout: React.FC = () => {
           // Tracking-doc fields for the client-side demo confirmation
           // (Spark rework): normalized forms derived exactly as
           // createGuestOrder derives them.
+          trackingToken: result.trackingToken,
+          deliveryType: orderData.deliveryType,
           orderNumberNormalized: result.orderNumber.toLowerCase().trim(),
           senderEmailNormalized: orderData.senderEmail.toLowerCase().trim(),
           recipientFirstName: (orderData.recipientName ?? '').split(' ')[0],
@@ -166,15 +250,15 @@ export const Checkout: React.FC = () => {
 
   const subtotal = getSubtotal();
   const taxableSubtotal = getTaxableSubtotal();
-  const deliveryFee = formData.deliveryType === 'sameday' ? 19.99 : (formData.deliveryType === 'pickup' ? 0 : 9.99);
-  
-  const taxConfig = getTaxConfigForState(formData.recipientState);
-  let taxableAmount = taxableSubtotal;
-  if (taxConfig.isDeliveryTaxable) {
-    taxableAmount += deliveryFee;
-  }
-  const taxes = taxableAmount * taxConfig.rate;
-  const total = subtotal + deliveryFee + taxes;
+  const quote = quoteCheckout({
+    deliveryType: formData.deliveryType,
+    recipientState: formData.recipientState,
+    subtotal,
+    taxableSubtotal,
+  });
+  const deliveryFee = quote.deliveryFee;
+  const taxes = quote.taxes;
+  const total = quote.total;
 
   return (
     <div className={styles.checkoutPage}>
@@ -229,15 +313,15 @@ export const Checkout: React.FC = () => {
                     </div>
                     <div className={styles.formGroup} style={{ gridColumn: '1 / -1' }}>
                       <label>{t('checkout.deliveryAddress')}</label>
-                      <input required name="recipientAddress" value={formData.recipientAddress} onChange={handleInputChange} />
+                      <input name="recipientAddress" value={formData.recipientAddress} onChange={handleInputChange} />
                     </div>
                     <div className={styles.formGroup}>
                       <label>{t('checkout.city')}</label>
-                      <input required name="recipientCity" value={formData.recipientCity} onChange={handleInputChange} />
+                      <input name="recipientCity" value={formData.recipientCity} onChange={handleInputChange} />
                     </div>
                     <div className={styles.formGroup}>
                       <label>{t('checkout.state')}</label>
-                      <select required name="recipientState" value={formData.recipientState} onChange={handleInputChange}>
+                      <select name="recipientState" value={formData.recipientState} onChange={handleInputChange}>
                         <option value="">{t('checkout.selectState')}</option>
                         {Object.keys(STATE_TAX_RATES).filter(k => k !== 'DEFAULT').map(state => (
                           <option key={state} value={state}>{state}</option>
@@ -246,10 +330,14 @@ export const Checkout: React.FC = () => {
                     </div>
                     <div className={styles.formGroup}>
                       <label>{t('checkout.zipCode')}</label>
-                      <input required name="recipientZip" value={formData.recipientZip} onChange={handleInputChange} />
+                      <input name="recipientZip" value={formData.recipientZip} onChange={handleInputChange} />
                     </div>
+                    <p className={styles.addressHint}>{t('checkout.addressHint')}</p>
                   </div>
-                  <Button type="button" onClick={nextStep} className={styles.nextBtn}>{t('checkout.continueToDelivery')}</Button>
+                  {stepError && step === 1 && (
+                    <p role="alert" className={styles.fieldError}>{t(stepError)}</p>
+                  )}
+                  <Button type="button" onClick={continueStep} className={styles.nextBtn}>{t('checkout.continueToDelivery')}</Button>
                 </div>
               )}
 
@@ -300,13 +388,16 @@ export const Checkout: React.FC = () => {
                   </div>
                   
                   <div className={styles.formGroup} style={{ marginTop: '2rem' }}>
-                    <label>{t('checkout.requestedDeliveryDate')}</label>
-                    <input required type="date" name="deliveryDate" value={formData.deliveryDate} onChange={handleInputChange} />
+                    <label>{formData.deliveryType === 'pickup' ? t('checkout.requestedPickupDate') : t('checkout.requestedDeliveryDate')}</label>
+                    <input type="date" name="deliveryDate" min={todayIsoDate()} value={formData.deliveryDate} onChange={handleInputChange} />
+                    {stepError && step === 2 && (
+                      <p role="alert" className={styles.fieldError}>{t(stepError)}</p>
+                    )}
                   </div>
 
                   <div className={styles.btnRow}>
                     <Button type="button" variant="ghost" onClick={prevStep}>{t('checkout.back')}</Button>
-                    <Button type="button" onClick={nextStep}>{t('checkout.continueToDetails')}</Button>
+                    <Button type="button" onClick={continueStep}>{t('checkout.continueToDetails')}</Button>
                   </div>
                 </div>
               )}
@@ -335,9 +426,12 @@ export const Checkout: React.FC = () => {
                       />
                     </div>
                   </div>
+                  {stepError && step === 3 && (
+                    <p role="alert" className={styles.fieldError}>{t(stepError)}</p>
+                  )}
                   <div className={styles.btnRow}>
                     <Button type="button" variant="ghost" onClick={prevStep}>{t('checkout.back')}</Button>
-                    <Button type="button" onClick={nextStep}>{t('checkout.continueToPayment')}</Button>
+                    <Button type="button" onClick={continueStep}>{t('checkout.continueToPayment')}</Button>
                   </div>
                 </div>
               )}
@@ -405,8 +499,11 @@ export const Checkout: React.FC = () => {
               </div>
               <div className={styles.costRow}>
                 <span>{t('checkout.delivery')}</span>
-                <span>${deliveryFee.toFixed(2)}</span>
+                <span>{quote.deliveryChosen ? `$${deliveryFee.toFixed(2)}` : '—'}</span>
               </div>
+              {!quote.deliveryChosen && (
+                <p className={styles.addressHint}>{t('checkout.deliveryFeeAfterMethod')}</p>
+              )}
               <div className={styles.costRow}>
                 <span>{t('checkout.taxesEstimated')}</span>
                 <span>${taxes.toFixed(2)}</span>

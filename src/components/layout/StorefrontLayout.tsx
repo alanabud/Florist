@@ -14,6 +14,7 @@ export const StorefrontLayout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toggleDrawer, getTotalItems } = useCartStore();
+  const totalItems = getTotalItems();
   const { t } = useI18n();
 
   useEffect(() => {
@@ -105,7 +106,7 @@ export const StorefrontLayout: React.FC = () => {
               aria-label={t('layout.openCart')}
             >
               <ShoppingBag size={20} />
-              <span className={styles.cartBadge}>{getTotalItems()}</span>
+              {totalItems > 0 && <span className={styles.cartBadge}>{totalItems}</span>}
             </button>
           </div>
         </div>

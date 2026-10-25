@@ -158,6 +158,24 @@
   font-weight: 500;
 }
 
+.totalsBlock {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.totalRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.95rem;
+}
+
+.totalGrand {
+  font-weight: 700;
+  margin-top: 0.25rem;
+}
+
 .emailNotice {
   background-color: #EAF2EC;
   border-radius: 8px;

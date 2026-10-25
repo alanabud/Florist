@@ -58,3 +58,21 @@ export const SITE_CONFIG = {
    */
   governingLawState: '',
 };
+
+/** Street lines for in-store pickup. Empty until the studio address is set. */
+export function studioAddressLines(): string[] {
+  const cityState = [SITE_CONFIG.addressCity, SITE_CONFIG.addressState].filter(Boolean).join(', ');
+  const locality = [cityState, SITE_CONFIG.addressZip].filter(Boolean).join(' ');
+  return [SITE_CONFIG.addressLine1, locality].filter((line) => line.trim().length > 0);
+}
+
+/**
+ * Customer-facing pickup location. Uses the studio address when it is
+ * configured; otherwise the trading name plus a generic studio line.
+ * The recipient's name is not part of the location.
+ */
+export function studioPickupDisplayLines(fallbackStudio: string): string[] {
+  const address = studioAddressLines();
+  if (address.length === 0) return [SITE_CONFIG.businessName, fallbackStudio];
+  return [SITE_CONFIG.businessName, ...address];
+}
