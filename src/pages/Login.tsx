@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase/config';
-import { signInWithGoogle, signInWithMicrosoft, getFriendlyErrorMessage, syncUserProfile } from '../services/authService';
+import { signInWithGoogle, signInWithMicrosoft, getFriendlyErrorMessage, syncUserProfile, completeRedirectSignIn } from '../services/authService';
 import { useAuthStore } from '../store/authStore';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -37,6 +37,7 @@ export const Login: React.FC = () => {
   const [isLoadingEmail, setIsLoadingEmail] = useState(false);
   const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
   const [isLoadingMicrosoft, setIsLoadingMicrosoft] = useState(false);
+  const [isCompletingRedirect, setIsCompletingRedirect] = useState(true);
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -50,6 +51,26 @@ export const Login: React.FC = () => {
       navigate(origin, { replace: true });
     }
   }, [user, navigate, location]);
+
+  // Popup is the default. This only finishes a sign-in that fell back to
+  // redirect because the browser blocked the popup. A normal visit resolves null.
+  useEffect(() => {
+    let active = true;
+    completeRedirectSignIn()
+      .catch((err: unknown) => {
+        if (!active) return;
+        const message = err instanceof Error && err.message
+          ? err.message
+          : getFriendlyErrorMessage(err);
+        setError(message);
+      })
+      .finally(() => {
+        if (active) setIsCompletingRedirect(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,18 +93,27 @@ export const Login: React.FC = () => {
     if (provider === 'google') setIsLoadingGoogle(true);
     if (provider === 'microsoft') setIsLoadingMicrosoft(true);
 
+    let redirecting = false;
     try {
-      if (provider === 'google') {
-        await signInWithGoogle();
-      } else {
-        await signInWithMicrosoft();
+      const result = provider === 'google'
+        ? await signInWithGoogle()
+        : await signInWithMicrosoft();
+      if (result.status === 'redirect') {
+        // The browser is leaving this page. Keep the button in a loading
+        // state until the document unloads.
+        redirecting = true;
       }
-      // Navigation is handled by useEffect
+      // Navigation after a popup success is handled by the auth-state effect.
     } catch (err: unknown) {
-      setError((err as { message?: string })?.message || 'Sign-in failed.');
+      const message = err instanceof Error && err.message
+        ? err.message
+        : 'Sign-in failed.';
+      setError(message);
     } finally {
-      if (provider === 'google') setIsLoadingGoogle(false);
-      if (provider === 'microsoft') setIsLoadingMicrosoft(false);
+      if (!redirecting) {
+        if (provider === 'google') setIsLoadingGoogle(false);
+        if (provider === 'microsoft') setIsLoadingMicrosoft(false);
+      }
     }
   };
 
@@ -116,7 +146,7 @@ export const Login: React.FC = () => {
             className={styles.providerBtn}
             onClick={() => handleProviderLogin('google')}
             isLoading={isLoadingGoogle}
-            disabled={isLoadingEmail || isLoadingMicrosoft}
+            disabled={isLoadingEmail || isLoadingMicrosoft || isCompletingRedirect}
           >
             {!isLoadingGoogle && <GoogleIcon />}
             {t('login.continueWithGoogle')}
@@ -129,7 +159,7 @@ export const Login: React.FC = () => {
             className={styles.providerBtn}
             onClick={() => handleProviderLogin('microsoft')}
             isLoading={isLoadingMicrosoft}
-            disabled={isLoadingEmail || isLoadingGoogle}
+            disabled={isLoadingEmail || isLoadingGoogle || isCompletingRedirect}
           >
             {!isLoadingMicrosoft && <MicrosoftIcon />}
             {t('login.continueWithMicrosoft')}
@@ -148,7 +178,7 @@ export const Login: React.FC = () => {
             onChange={(e) => setEmail(e.target.value)}
             required
             fullWidth
-            disabled={isLoadingEmail || isLoadingGoogle || isLoadingMicrosoft}
+            disabled={isLoadingEmail || isLoadingGoogle || isLoadingMicrosoft || isCompletingRedirect}
           />
           <Input 
             label={t('login.passwordLabel')} 
@@ -157,7 +187,7 @@ export const Login: React.FC = () => {
             onChange={(e) => setPassword(e.target.value)}
             required
             fullWidth
-            disabled={isLoadingEmail || isLoadingGoogle || isLoadingMicrosoft}
+            disabled={isLoadingEmail || isLoadingGoogle || isLoadingMicrosoft || isCompletingRedirect}
           />
           
           <div className={styles.forgotPassword}>
@@ -171,7 +201,7 @@ export const Login: React.FC = () => {
             fullWidth 
             isLoading={isLoadingEmail} 
             className={styles.submitBtn}
-            disabled={isLoadingGoogle || isLoadingMicrosoft}
+            disabled={isLoadingGoogle || isLoadingMicrosoft || isCompletingRedirect}
           >
             {t('login.signIn')}
           </Button>

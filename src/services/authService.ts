@@ -1,85 +1,107 @@
-import { 
-  signInWithPopup, 
-  GoogleAuthProvider, 
-  OAuthProvider, 
+import {
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
+  GoogleAuthProvider,
+  OAuthProvider,
   signOut,
 } from 'firebase/auth';
-import type { User } from 'firebase/auth';
+import type { AuthProvider, User } from 'firebase/auth';
 import { doc, runTransaction, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../firebase/config';
+import {
+  applyMicrosoftSignInSettings,
+  getFriendlyErrorMessage,
+  isUserCancel,
+  popupFailureAction,
+  readAuthError,
+} from './oauthSignIn';
 
+export { getFriendlyErrorMessage };
+
+// Any Google account. No hd / hosted-domain restriction.
 const googleProvider = new GoogleAuthProvider();
+
 const microsoftProvider = new OAuthProvider('microsoft.com');
+applyMicrosoftSignInSettings(microsoftProvider);
 
-// Optional: you can add custom scopes for Microsoft if needed
-// microsoftProvider.addScope('user.read');
+export type ProviderSignInResult =
+  | { status: 'success'; user: User }
+  | { status: 'redirect' };
 
-export const getFriendlyErrorMessage = (error: unknown) => {
-  const code = (error as { code?: string })?.code || '';
-  const message = (error as { message?: string })?.message || '';
+function logSignInFailure(label: string, error: unknown): void {
+  if (isUserCancel(error)) return;
+  const { code, message } = readAuthError(error);
+  console.warn(`[${label} Sign-In]`, {
+    code,
+    message,
+    envAuthDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    envProjectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  });
+}
 
-  if (code === 'auth/popup-blocked') {
-    return 'Popup was blocked. Please allow popups for this site and try again.';
+/**
+ * Popup first. Redirect only when the browser blocks the popup.
+ * A redirect navigates away; Login finishes it with completeRedirectSignIn.
+ */
+async function signInWithPopupFirst(
+  provider: AuthProvider,
+  label: string,
+): Promise<ProviderSignInResult> {
+  try {
+    const result = await signInWithPopup(auth, provider);
+    await syncUserProfile(result.user);
+    return { status: 'success', user: result.user };
+  } catch (error: unknown) {
+    if (popupFailureAction(error) === 'redirect') {
+      try {
+        await signInWithRedirect(auth, provider);
+        return { status: 'redirect' };
+      } catch (redirectError: unknown) {
+        logSignInFailure(`${label} redirect fallback`, redirectError);
+        throw new Error(getFriendlyErrorMessage(redirectError), { cause: redirectError });
+      }
+    }
+    logSignInFailure(label, error);
+    throw new Error(getFriendlyErrorMessage(error), { cause: error });
   }
-  if (code === 'auth/popup-closed-by-user') {
-    return 'Sign-in popup was closed before completion. If you saw a Google "Error 400", please verify the authorized domains and web client ID in Google Cloud and Firebase Consoles.';
-  }
-  if (code === 'auth/account-exists-with-different-credential') {
-    return 'An account already exists with the same email address but different sign-in credentials.';
-  }
-  if (code === 'auth/unauthorized-domain') {
-    return 'This domain is not authorized for Firebase Authentication. Please check your Authorized Domains list in Firebase Console under Authentication -> Settings.';
-  }
-  if (code === 'auth/operation-not-allowed') {
-    return 'This sign-in provider is disabled. Please enable Google/Microsoft sign-in under Authentication -> Sign-in method in Firebase Console.';
-  }
-  if (code === 'auth/network-request-failed') {
-    return 'Network error. Please check your internet connection.';
-  }
-  if (code === 'auth/configuration-not-found' || message.includes('configuration-not-found')) {
-    return 'Authentication configuration not found. Please verify your Firebase project setup and API keys.';
-  }
-  if (message.includes('auth/invalid-oauth-client-id') || code === 'auth/invalid-oauth-client-id') {
-    return 'Invalid OAuth client ID configured. Please ensure the client ID matches your production domain registration in Google Cloud Console.';
-  }
-  return message || 'An unexpected error occurred during sign-in.';
+}
+
+export const signInWithGoogle = () => signInWithPopupFirst(googleProvider, 'Google');
+
+export const signInWithMicrosoft = () => {
+  // Re-applied immediately before sign-in so tenant/prompt cannot drift.
+  applyMicrosoftSignInSettings(microsoftProvider);
+  return signInWithPopupFirst(microsoftProvider, 'Microsoft');
 };
 
-export const signInWithGoogle = async () => {
+let redirectCompletion: Promise<User | null> | null = null;
+
+/**
+ * Finish a popup-blocked redirect on the Login page.
+ * One shared promise so React Strict Mode cannot consume the result twice.
+ * Resolves null when this page load has no pending redirect.
+ */
+export function completeRedirectSignIn(): Promise<User | null> {
+  // Keep the same promise after it settles. Login mounts twice in Strict Mode;
+  // a second getRedirectResult() would miss a result the first call already took.
+  if (!redirectCompletion) {
+    redirectCompletion = consumeRedirectResult();
+  }
+  return redirectCompletion;
+}
+
+async function consumeRedirectResult(): Promise<User | null> {
   try {
-    const result = await signInWithPopup(auth, googleProvider);
+    const result = await getRedirectResult(auth);
+    if (!result?.user) return null;
     await syncUserProfile(result.user);
     return result.user;
   } catch (error: unknown) {
-    console.error("[Google Sign-In Error details]", {
-      error,
-      code: (error as any)?.code,
-      message: (error as any)?.message,
-      envAuthDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-      envProjectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-    });
-    const friendly = getFriendlyErrorMessage(error);
-    throw new Error(friendly, { cause: error });
+    logSignInFailure('Redirect result', error);
+    throw new Error(getFriendlyErrorMessage(error), { cause: error });
   }
-};
-
-export const signInWithMicrosoft = async () => {
-  try {
-    const result = await signInWithPopup(auth, microsoftProvider);
-    await syncUserProfile(result.user);
-    return result.user;
-  } catch (error: unknown) {
-    console.error("[Microsoft Sign-In Error details]", {
-      error,
-      code: (error as any)?.code,
-      message: (error as any)?.message,
-      envAuthDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-      envProjectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-    });
-    const friendly = getFriendlyErrorMessage(error);
-    throw new Error(friendly, { cause: error });
-  }
-};
+}
 
 export const logout = async () => {
   try {

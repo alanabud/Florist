@@ -17,6 +17,10 @@ If you are enabling Microsoft sign-in for Outlook/Hotmail/Work accounts, please 
 4. **Secrets**: Provide the generated Microsoft Client ID and Client Secret *directly inside your Firebase Console* (`Authentication > Sign-in method > Microsoft`).
    - **DO NOT** expose the Azure client secret in source code, `.env`, or Vite variables.
 
+The client keeps **popup** sign-in as the default for Google and Microsoft. A full-page redirect is used only when the browser reports `auth/popup-blocked`, and the Login page completes that return with `getRedirectResult`. Immediately before Microsoft sign-in the provider is set to `tenant: common` and `prompt: select_account`, with scopes `openid`, `email`, `profile`, and `User.Read`, so personal Outlook accounts and work/school accounts can both be chosen. Google sign-in is not limited to a hosted domain.
+
+OAuth does not grant a company workspace. Any Google or Microsoft account Firebase accepts can finish sign-in and receive a `users/{uid}` profile (`owner` for the first profile, otherwise `staff`). There is no email allowlist and no custom claim. Admin company UI still needs an active membership from `scripts/bootstrap-default-company-user.js`.
+
 ### Authorized Domains
 Ensure the following domains are added to your authorized domains in the Firebase Console:
 - `localhost`
@@ -30,7 +34,7 @@ Ensure the following domains are added to your authorized domains in the Firebas
 3. **Microsoft/Outlook**: Click the Microsoft login button.
 4. **Role Assignment**: The very first user to authenticate will be assigned the `owner` role. Subsequent users will be assigned the `staff` role.
 
-*Note: You must explicitly enable these providers in the Firebase Console before testing.*
+*Note: You must explicitly enable these providers in the Firebase Console before testing. Use a real Google account and a real Microsoft account. Company workspace access is a separate step: `scripts/bootstrap-default-company-user.js`.*
 
 ## License
 
