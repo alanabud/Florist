@@ -29,7 +29,8 @@ export const SITE_CONFIG = {
   /** Studio/store address (Contact page, pickup instructions). Empty = hidden / generic pickup wording. */
   addressLine1: '',
   addressCity: '',
-  addressState: '',
+  /** Studio tax state on the live florist deploy. Not a street; pickup copy stays hidden until addressLine1 is set. */
+  addressState: 'FL',
   addressZip: '',
 
   /** Public support hours, e.g. "Mon–Sat, 9 AM – 6 PM ET" (Contact page). Empty = hidden. */

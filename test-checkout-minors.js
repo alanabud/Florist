@@ -62,9 +62,15 @@ const before = quoteCheckout({ ...juliet, deliveryType: '' });
 assert(!before.deliveryChosen && before.deliveryFee === 0 && before.taxes === 0 && before.total === 125,
   'Before a method is chosen, delivery is not baked into the total.');
 
+const configuredStudio = SITE_CONFIG.addressState;
+SITE_CONFIG.addressState = '';
+const pickupUnset = quoteCheckout({ ...juliet, deliveryType: 'pickup' });
+assert(pickupUnset.deliveryFee === 0 && pickupUnset.taxes === 0 && pickupUnset.total === 125,
+  'Pickup does not charge delivery or destination tax when the studio state is unset.');
+SITE_CONFIG.addressState = configuredStudio;
 const pickup = quoteCheckout({ ...juliet, deliveryType: 'pickup' });
-assert(pickup.deliveryFee === 0 && pickup.taxes === 0 && pickup.total === 125,
-  'Pickup does not charge delivery or the recipient FL tax when the studio state is unset.');
+assert(pickup.deliveryFee === 0 && pickup.taxes === 125 * 0.06 && pickup.total === 125 + 125 * 0.06,
+  'Pickup tax follows the live studio state (FL), not a delivery fee.');
 
 const previousStudio = SITE_CONFIG.addressState;
 SITE_CONFIG.addressState = 'FL';
