@@ -18,13 +18,13 @@ export const SITE_CONFIG = {
    * (businessName) until Alan confirms the legal entity. Required before
    * real sales.
    */
-  legalBusinessName: '',
+  legalBusinessName: 'AF Strategic Technologies LLC',
 
   /** Public contact email (Contact page, Terms, Privacy). Set by Alan for the 2026-10-18 demo launch. */
   contactEmail: 'alanabud@gmail.com',
 
   /** Public contact phone (Contact page). Empty = the phone row is hidden. */
-  contactPhone: '',
+  contactPhone: '+1 (352) 809-4226',
 
   /** Studio/store address (Contact page, pickup instructions). Empty = hidden / generic pickup wording. */
   addressLine1: '',
@@ -56,7 +56,7 @@ export const SITE_CONFIG = {
    * launch — the governing-law section is hidden until Alan confirms it.
    * Required before real sales.
    */
-  governingLawState: '',
+  governingLawState: 'FL',
 };
 
 /** Street lines for in-store pickup. Empty until the studio address is set. */
