@@ -99,6 +99,60 @@ export function isDeliveryMethod(value: string): value is 'standard' | 'sameday'
   return value === 'standard' || value === 'sameday' || value === 'pickup';
 }
 
+export interface CheckoutStepForm {
+  recipientName: string;
+  recipientPhone: string;
+  recipientAddress: string;
+  recipientCity: string;
+  recipientState: string;
+  recipientZip: string;
+  deliveryType: string;
+  deliveryDate: string;
+  senderName: string;
+  senderEmail: string;
+}
+
+export type CheckoutStepIssue =
+  | 'contact'
+  | 'phone'
+  | 'method'
+  | 'address'
+  | 'date'
+  | 'date-past'
+  | 'sender';
+
+/**
+ * Recipient Continue requires name + a 10-digit phone only.
+ * Address and ZIP are checked later, and only for standard / same-day.
+ * Pickup never demands a delivery ZIP. Phone and ZIP are never one error.
+ * Returns the step that should be shown when the check fails.
+ */
+export function validateCheckoutStep(
+  step: number,
+  form: CheckoutStepForm,
+  now = new Date(),
+): { step: number; issue: CheckoutStepIssue } | null {
+  if (step === 1) {
+    if (!hasRecipientContact(form)) return { step: 1, issue: 'contact' };
+    if (!isValidPhone(form.recipientPhone)) return { step: 1, issue: 'phone' };
+    return null;
+  }
+  if (step === 2) {
+    if (!isDeliveryMethod(form.deliveryType)) return { step: 2, issue: 'method' };
+    if (form.deliveryType !== 'pickup' && (!hasDeliveryAddress(form) || !isValidZip(form.recipientZip))) {
+      return { step: 1, issue: 'address' };
+    }
+    if (!isValidFulfillmentDate(form.deliveryDate)) return { step: 2, issue: 'date' };
+    if (isPastFulfillmentDate(form.deliveryDate, now)) return { step: 2, issue: 'date-past' };
+    return null;
+  }
+  if (step === 3) {
+    if (!isValidSender(form)) return { step: 3, issue: 'sender' };
+    return null;
+  }
+  return null;
+}
+
 export interface CheckoutQuoteInput {
   deliveryType: string;
   recipientState: string;

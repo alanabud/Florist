@@ -122,7 +122,7 @@ const orderUpdateKeys = extractBlockKeys(demoSvc, "batch.update(doc(db, 'orders'
 assert(JSON.stringify(orderUpdateKeys) === JSON.stringify(['demoPayment', 'paidAt', 'paymentProvider', 'paymentStatus', 'status']),
   `Client order update touches EXACTLY the five quarantined fields (got ${orderUpdateKeys.join(',')}).`);
 const trackingKeys = extractBlockKeys(demoSvc, "batch.set(doc(db, 'publicOrderTracking'");
-const expectedTrackingKeys = ['city', 'companyId', 'deliveryDate', 'deliveryFee', 'deliveryType', 'itemsSummary', 'orderNumber', 'orderNumberNormalized', 'paymentMode', 'recipientFirstName', 'senderEmailNormalized', 'state', 'status', 'subtotal', 'taxes', 'timeline', 'total', 'trackingToken', 'updatedAt'].sort();
+const expectedTrackingKeys = ['addressLine1', 'city', 'companyId', 'deliveryDate', 'deliveryFee', 'deliveryType', 'itemsSummary', 'orderNumber', 'orderNumberNormalized', 'paymentMode', 'recipientFirstName', 'recipientName', 'senderEmailNormalized', 'state', 'status', 'subtotal', 'taxes', 'timeline', 'total', 'trackingToken', 'updatedAt', 'zip'].sort();
 assert(JSON.stringify(trackingKeys) === JSON.stringify(expectedTrackingKeys),
   `Client tracking doc carries EXACTLY the public allowlist + paymentMode (got ${trackingKeys.join(',')}).`);
 
@@ -157,6 +157,10 @@ assert(ordersPage.includes("glPostingStatus === 'unposted' && !isDemoOrder(order
 // complete-and-only field set, pinned demo outcome — and 'paid' is
 // never a client-reachable value.
 const rules = read('firestore.rules');
+const rulesAllow = rules.slice(rules.indexOf('function publicTrackingFields'), rules.indexOf('function isValidPublicTrackingCreate'));
+for (const key of ['recipientName', 'addressLine1', 'zip', 'deliveryType']) {
+  assert(rulesAllow.includes(`'${key}'`), `Demo tracking allowlist includes ${key}.`);
+}
 assert(rules.includes("request.resource.data.status == 'pending_payment'") &&
        rules.includes("request.resource.data.paymentStatus == 'pending'"),
   'Guest order creation still requires the pending state.');

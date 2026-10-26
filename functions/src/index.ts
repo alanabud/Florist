@@ -70,8 +70,11 @@ interface OrderData {
   orderNumberNormalized?: string;
   senderEmailNormalized?: string;
   recipientName?: string;
+  recipientAddress?: string;
   recipientCity?: string;
   recipientState?: string;
+  recipientZip?: string;
+  deliveryType?: string;
   deliveryDate?: string;
 }
 
@@ -222,9 +225,13 @@ const writeTrackingDoc = (
     senderEmailNormalized: order.senderEmailNormalized,
     status: 'placed',
     deliveryDate: order.deliveryDate,
+    deliveryType: order.deliveryType ?? '',
     recipientFirstName: String(order.recipientName ?? '').split(' ')[0],
+    recipientName: String(order.recipientName ?? '').trim(),
+    addressLine1: String(order.recipientAddress ?? '').trim(),
     city: order.recipientCity,
     state: order.recipientState,
+    zip: String(order.recipientZip ?? '').trim(),
     itemsSummary: (order.items ?? [])
       .map((item) => `${item.quantity ?? 1}x ${item.name ?? ''}`)
       .join(', '),

@@ -73,6 +73,9 @@ export interface DemoOrderSummary {
   orderNumberNormalized: string;
   senderEmailNormalized: string;
   recipientFirstName: string;
+  recipientName: string;
+  recipientAddress: string;
+  recipientZip: string;
   recipientCity: string;
   recipientState: string;
   deliveryDate: string;
@@ -155,8 +158,11 @@ export const confirmDemoPayment = async (orderId: string): Promise<ConfirmDemoRe
     deliveryDate: summary.deliveryDate,
     deliveryType: summary.deliveryType,
     recipientFirstName: summary.recipientFirstName,
+    recipientName: summary.recipientName ?? '',
+    addressLine1: summary.recipientAddress ?? '',
     city: summary.recipientCity,
     state: summary.recipientState,
+    zip: summary.recipientZip ?? '',
     itemsSummary: summary.items
       .map((item) => `${item.quantity ?? 1}x ${item.name ?? ''}`)
       .join(', '),

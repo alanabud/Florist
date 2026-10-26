@@ -114,7 +114,8 @@ service cloud.firestore {
       return [
         'orderNumber', 'orderNumberNormalized', 'senderEmailNormalized',
         'trackingToken', 'status', 'deliveryDate', 'deliveryType', 'recipientFirstName',
-        'city', 'state', 'itemsSummary', 'subtotal', 'deliveryFee', 'taxes', 'total',
+        'recipientName', 'addressLine1', 'city', 'state', 'zip',
+        'itemsSummary', 'subtotal', 'deliveryFee', 'taxes', 'total',
         'timeline', 'updatedAt',
         'deliveryWindow', 'trackingMessage', 'companyId', 'paymentMode'
       ];

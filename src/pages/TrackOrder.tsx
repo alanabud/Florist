@@ -9,7 +9,8 @@ import styles from './TrackOrder.module.css';
 import { useI18n } from '../i18n/I18nProvider';
 import { emailLookupDocId } from '../services/publicOrderService';
 import { formatFulfillmentDateLong } from '../services/checkoutValidation';
-import { studioPickupDisplayLines } from '../config/siteConfig';
+import { studioPickupBodyLines } from '../config/siteConfig';
+import { deliveryDestinationLines } from '../services/fulfillmentDisplay';
 
 interface TimelineStep {
   status: string;
@@ -22,8 +23,11 @@ interface TrackingData {
   status: string;
   deliveryDate: string;
   recipientFirstName: string;
+  recipientName?: string;
+  addressLine1?: string;
   city: string;
   state: string;
+  zip?: string;
   itemsSummary: string;
   deliveryType?: string;
   timeline: TimelineStep[];
@@ -161,13 +165,29 @@ export const TrackOrder: React.FC = () => {
                   <div>
                     {trackingData.deliveryType === 'pickup' ? (
                       <>
-                        <h4>{t('trackorder.pickupLocation')}</h4>
-                        <p>{studioPickupDisplayLines(t('orderconfirmation.pickupAtStudio')).join(' — ')}</p>
+                        <h4>{t('orderconfirmation.inStorePickup')}</h4>
+                        {studioPickupBodyLines(
+                          t('orderconfirmation.pickupAtStudio'),
+                          t('orderconfirmation.pickupEmailInstructions'),
+                        ).map((line, index) => (
+                          <p key={`${index}-${line}`}>{line}</p>
+                        ))}
                       </>
                     ) : (
                       <>
                         <h4>{t('trackorder.destination')}</h4>
-                        <p>{t('orderconfirmation.recipientHome').replace('{name}', trackingData.recipientFirstName)} — {trackingData.city}, {trackingData.state}</p>
+                        <p>
+                          {deliveryDestinationLines({
+                            fullName: (trackingData.recipientName || trackingData.recipientFirstName || '').trim(),
+                            street: trackingData.addressLine1 || '',
+                            city: trackingData.city || '',
+                            state: trackingData.state || '',
+                            zip: trackingData.zip || '',
+                            deliverTo: t('orderconfirmation.deliverToName', {
+                              fullName: (trackingData.recipientName || trackingData.recipientFirstName || '').trim(),
+                            }),
+                          }).join(' — ')}
+                        </p>
                       </>
                     )}
                   </div>

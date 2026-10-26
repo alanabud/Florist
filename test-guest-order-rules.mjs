@@ -249,6 +249,18 @@ await allow('Guest creates a token-id demo tracking doc', () =>
       taxes: 0,
       total: 125,
     })));
+await allow('Guest demo tracking doc may include fulfillment name, street, and ZIP', () =>
+  setDoc(doc(guestDb, `publicOrderTracking/blm-43434_${token}`),
+    trackingDoc({
+      orderNumber: 'BLM-43434',
+      orderNumberNormalized: 'blm-43434',
+      paymentMode: 'demo',
+      trackingToken: token,
+      deliveryType: 'standard',
+      recipientName: 'Jordan Recipient',
+      addressLine1: '1 Main St',
+      zip: '33101',
+    })));
 await deny('Guest creates a token tracking doc whose id does not match the token', () =>
   setDoc(doc(guestDb, 'publicOrderTracking/blm-42424_' + 'b'.repeat(32)),
     trackingDoc({

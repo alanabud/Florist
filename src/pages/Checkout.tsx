@@ -7,16 +7,10 @@ import { ChevronRight, Lock, AlertTriangle } from 'lucide-react';
 import { STATE_TAX_RATES } from '../data/taxConfig';
 import { createGuestOrder } from '../services/publicOrderService';
 import {
-  hasDeliveryAddress,
-  hasRecipientContact,
-  isDeliveryMethod,
-  isPastFulfillmentDate,
-  isValidFulfillmentDate,
-  isValidPhone,
-  isValidSender,
-  isValidZip,
   quoteCheckout,
   todayIsoDate,
+  validateCheckoutStep,
+  type CheckoutStepIssue,
 } from '../services/checkoutValidation';
 import { startStripeCheckout } from '../services/stripeCheckoutService';
 import { PAYMENTS_MODE } from '../config/stripeConfig';
@@ -58,54 +52,24 @@ export const Checkout: React.FC = () => {
     setStepError(null);
   };
 
-  // Address is required only once the customer has chosen delivery.
-  // Pickup keeps name + phone, and does not require street/city/state/ZIP.
+  const stepIssueKey: Record<CheckoutStepIssue, string> = {
+    contact: 'checkout.recipientContactRequired',
+    phone: 'checkout.recipientPhoneInvalid',
+    method: 'checkout.deliveryMethodRequired',
+    address: 'checkout.recipientAddressRequired',
+    date: 'checkout.deliveryDateRequired',
+    'date-past': 'checkout.deliveryDateInPast',
+    sender: 'checkout.senderDetailsRequired',
+  };
+
+  // Recipient Continue: name + 10-digit phone. Address/ZIP stay optional
+  // until Standard or Same-Day is chosen. Pickup never asks for them.
   // Returns the step that should be shown when the check fails.
   const validateStep = (which: number): number | null => {
-    if (which === 1) {
-      if (!hasRecipientContact(formData)) {
-        setStepError('checkout.recipientContactRequired');
-        return 1;
-      }
-      if (!isValidPhone(formData.recipientPhone)) {
-        setStepError('checkout.recipientPhoneInvalid');
-        return 1;
-      }
-      return null;
-    }
-    if (which === 2) {
-      if (!isDeliveryMethod(formData.deliveryType)) {
-        setStepError('checkout.deliveryMethodRequired');
-        return 2;
-      }
-      if (formData.deliveryType !== 'pickup') {
-        if (!hasDeliveryAddress(formData)) {
-          setStepError('checkout.recipientAddressRequired');
-          return 1;
-        }
-        if (!isValidZip(formData.recipientZip) || !isValidPhone(formData.recipientPhone)) {
-          setStepError('checkout.recipientFormatRequired');
-          return 1;
-        }
-      }
-      if (!isValidFulfillmentDate(formData.deliveryDate)) {
-        setStepError('checkout.deliveryDateRequired');
-        return 2;
-      }
-      if (isPastFulfillmentDate(formData.deliveryDate)) {
-        setStepError('checkout.deliveryDateInPast');
-        return 2;
-      }
-      return null;
-    }
-    if (which === 3) {
-      if (!isValidSender(formData)) {
-        setStepError('checkout.senderDetailsRequired');
-        return 3;
-      }
-      return null;
-    }
-    return null;
+    const result = validateCheckoutStep(which, formData);
+    if (!result) return null;
+    setStepError(stepIssueKey[result.issue]);
+    return result.step;
   };
 
   const continueStep = () => {
@@ -218,6 +182,9 @@ export const Checkout: React.FC = () => {
           orderNumberNormalized: result.orderNumber.toLowerCase().trim(),
           senderEmailNormalized: orderData.senderEmail.toLowerCase().trim(),
           recipientFirstName: (orderData.recipientName ?? '').split(' ')[0],
+          recipientName: (orderData.recipientName ?? '').trim(),
+          recipientAddress: (orderData.recipientAddress ?? '').trim(),
+          recipientZip: (orderData.recipientZip ?? '').trim(),
           recipientCity: orderData.recipientCity,
           recipientState: orderData.recipientState,
           deliveryDate: orderData.deliveryDate,
@@ -382,7 +349,7 @@ export const Checkout: React.FC = () => {
                       />
                       <div className={styles.radioContent}>
                         <strong>{t('checkout.inStorePickupFree')}</strong>
-                        <p>{t('checkout.collectFromOurDowntownStudio')}</p>
+                        <p>{t('checkout.pickupAtStudio')}</p>
                       </div>
                     </label>
                   </div>

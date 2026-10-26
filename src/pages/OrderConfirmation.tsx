@@ -9,14 +9,18 @@ import { CheckCircle2, ShoppingBag, Calendar, MapPin, ArrowRight } from 'lucide-
 import styles from './OrderConfirmation.module.css';
 import { useI18n } from '../i18n/I18nProvider';
 import { formatFulfillmentDateLong } from '../services/checkoutValidation';
-import { studioPickupDisplayLines } from '../config/siteConfig';
+import { studioPickupBodyLines } from '../config/siteConfig';
+import { deliveryDestinationLines } from '../services/fulfillmentDisplay';
 
 interface ConfirmationData {
   orderNumber: string;
   deliveryDate: string;
   recipientFirstName: string;
+  recipientName?: string;
+  addressLine1?: string;
   city: string;
   state: string;
+  zip?: string;
   itemsSummary: string;
   deliveryType?: string;
   subtotal?: number;
@@ -134,16 +138,29 @@ export const OrderConfirmation: React.FC = () => {
               <div>
                 {order.deliveryType === 'pickup' ? (
                   <>
-                    <h3>{t('orderconfirmation.pickupLocation')}</h3>
-                    {studioPickupDisplayLines(t('orderconfirmation.pickupAtStudio')).map((line, index) => (
+                    <h3>{t('orderconfirmation.inStorePickup')}</h3>
+                    {studioPickupBodyLines(
+                      t('orderconfirmation.pickupAtStudio'),
+                      t('orderconfirmation.pickupEmailInstructions'),
+                    ).map((line, index) => (
                       <p key={`${index}-${line}`}>{line}</p>
                     ))}
                   </>
                 ) : (
                   <>
-                    <h3>{t('orderconfirmation.deliveryResidence')}</h3>
-                    <p>{t('orderconfirmation.recipientHome').replace('{name}', order.recipientFirstName)}</p>
-                    <p>{order.city}, {order.state}</p>
+                    <h3>{t('orderconfirmation.deliveryTo')}</h3>
+                    {deliveryDestinationLines({
+                      fullName: (order.recipientName || order.recipientFirstName || '').trim(),
+                      street: order.addressLine1 || '',
+                      city: order.city || '',
+                      state: order.state || '',
+                      zip: order.zip || '',
+                      deliverTo: t('orderconfirmation.deliverToName', {
+                        fullName: (order.recipientName || order.recipientFirstName || '').trim(),
+                      }),
+                    }).map((line, index) => (
+                      <p key={`${index}-${line}`}>{line}</p>
+                    ))}
                   </>
                 )}
               </div>

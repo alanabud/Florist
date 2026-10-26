@@ -59,20 +59,34 @@ export const SITE_CONFIG = {
   governingLawState: 'FL',
 };
 
-/** Street lines for in-store pickup. Empty until the studio address is set. */
+/**
+ * Street line for in-store pickup. Empty until a future tenant sets
+ * SITE_CONFIG.addressLine1. City, state, or ZIP alone are not a street
+ * and must not surface as a location fragment.
+ */
 export function studioAddressLines(): string[] {
-  const cityState = [SITE_CONFIG.addressCity, SITE_CONFIG.addressState].filter(Boolean).join(', ');
-  const locality = [cityState, SITE_CONFIG.addressZip].filter(Boolean).join(' ');
-  return [SITE_CONFIG.addressLine1, locality].filter((line) => line.trim().length > 0);
+  const street = SITE_CONFIG.addressLine1.trim();
+  if (!street) return [];
+  const cityState = [SITE_CONFIG.addressCity.trim(), SITE_CONFIG.addressState.trim()].filter(Boolean).join(', ');
+  const locality = [cityState, SITE_CONFIG.addressZip.trim()].filter(Boolean).join(' ');
+  return [street, locality].filter((line) => line.length > 0);
 }
 
 /**
- * Customer-facing pickup location. Uses the studio address when it is
- * configured; otherwise the trading name plus a generic studio line.
+ * Customer-facing pickup block.
+ * With no street (BloomPro demo): "{businessName} — {atStudio}" plus the
+ * email-instructions line. Never a blank street row, a downtown claim,
+ * or an invented address.
+ * With a complete street (future tenant): the same title, then the street,
+ * then City, ST ZIP — incomplete locality fragments stay hidden.
  * The recipient's name is not part of the location.
  */
-export function studioPickupDisplayLines(fallbackStudio: string): string[] {
+export function studioPickupBodyLines(atStudio: string, emailInstructions: string): string[] {
+  const name = SITE_CONFIG.businessName.trim();
+  const title = [name, atStudio.trim()].filter(Boolean).join(' — ');
   const address = studioAddressLines();
-  if (address.length === 0) return [SITE_CONFIG.businessName, fallbackStudio];
-  return [SITE_CONFIG.businessName, ...address];
+  if (address.length === 0) {
+    return [title, emailInstructions.trim()].filter((line) => line.length > 0);
+  }
+  return [title, ...address];
 }
