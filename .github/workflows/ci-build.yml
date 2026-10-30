@@ -1,0 +1,68 @@
+name: CI Build
+
+# Build-only check for the Vite app. It does not deploy, does not call the
+# Firebase CLI or Hosting, and does not read secrets. It is not a required
+# status check; branch protection and rulesets are left unchanged.
+#
+# Node selection (no root engines field, no .nvmrc):
+#   functions/package.json  engines.node = "20"
+#   package-lock.json       npm lockfileVersion 3
+#     vite  engines: ^20.19.0 || >=22.12.0
+#     eslint engines: ^20.19.0 || ^22.13.0 || >=24
+# Node 20 (current 20.x, which is >= 20.19) satisfies the functions runtime
+# pin and that lockfile floor. Install is `npm ci` because the repo has a
+# package-lock.json and no packageManager field.
+#
+# Scripts: `lint` exists (`eslint .`). There is no `typecheck` script;
+# `npm run build` is `tsc -b && vite build`, so the production build is the
+# typecheck. VITE_* values below are harmless placeholders, not credentials.
+# Vite inlines them at build time; nothing here talks to Firebase or Stripe.
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Lint and production build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out the branch
+        uses: actions/checkout@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Production build
+        run: npm run build
+        env:
+          # Placeholders only. Not real Firebase, App Check, or Stripe keys.
+          VITE_FIREBASE_API_KEY: ci-placeholder-not-a-real-key
+          VITE_FIREBASE_AUTH_DOMAIN: ci-placeholder.firebaseapp.com
+          VITE_FIREBASE_PROJECT_ID: ci-placeholder
+          VITE_FIREBASE_STORAGE_BUCKET: ci-placeholder.appspot.com
+          VITE_FIREBASE_MESSAGING_SENDER_ID: '000000000000'
+          VITE_FIREBASE_APP_ID: '1:000000000000:web:ciplaceholder'
+          VITE_FIREBASE_MEASUREMENT_ID: G-CIPLACEHOLDER
+          VITE_FIREBASE_APPCHECK_SITE_KEY: ci-placeholder-recaptcha-site-key
+          VITE_FIREBASE_APPCHECK_DEBUG: 'false'
+          VITE_STRIPE_PUBLISHABLE_KEY: pk_test_ci_placeholder_not_a_real_key
+          VITE_PAYMENTS_DEMO_MODE: 'false'
