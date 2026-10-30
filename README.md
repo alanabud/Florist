@@ -1,5 +1,7 @@
 # BloomPro Studio
 
+[![CI Build](https://github.com/alanabud/Florist/actions/workflows/ci-build.yml/badge.svg?branch=main)](https://github.com/alanabud/Florist/actions/workflows/ci-build.yml)
+
 A premium, production-oriented Florist SaaS web app for flower shops, floral studios, and event florists.
 
 ## Firebase Authentication Setup
@@ -31,6 +33,10 @@ Ensure the following domains are added to your authorized domains in the Firebas
 4. **Role Assignment**: The very first user to authenticate will be assigned the `owner` role. Subsequent users will be assigned the `staff` role.
 
 *Note: You must explicitly enable these providers in the Firebase Console before testing.*
+
+## CI
+
+Build-only check (Node 20, `npm ci`, lint, tsc + Vite build). The [CI Build](https://github.com/alanabud/Florist/actions/workflows/ci-build.yml) workflow uses `contents: read`, reads no secrets, does not deploy, and is not a required check.
 
 ## License
 
